@@ -218,6 +218,51 @@ Write them in reStructuredText files in :file:`.duvet/notes/`:
 
 The note is shown in the row of the requirement.
 
+Command line
+------------
+
+The ``sphinx-duvet`` command shows the same reports in a terminal, and checks them in the CI.
+Run it from the repository, or give the project folder with ``--root``.
+Like the documentation, it runs Duvet, or reads a report given with ``--report-json``.
+
+.. code-block:: shell
+
+   sphinx-duvet report spec/rfc9999.txt --group-by role --show missing
+   sphinx-duvet recap --levels MUST,SHOULD
+   sphinx-duvet check --levels MUST
+
+``report``
+   A table per specification, with a row per requirement.
+   Each target has two columns: ``impl`` for the implementation state, and ``test`` for the test state.
+   In a terminal, the states are colored, unless ``NO_COLOR`` is set,
+   and long requirements are cut to the width of the terminal.
+
+``recap``
+   The counts per level and per column, as :rst:dir:`duvet-recap`.
+
+``check``
+   The requirements that fail, with their column and the reason.
+   The command fails if there are some.
+
+The three commands take the specifications to show, all by default,
+and the options of the directives: ``--targets``, ``--group-by``, ``--sections``, ``--levels``,
+and ``--show`` for ``report``. ``--labels`` is ``symbols`` or ``text``.
+
+``check`` also takes:
+
+``--fail-on``
+   The states that fail, separated by commas, among
+   ``missing``, ``partial``, ``todo``, ``untested`` (a missing test) and ``unannotated``.
+   The default is ``missing,partial,untested``.
+   Deliberate deviations never fail.
+
+``--strict``
+   Also fail if some ``[[applies]]`` entries or notes match no requirement.
+   Otherwise, they only show a warning.
+
+The exit code is 0 on success, 1 if ``check`` finds failures,
+and 2 if the arguments are invalid or the report cannot be loaded.
+
 Warnings
 --------
 

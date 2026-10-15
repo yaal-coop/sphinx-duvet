@@ -32,6 +32,9 @@ dependencies = [
     "sphinx>=7.3",
 ]
 
+[project.scripts]
+sphinx-duvet = "sphinx_duvet._cli:main"
+
 [project.urls]
 documentation = "https://sphinx-duvet.readthedocs.io"
 repository = "https://github.com/yaal-coop/sphinx-duvet"
