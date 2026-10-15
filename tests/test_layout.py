@@ -463,10 +463,30 @@ def test_labels_with_a_colon() -> None:
         "   Schema Name:  A descriptive name of the schema (e.g.,\n"
         '      "Generic Device").\n\n'
         "   For example:\n\n"
-        "      None\n"
+        "      GET /Users HTTP/1.1\n"
     )
     assert [type(e) for e in elements] == [Paragraph, DefinitionList, Paragraph, Figure]
     definitions = elements[1]
     assert isinstance(definitions, DefinitionList)
     terms = [d.term.lines[0].text for d in definitions.items]
     assert terms == ["Schema URI:", "Schema Name:"]
+
+
+def test_labels_on_their_own_line() -> None:
+    """A label alone on its line is a term when prose follows it, not when code does."""
+    elements = parse(
+        "   The template:\n\n"
+        "   Relevant Ancillary Documentation:\n\n"
+        "      None\n\n"
+        "   Scope:\n\n"
+        "      Global.\n\n"
+        "   For example:\n\n"
+        "      GET /Users HTTP/1.1\n"
+    )
+    assert [type(e) for e in elements] == [Paragraph, DefinitionList, Paragraph, Figure]
+    definitions = elements[1]
+    assert isinstance(definitions, DefinitionList)
+    assert [d.term.lines[0].text.strip() for d in definitions.items] == [
+        "Relevant Ancillary Documentation:",
+        "Scope:",
+    ]

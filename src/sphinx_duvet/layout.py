@@ -494,7 +494,7 @@ def _parse(
 def _looks_like_code(text: str) -> bool:
     """Return True if a line looks like code or a drawing, not like a sentence."""
     return (
-        (" " not in text and not text.isalpha())
+        (" " not in text and not text.rstrip(".,").isalpha())
         or text[0] in "{}]|+"
         or text.startswith(('["', "[{"))
         or text == "["
@@ -601,12 +601,20 @@ def _starts_definition(block: Block, prose: bool) -> bool:
 
 
 def _alone_term(spec_blocks: list[Block], index: int, prose: bool) -> _Head | None:
-    """Return a term on a line of its own, if the next block is its indented definition."""
+    """Return a term on a line of its own, if the next block is its indented definition.
+
+    A label that ends with a colon is a term when prose follows it, not code.
+    """
     block = spec_blocks[index]
     following = spec_blocks[index + 1] if index + 1 < len(spec_blocks) else None
     if not prose or len(block.lines) != 1 or following is None:
         return None
-    if following.indent <= block.indent or not _is_term(block.lines[0].text.strip()):
+    if following.indent <= block.indent:
+        return None
+    prose_follows = all(
+        line.indent == following.indent for line in following.lines
+    ) and not _looks_like_code(following.lines[0].text.strip())
+    if not _is_term(block.lines[0].text.strip(), label=prose_follows):
         return None
     return None, block, None, following.indent
 
