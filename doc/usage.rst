@@ -345,6 +345,17 @@ and which annotations and requirements apply to them.
    quote = "The client MUST send the token."
    applies-to = "role=client"
 
+   # Requirements that another project implements. Without a quote,
+   # every requirement of the section and its subsections.
+   [[outside]]
+   target = "spec/rfc9999.txt#section-3"
+   reason = "The HTTP server implements it."
+
+Requirements out of scope show their reason, with the state "out of scope".
+They are not counted, and are not gaps.
+A requirement that the project cites is in scope, even in a section out of scope.
+``[[outside]]`` entries are not shared with the projects that include the project.
+
 Checkers
 ~~~~~~~~
 
@@ -506,7 +517,7 @@ as :confval:`duvet_figure_requirements` does.
    Deliberate deviations never fail.
 
 ``--strict``
-   Also fail if some ``[[applies]]`` entries or notes match no requirement.
+   Also fail if some ``[[applies]]`` or ``[[outside]]`` entries or notes match no requirement.
    Otherwise, they only show a warning.
 
 The exit code is 0 on success, 1 if ``check`` finds failures,
@@ -516,7 +527,8 @@ Warnings
 --------
 
 All the warnings of sphinx-duvet have the ``duvet`` type.
-The ``duvet.unused`` subtype is for ``[[applies]]`` entries and notes that match no requirement.
+The ``duvet.unused`` subtype is for ``[[applies]]`` and ``[[outside]]`` entries
+and notes that match no requirement.
 Silence them with :confval:`suppress_warnings`:
 
 .. code-block:: python

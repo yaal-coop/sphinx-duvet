@@ -27,7 +27,11 @@ _CLASSES = {
     State.UNANNOTATED: "duvet-unannotated",
     State.NOT_EXPECTED: "duvet-none",
     State.NOT_APPLICABLE: "duvet-na",
+    State.OUTSIDE: "duvet-outside",
 }
+
+# States without a test state.
+_SINGLE = (State.NOT_APPLICABLE, State.UNANNOTATED, State.OUTSIDE)
 
 
 class duvet_label(nodes.inline):
@@ -97,7 +101,7 @@ class Labels:
 
     def status_cell(self, status: Status) -> list[nodes.Node]:
         """Return the implementation and test states, one per line."""
-        if status.implementation in (State.NOT_APPLICABLE, State.UNANNOTATED):
+        if status.implementation in _SINGLE:
             return [_line(self.state(status.implementation))]
         return [
             _line(_caption("impl. "), self.state(status.implementation)),

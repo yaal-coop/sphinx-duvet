@@ -175,6 +175,7 @@ _RULE_STATES = [
     ("missing", "missing"),
     ("exception", "deliberate deviation"),
     ("unannotated", "not annotated yet"),
+    ("outside", "out of scope"),
 ]
 
 

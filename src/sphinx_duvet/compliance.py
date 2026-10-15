@@ -17,6 +17,7 @@ from .report import normalize
 from .report import parse_report
 from .report import run_duvet
 from .targets import Applies
+from .targets import Outside
 from .targets import Selector
 from .targets import Target
 from .targets import load_targets
@@ -39,6 +40,7 @@ class State(StrEnum):
     UNANNOTATED = "unannotated"
     NOT_EXPECTED = "-"
     NOT_APPLICABLE = "n/a"
+    OUTSIDE = "outside"
 
 
 _RANK = {
@@ -64,11 +66,18 @@ class Status:
 
         A requirement without any annotation is not a gap: it has not been studied yet.
         """
-        done = (State.OK, State.EXCEPTION, State.NOT_APPLICABLE, State.UNANNOTATED)
+        done = (
+            State.OK,
+            State.EXCEPTION,
+            State.NOT_APPLICABLE,
+            State.UNANNOTATED,
+            State.OUTSIDE,
+        )
         return self.implementation not in done or self.test == State.MISSING
 
 
 _NOT_APPLICABLE = Status(State.NOT_APPLICABLE, State.NOT_APPLICABLE)
+_OUTSIDE = Status(State.OUTSIDE, State.OUTSIDE)
 
 
 @dataclass
@@ -125,6 +134,7 @@ class Project:
                     cite.covers = self.config.covers(cite.path)
         self.unused_applies = self._attach_applies(requirements)
         self.unused_notes = self._attach_notes(requirements)
+        self.unused_outside = self._attach_outside(requirements)
 
     @classmethod
     def from_duvet(
@@ -166,6 +176,20 @@ class Project:
                 unused.append(entry)
             for requirement in matches:
                 requirement.applies = entry.applies_to
+        return unused
+
+    def _attach_outside(self, requirements: list[Requirement]) -> list[Outside]:
+        """Mark the requirements out of the scope of the project. Return the entries that match nothing."""
+        unused = []
+        for entry in self.config.outside:
+            if entry.quote is None:
+                matches = _in_section(requirements, entry.target)
+            else:
+                matches = _find(requirements, entry.target, entry.quote)
+            if not matches:
+                unused.append(entry)
+            for requirement in matches:
+                requirement.outside = entry.reason
         return unused
 
     def _attach_notes(self, requirements: list[Requirement]) -> list[Note]:
@@ -225,6 +249,8 @@ class Project:
         """
         if target not in self.applicable(requirement):
             return _NOT_APPLICABLE
+        if requirement.outside is not None and not requirement.cites:
+            return _OUTSIDE
         if not requirement.cites:
             return Status(State.UNANNOTATED, State.NOT_EXPECTED)
 
@@ -270,11 +296,14 @@ class Project:
         """Return the status of a requirement for several targets.
 
         The worst state of the targets wins.
+        A requirement out of scope for every target is out of scope.
         """
         statuses = [self.status(requirement, t) for t in targets]
         statuses = [s for s in statuses if s.implementation != State.NOT_APPLICABLE]
         if not statuses:
             return _NOT_APPLICABLE
+        if all(s.implementation == State.OUTSIDE for s in statuses):
+            return _OUTSIDE
         implementation = min(
             (s.implementation for s in statuses), key=_RANK.__getitem__
         )
@@ -294,11 +323,12 @@ class Project:
 
         A requirement without any annotation is counted as "unannotated",
         not as "missing": it has not been studied yet.
+        Requirements out of scope are not counted.
         """
         counts = {level: Counts() for level in LEVELS}
         for requirement in requirements:
             status = self.group(requirement, targets)
-            if status.implementation == State.NOT_APPLICABLE:
+            if status.implementation in (State.NOT_APPLICABLE, State.OUTSIDE):
                 continue
             count = counts.setdefault(requirement.level, Counts())
             count.requirements += 1
@@ -349,6 +379,17 @@ def _project(selectors: list[Selector], keys: set[str]) -> list[Selector]:
     if not keys:
         return selectors
     return [s.project(keys) for s in selectors]
+
+
+def _in_section(requirements: list[Requirement], target: str) -> list[Requirement]:
+    """Return the requirements of a section and of its subsections."""
+    spec, _, section = target.partition("#")
+    return [
+        r
+        for r in requirements
+        if r.spec == spec
+        and (r.section == section or r.section.startswith(section + "."))
+    ]
 
 
 def _find(

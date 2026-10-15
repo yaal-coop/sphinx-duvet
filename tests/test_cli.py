@@ -289,3 +289,14 @@ def test_figure_requirements(capsys: pytest.CaptureFixture[str]) -> None:
         capsys, "check", *options, "--fail-on", "unannotated", "--figure-requirements"
     )
     assert "rfc9997#3-1 MUST default: unannotated" in out
+
+
+def test_outside(capsys: pytest.CaptureFixture[str]) -> None:
+    """Requirements out of scope have a single cell."""
+    outside = Path(__file__).parent / "projects" / "outside"
+    options = ["--root", str(outside), "--report-json", str(outside / "report.json")]
+    _, out, err = run(capsys, "report", *options, "--labels", "text")
+    assert re.search(r"1\.1-1 +MUST +out of scope +The server MUST", out)
+    assert "no requirement matches the [[outside]] entry" in err
+    code, _, _ = run(capsys, "check", *options, "--fail-on", "missing", "--strict")
+    assert code == 1

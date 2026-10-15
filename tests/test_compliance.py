@@ -270,3 +270,33 @@ def test_checker(project: Project) -> None:
     assert applicable_ids(project, "The client MUST send the token.") == ["client"]
     assert "checker" in applicable_ids(project, "Servers SHOULD rotate their keys.")
     assert [label for label, _ in project.columns(group_by="role")][-1] == "checker"
+
+
+def test_outside() -> None:
+    """Requirements out of scope are not counted, unless the project cites them."""
+    root = Path(__file__).parent / "projects" / "outside"
+    project = Project(root, read_report(root / "report.json"))
+    [spec] = project.specifications.values()
+    states = {
+        r.id: project.group(r, project.targets).implementation
+        for r in spec.requirements
+    }
+    assert states["rfc9997#1.1-1"] == State.OUTSIDE
+    assert states["rfc9997#1.1.1-1"] == State.OK
+    assert states["rfc9997#2-2"] == State.OUTSIDE
+    assert states["rfc9997#2-1"] == State.OK
+    [unused] = project.unused_outside
+    assert unused.target == "spec/rfc9997.txt#section-9"
+    counts = project.recap(spec.requirements, project.targets)
+    assert counts["MUST"].requirements == 4
+    assert not Status(State.OUTSIDE, State.OUTSIDE).gap
+
+
+def test_outside_with_cites(project: Project) -> None:
+    """A requirement out of scope keeps its state while the project cites it."""
+    req = requirement(project, "The client MUST send the token.")
+    req.outside = "Not for this project."
+    status = project.group(req, project.targets)
+    assert status.implementation == State.OK
+    req.cites = []
+    assert project.group(req, project.targets).implementation == State.OUTSIDE

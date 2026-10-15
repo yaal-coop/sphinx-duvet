@@ -46,6 +46,7 @@ _COLORS = {
     State.UNANNOTATED: "2",
     State.NOT_EXPECTED: "2",
     State.NOT_APPLICABLE: "2",
+    State.OUTSIDE: "2",
 }
 
 _RECAP_HEADERS = [
@@ -90,9 +91,14 @@ class _Output:
     def status(self, status: Status) -> list[tuple[str, str]]:
         """Return the implementation and test cells of a status.
 
-        A requirement that is unannotated or does not apply only has an implementation cell.
+        A requirement that is unannotated, does not apply or is out of scope only has
+        an implementation cell.
         """
-        if status.implementation in (State.NOT_APPLICABLE, State.UNANNOTATED):
+        if status.implementation in (
+            State.NOT_APPLICABLE,
+            State.UNANNOTATED,
+            State.OUTSIDE,
+        ):
             return [self.state(status.implementation), _plain("")]
         return [self.state(status.implementation), self.state(status.test)]
 
@@ -257,7 +263,11 @@ def check(
                     f"{label}: {', '.join(reasons)}"
                 )
                 out.write(f"    {requirement.text}")
-    unused = len(project.unused_applies) + len(project.unused_notes)
+    unused = (
+        len(project.unused_applies)
+        + len(project.unused_notes)
+        + len(project.unused_outside)
+    )
     if failures:
         out.write(f"{failures} failure{'s' if failures > 1 else ''}.")
     else:
@@ -373,10 +383,15 @@ def _specifications(project: Project, paths: list[str]) -> list[Specification]:
 
 
 def _warn_unused(project: Project) -> None:
-    """Warn about the [[applies]] entries and notes that match no requirement."""
+    """Warn about the [[applies]] and [[outside]] entries and notes that match no requirement."""
     for entry in project.unused_applies:
         print(
             f"warning: no requirement matches the [[applies]] entry {entry.target}: {entry.quote!r}",
+            file=sys.stderr,
+        )
+    for outside in project.unused_outside:
+        print(
+            f"warning: no requirement matches the [[outside]] entry {outside.target}: {outside.quote or ''!r}",
             file=sys.stderr,
         )
     for note in project.unused_notes:

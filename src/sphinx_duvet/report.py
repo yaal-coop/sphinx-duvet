@@ -75,6 +75,8 @@ class Requirement:
     contents: bytes = field(repr=False, compare=False)
     cites: list[Cite] = field(default_factory=list)
     applies: list[Selector] | None = None
+    outside: str | None = None
+    """Why the requirement is out of the scope of the project, if it is."""
     notes: list[Note] = field(default_factory=list)
     id: str = ""
     """A stable identifier, such as ``rfc7643#3.1-9``: the name of the specification,

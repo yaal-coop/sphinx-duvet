@@ -76,6 +76,17 @@ def load_project(app: Sphinx) -> None:
             subtype="unused",
             location=_location(note.source, note.line),
         )
+    for outside in project.unused_outside:
+        logger.warning(
+            "no requirement matches the [[outside]] entry %s: %r",
+            outside.target,
+            outside.quote or "",
+            type="duvet",
+            subtype="unused",
+            location=_location(
+                targets, _line_of(targets, outside.quote or outside.target)
+            ),
+        )
     _PROJECTS[str(app.srcdir)] = LoadedProject(project, report_path)
 
 

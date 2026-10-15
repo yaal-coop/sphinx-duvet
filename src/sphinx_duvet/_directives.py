@@ -251,6 +251,13 @@ class DuvetReport(_DuvetDirective):
                 container,
             )
             text.append(container)
+        if requirement.outside is not None:
+            text.append(
+                render.paragraph(
+                    nodes.Text(f"Out of scope: {requirement.outside}"),
+                    classes=["duvet-outside-reason"],
+                )
+            )
         level = render.paragraph(
             render.level_badge(requirement.level), classes=["duvet-level-cell"]
         )

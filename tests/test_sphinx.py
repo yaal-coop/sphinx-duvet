@@ -1043,3 +1043,32 @@ def test_autoreport_without_recap(app: SphinxTestApp) -> None:
     folder = Path(app.srcdir) / "compliance"
     assert "duvet-recap" not in (folder / "rfc9999.rst").read_text()
     assert ".. duvet-recap::\n" in (folder / "index.rst").read_text()
+
+
+OUTSIDE = Path(__file__).parent / "projects" / "outside"
+
+
+@pytest.mark.sphinx(
+    "html",
+    testroot="outside",
+    confoverrides={
+        "duvet_root": str(OUTSIDE),
+        "duvet_report_json": str(OUTSIDE / "report.json"),
+    },
+    freshenv=True,
+)
+def test_outside(app: SphinxTestApp) -> None:
+    """Requirements out of scope show their reason, and unused entries are reported."""
+    app.build()
+    html = (Path(app.outdir) / "index.html").read_text()
+    assert (
+        '<p class="duvet-outside-reason">Out of scope: The terms are for the server.</p>'
+        in html
+    )
+    assert 'class="duvet-status duvet-outside"' in html
+    assert 'class="duvet-rule duvet-rule-outside"' in html
+    assert any(
+        "WARNING: no requirement matches the [[outside]] entry "
+        "spec/rfc9997.txt#section-9: ''" in m
+        for m in warnings(app)
+    )

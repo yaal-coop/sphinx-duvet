@@ -11,6 +11,7 @@ KEYS = {
     "exception": State.EXCEPTION,
     "not_expected": State.NOT_EXPECTED,
     "not_applicable": State.NOT_APPLICABLE,
+    "outside": State.OUTSIDE,
 }
 """The name of each state in the configuration."""
 
@@ -23,6 +24,7 @@ DESCRIPTIONS = {
     State.EXCEPTION: "deliberate deviation",
     State.NOT_EXPECTED: "no test expected",
     State.NOT_APPLICABLE: "not applicable",
+    State.OUTSIDE: "out of scope",
 }
 """A short description of each state."""
 
@@ -36,6 +38,7 @@ PRESETS = {
         State.EXCEPTION: "≠",
         State.NOT_EXPECTED: "—",
         State.NOT_APPLICABLE: "∅",
+        State.OUTSIDE: "∅",
     },
     "text": {
         State.OK: "done",
@@ -46,6 +49,7 @@ PRESETS = {
         State.EXCEPTION: "exception",
         State.NOT_EXPECTED: "not expected",
         State.NOT_APPLICABLE: "n/a",
+        State.OUTSIDE: "out of scope",
     },
 }
 """The label sets: ``symbols`` and ``text``."""

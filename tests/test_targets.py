@@ -149,6 +149,14 @@ def test_selectors_as_list(tmp_path: Path) -> None:
             '[[applies]]\ntarget = "a#b"\nquote = "q"\n',
             "Each \\[\\[applies\\]\\] entry needs a 'applies-to'",
         ),
+        (
+            '[[outside]]\ntarget = "a#b"\n',
+            "Each \\[\\[outside\\]\\] entry needs a 'reason'",
+        ),
+        (
+            '[[outside]]\ntarget = "a#b"\nquote = 1\nreason = "r"\n',
+            "Each \\[\\[outside\\]\\] entry needs a 'quote'",
+        ),
     ],
 )
 def test_invalid_targets_file(tmp_path: Path, content: str, message: str) -> None:

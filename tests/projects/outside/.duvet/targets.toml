@@ -1,0 +1,12 @@
+[[outside]]
+target = "spec/rfc9997.txt#section-1"
+reason = "The terms are for the server."
+
+[[outside]]
+target = "spec/rfc9997.txt#section-2"
+quote = "check it."
+reason = "Tables are checked elsewhere."
+
+[[outside]]
+target = "spec/rfc9997.txt#section-9"
+reason = "There is no such section."

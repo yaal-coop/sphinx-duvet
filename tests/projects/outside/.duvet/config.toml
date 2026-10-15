@@ -1,0 +1,13 @@
+"$schema" = "https://awslabs.github.io/duvet/config/v0.4.0.json"
+
+[[source]]
+pattern = "src/**/*.py"
+type = "implementation"
+comment-style = { meta = "##=", content = "##%" }
+
+[[specification]]
+source = "spec/rfc9997.txt"
+format = "ietf"
+
+[report.html]
+enabled = false

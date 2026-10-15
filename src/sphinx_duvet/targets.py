@@ -115,6 +115,18 @@ class Applies:
 
 
 @dataclass(frozen=True)
+class Outside:
+    """Requirements that are out of the scope of the project, with the reason.
+
+    Without a quote, every requirement of the section and its subsections is out of scope.
+    """
+
+    target: str
+    quote: str | None
+    reason: str
+
+
+@dataclass(frozen=True)
 class Dependency:
     """An installed Python package whose annotations count for the project."""
 
@@ -132,6 +144,7 @@ class TargetConfig:
     test_granularity: set[str] = field(default_factory=set)
     defaults: list[Default] = field(default_factory=list)
     applies: list[Applies] = field(default_factory=list)
+    outside: list[Outside] = field(default_factory=list)
     dependencies: list[Dependency] = field(default_factory=list)
     notes: list[tuple[Path, str]] = field(default_factory=list)
     files: list[Path] = field(default_factory=list)
@@ -191,6 +204,7 @@ def load_targets(path: Path) -> TargetConfig:
         test_granularity=granularity | own.test_granularity,
         defaults=own.defaults,
         applies=applies + own.applies,
+        outside=own.outside,
         dependencies=own.dependencies,
         notes=[*notes, (root / ".duvet/notes", "")],
         files=files,
@@ -251,6 +265,14 @@ def _load_own(config: dict[str, Any]) -> TargetConfig:
             )
             for entry in config.get("applies", [])
         ],
+        outside=[
+            Outside(
+                _get(entry, "target", "outside"),
+                _optional(entry, "quote", "outside"),
+                _get(entry, "reason", "outside"),
+            )
+            for entry in config.get("outside", [])
+        ],
         dependencies=[_dependency(entry) for entry in config.get("dependency", [])],
     )
 
@@ -261,6 +283,13 @@ def _get(entry: dict[str, Any], key: str, table: str) -> str:
     if not isinstance(value, str):
         raise ConfigError(f"Each [[{table}]] entry needs a {key!r} string")
     return value
+
+
+def _optional(entry: dict[str, Any], key: str, table: str) -> str | None:
+    """Return an optional string value of a TOML table entry, or raise ConfigError."""
+    if key not in entry:
+        return None
+    return _get(entry, key, table)
 
 
 def _selectors(entry: dict[str, Any], key: str, table: str) -> list[Selector]:

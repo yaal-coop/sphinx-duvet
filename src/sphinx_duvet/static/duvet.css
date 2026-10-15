@@ -81,7 +81,8 @@ abbr.duvet-status {
 }
 
 .duvet-none,
-.duvet-na {
+.duvet-na,
+.duvet-outside {
   color: var(--duvet-muted);
   font-weight: normal;
 }
@@ -280,6 +281,11 @@ a > .duvet-rule-link {
   box-shadow: inset 0 -2px 0 var(--duvet-muted);
 }
 
+/* Out of scope: no background, so the text reads as plain prose. */
+.duvet-rule-outside {
+  box-shadow: inset 0 -1px 0 var(--duvet-muted);
+}
+
 .duvet-rule-exception {
   background: var(--duvet-muted-bg);
   text-decoration: underline dashed 2px var(--duvet-muted);
@@ -356,4 +362,10 @@ table.duvet-spec-table > caption {
   text-align: center;
   background: none;
   border: 0;
+}
+
+/* Why a requirement is out of the scope of the project. */
+.duvet-outside-reason {
+  color: var(--duvet-muted);
+  font-size: 0.9em;
 }
