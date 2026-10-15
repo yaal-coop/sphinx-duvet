@@ -12,6 +12,7 @@ from sphinx_duvet.compliance import State
 from sphinx_duvet.compliance import Status
 from sphinx_duvet.compliance import find_root
 from sphinx_duvet.compliance import in_sections
+from sphinx_duvet.report import Cite
 from sphinx_duvet.report import Report
 from sphinx_duvet.report import Requirement
 from sphinx_duvet.report import read_report
@@ -300,3 +301,13 @@ def test_outside_with_cites(project: Project) -> None:
     assert status.implementation == State.OK
     req.cites = []
     assert project.group(req, project.targets).implementation == State.OUTSIDE
+
+
+def test_citation_with_todo(project: Project) -> None:
+    """A requirement cited in full is partly done when a todo annotation remains."""
+    req = requirement(project, "The server MUST reject invalid tokens.")
+    targets = [t for t in project.targets if t.id == "server-flask"]
+    assert project.group(req, targets).implementation == State.OK
+    todo = Cite(type="TODO", path="src/a.py", line=1, ranges=[], reason="")
+    req.cites.append(todo)
+    assert project.group(req, targets).implementation == State.PARTIAL

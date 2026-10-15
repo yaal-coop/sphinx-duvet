@@ -269,10 +269,12 @@ The implementation state of a requirement for a target is one of:
 - **done**: the annotations of the target cite the whole requirement;
 - **exception**: the requirement is a deliberate deviation;
 - **todo**: an annotation plans the requirement;
-- **partial**: the annotations cite only a part of the requirement;
+- **partial**: the annotations cite only a part of the requirement,
+  or they cite all of it and a todo annotation says what remains to do;
 - **missing**: the requirement has annotations, but none for this target;
 - **not annotated**: the requirement has no annotation at all;
-- **n/a**: the requirement does not apply to the target.
+- **n/a**: the requirement does not apply to the target;
+- **out of scope**: an ``[[outside]]`` entry says that another project implements it.
 
 A test is expected when a part of the requirement is cited as implemented.
 The tests must cover that part. Parts cited as exceptions need no test.

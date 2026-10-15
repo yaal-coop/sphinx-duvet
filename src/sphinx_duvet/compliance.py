@@ -260,10 +260,14 @@ class Project:
             if c.covers is None or matches_any(c.covers, target)
         ]
         implementations = [c for c in cites if c.type in _IMPLEMENTATION_TYPES]
+        todo = any(c.type == "TODO" for c in cites)
         if implementations and requirement.covered_by(implementations):
             types = {c.type for c in implementations}
             implementation = State.EXCEPTION if types == {"EXCEPTION"} else State.OK
-        elif any(c.type == "TODO" for c in cites):
+            # A todo next to a whole citation says what remains to do.
+            if implementation == State.OK and todo:
+                implementation = State.PARTIAL
+        elif todo:
             implementation = State.TODO
         elif implementations:
             implementation = State.PARTIAL
