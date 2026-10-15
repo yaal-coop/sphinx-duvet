@@ -133,9 +133,7 @@ class DuvetReport(_DuvetDirective):
                 item = render.paragraph(
                     render.link(f"{cite.path}:{cite.line}", cite.url)
                 )
-                item += nodes.Text(
-                    f" ({render.CITE_TYPES.get(cite.type, cite.type.lower())})"
-                )
+                item += nodes.Text(f" ({render.cite_kind(cite)})")
                 if cite.reason:
                     item += nodes.Text(f": {cite.reason}")
                 items += nodes.list_item("", item)

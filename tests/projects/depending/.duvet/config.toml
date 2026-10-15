@@ -1,0 +1,19 @@
+"$schema" = "https://awslabs.github.io/duvet/config/v0.4.0.json"
+
+[[source]]
+pattern = "src/**/*.py"
+type = "implementation"
+comment-style = { meta = "##=", content = "##%" }
+
+[[source]]
+pattern = "tests/**/*.py"
+type = "test"
+comment-style = { meta = "##=", content = "##%" }
+
+[[specification]]
+source = "spec/spec.md"
+format = "markdown"
+
+[report.html]
+enabled = false
+blob-link = "https://github.com/example/depending/blob/main"

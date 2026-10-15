@@ -19,17 +19,19 @@ class Note:
     line: int
 
 
-def load_notes(folder: Path) -> list[Note]:
+def load_notes(folder: Path, prefix: str = "") -> list[Note]:
     """Read the duvet-note directives of the .rst files of a folder.
 
     Each note starts with ``.. duvet-note:: spec#section``, has a ``:quote:``
-    option, then an indented body.
+    option, then an indented body. The prefix is added to the specification paths.
     """
     if not folder.is_dir():
         return []
     notes = []
     for path in sorted(folder.glob("**/*.rst")):
-        notes.extend(parse_notes(path.read_text(), path))
+        for note in parse_notes(path.read_text(), path):
+            note.target = prefix + note.target
+            notes.append(note)
     return notes
 
 

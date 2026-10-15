@@ -163,3 +163,17 @@ def test_run_duvet_not_installed(tmp_path: Path) -> None:
     """A missing executable is reported."""
     with pytest.raises(DuvetNotFound, match="Install it with: cargo install duvet"):
         run_duvet(tmp_path, os.fspath(tmp_path / "missing"))
+
+
+def test_run_duvet_config(tmp_path: Path) -> None:
+    """A generated configuration is written next to the original one, then removed."""
+    (tmp_path / ".duvet").mkdir()
+    executable = fake_duvet(
+        tmp_path,
+        "import json, pathlib\n"
+        "config = pathlib.Path(sys.argv[sys.argv.index('--config-path') + 1])\n"
+        "assert config.parent.name == '.duvet'\n"
+        "open(sys.argv[3], 'w').write(json.dumps({'config': config.read_text()}))",
+    )
+    assert run_duvet(tmp_path, executable, "generated") == {"config": "generated"}
+    assert list((tmp_path / ".duvet").iterdir()) == []

@@ -4,8 +4,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from .dependencies import duvet_config
+from .dependencies import locate
 from .notes import Note
 from .notes import load_notes
+from .report import Cite
 from .report import Report
 from .report import Requirement
 from .report import Specification
@@ -99,24 +102,49 @@ class Project:
         """Load the targets and notes of a project, and the report of Duvet."""
         self.root = Path(root)
         self.config = load_targets(self.root / ".duvet/targets.toml")
+        self.installed = [locate(d) for d in self.config.dependencies]
         self.specifications = parse_report(report)
-        self.notes = load_notes(self.root / ".duvet/notes")
+        self.notes = [
+            note
+            for folder, prefix in self.config.notes
+            for note in load_notes(folder, prefix)
+        ]
         requirements = [r for s in self.specifications.values() for r in s.requirements]
         for requirement in requirements:
             for cite in requirement.cites:
-                cite.covers = self.config.covers(cite.path)
+                if not self._from_dependency(cite):
+                    cite.covers = self.config.covers(cite.path)
         self.unused_applies = self._attach_applies(requirements)
         self.unused_notes = self._attach_notes(requirements)
 
     @classmethod
     def from_duvet(cls, root: Path, executable: str = "duvet") -> "Project":
-        """Load a project and run Duvet to get its report."""
-        return cls(root, run_duvet(root, executable))
+        """Load a project and run Duvet to get its report.
+
+        The report includes the annotations of the installed dependencies.
+        """
+        return cls(root, run_duvet(root, executable, duvet_config_for(root)))
 
     @property
     def targets(self) -> list[Target]:
         """The targets of the project."""
         return self.config.targets
+
+    def _from_dependency(self, cite: Cite) -> bool:
+        """Mark a cite that comes from a dependency. Return False if it comes from the project."""
+        for installed in self.installed:
+            path = installed.relative(self.root / cite.path) or _in_site_packages(
+                cite.path, installed.name
+            )
+            if path is None:
+                continue
+            cite.dependency = installed.name
+            cite.version = installed.version
+            cite.path = path
+            cite.link = installed.link(path, cite.line)
+            cite.covers = installed.dependency.covers
+            return True
+        return False
 
     def _attach_applies(self, requirements: list[Requirement]) -> list[Applies]:
         """Set the targets of the requirements. Return the entries that match nothing."""
@@ -143,9 +171,19 @@ class Project:
     def dependencies(self, spec: Specification) -> list[Path]:
         """Return the files whose changes affect the report of a specification."""
         paths = {spec.path, ".duvet/targets.toml", ".duvet/config.toml"}
+        packages = {
+            installed.name: installed.path.parent for installed in self.installed
+        }
+        dependency_files = set()
         for requirement in spec.requirements:
-            paths.update(cite.path for cite in requirement.cites)
+            for cite in requirement.cites:
+                if cite.dependency is None:
+                    paths.add(cite.path)
+                else:
+                    dependency_files.add(packages[cite.dependency] / cite.path)
         files = [self.root / path for path in sorted(paths)]
+        files += self.config.files
+        files += sorted(dependency_files)
         files += [note.source for note in self.notes]
         return [path for path in dict.fromkeys(files) if path.exists()]
 
@@ -194,9 +232,15 @@ class Project:
             c
             for c in requirement.cites
             if c.type in _TEST_TYPES
+            and c.dependency is None
             and (c.covers is None or matches_any(_project(c.covers, keys), target))
         ]
-        tested = bool(tests) and requirement.covered_by(tests, within=citations)
+        local = [c for c in citations if c.dependency is None]
+        if not local:
+            # The tests of a dependency are its own concern, but a test of the project counts.
+            tested = bool(tests) and requirement.covered_by(tests, within=citations)
+            return Status(implementation, State.OK if tested else State.NOT_EXPECTED)
+        tested = bool(tests) and requirement.covered_by(tests, within=local)
         return Status(implementation, State.OK if tested else State.MISSING)
 
     def group(self, requirement: Requirement, targets: list[Target]) -> Status:
@@ -252,6 +296,26 @@ class Project:
         for target in targets:
             groups.setdefault(target.attrs.get(group_by, "?"), []).append(target)
         return list(groups.items())
+
+
+def duvet_config_for(root: Path) -> str | None:
+    """Return the Duvet configuration of a project with its dependencies, if it has some."""
+    config = load_targets(Path(root) / ".duvet/targets.toml")
+    if not config.dependencies:
+        return None
+    return duvet_config(Path(root), [locate(d) for d in config.dependencies])
+
+
+def _in_site_packages(path: str, package: str) -> str | None:
+    """Return the path of a file from site-packages, if it is in the package.
+
+    A report produced on another machine has other site-packages folders.
+    """
+    marker = f"site-packages/{package}/"
+    index = path.find(marker)
+    if index < 0:
+        return None
+    return path[index + len("site-packages/") :]
 
 
 def _project(selectors: list[Selector], keys: set[str]) -> list[Selector]:

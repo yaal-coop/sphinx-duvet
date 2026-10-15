@@ -14,6 +14,7 @@ from sphinx_duvet.compliance import find_root
 from sphinx_duvet.compliance import in_sections
 from sphinx_duvet.report import Report
 from sphinx_duvet.report import Requirement
+from sphinx_duvet.report import read_report
 from sphinx_duvet.targets import parse_selectors
 
 
@@ -220,3 +221,21 @@ def test_in_sections(project: Project, sections: list[str], expected: bool) -> N
     """A requirement belongs to its section and to the parent sections."""
     req = requirement(project, "The client MAY cache the response.")
     assert in_sections(req, sections) is expected
+
+
+def test_included_project() -> None:
+    """Shared targets, applicability, notes and requirements come from an included project."""
+    root = Path(__file__).parent / "projects" / "including"
+    project = Project(root, read_report(root / "report.json"))
+    assert project.unused_applies == []
+    assert project.unused_notes == []
+    spec = project.specifications["rfc/spec.md"]
+    assert [statuses(project, r.text) for r in spec.requirements] == [
+        ["ok/ok", "n/a/n/a", "ok/ok"],
+        ["n/a/n/a", "unannotated/-", "n/a/n/a"],
+        ["ok/missing", "n/a/n/a", "ok/missing"],
+    ]
+    assert spec.requirements[0].notes[0].body == ["A shared note about replies."]
+    files = project.dependencies(spec)
+    assert root / "rfc/.duvet/targets.toml" in files
+    assert root / "rfc/.duvet/notes/spec.rst" in files

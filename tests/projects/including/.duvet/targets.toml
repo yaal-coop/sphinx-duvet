@@ -1,0 +1,10 @@
+include = "rfc"
+
+[[target]]
+id = "server-local"
+role = "server"
+local = "true"
+
+[[default]]
+pattern = "src/**"
+covers = "role=server"

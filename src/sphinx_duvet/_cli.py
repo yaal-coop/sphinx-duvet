@@ -1,6 +1,7 @@
 """The sphinx-duvet command: compliance reports in the terminal, and checks for the CI."""
 
 import argparse
+import json
 import os
 import shutil
 import sys
@@ -12,6 +13,7 @@ from typing import TextIO
 from .compliance import Project
 from .compliance import State
 from .compliance import Status
+from .compliance import duvet_config_for
 from .compliance import find_root
 from .labels import DESCRIPTIONS
 from .labels import PRESETS
@@ -20,6 +22,7 @@ from .report import DuvetNotFound
 from .report import Requirement
 from .report import Specification
 from .report import read_report
+from .report import run_duvet
 from .views import SHOW
 from .views import View
 
@@ -324,14 +327,36 @@ def _parser() -> argparse.ArgumentParser:
         help="also fail on [[applies]] entries and notes that match no requirement",
     )
     command.set_defaults(command=check)
+    command = commands.add_parser(
+        "export",
+        help="write the Duvet report, with the annotations of the dependencies",
+    )
+    command.add_argument("output", type=Path, help="the JSON file to write")
+    command.add_argument("--root", type=Path, help="the folder that contains .duvet/")
+    command.add_argument("--duvet", default="duvet", help="the Duvet executable")
+    command.set_defaults(command=export)
     return parser
+
+
+def export(args: argparse.Namespace) -> int:
+    """Run Duvet with the dependencies, and write its v2 JSON report."""
+    root = _root(args)
+    report = run_duvet(root, args.duvet, duvet_config_for(root))
+    args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    return 0
+
+
+def _root(args: argparse.Namespace) -> Path:
+    """Return the root of the project, given or found above the current folder."""
+    root: Path | None = args.root or find_root(Path.cwd())
+    if root is None:
+        raise _UsageError("no .duvet/config.toml found, use --root")
+    return root
 
 
 def _load(args: argparse.Namespace) -> Project:
     """Load the project and its report."""
-    root = args.root or find_root(Path.cwd())
-    if root is None:
-        raise _UsageError("no .duvet/config.toml found, use --root")
+    root = _root(args)
     if args.report_json is None:
         return Project.from_duvet(root, args.duvet)
     return Project(root, read_report(args.report_json))
@@ -366,6 +391,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     command: Callable[..., int] = args.command
     try:
+        if command is export:
+            return export(args)
         project = _load(args)
         view = View.parse(
             args.targets,

@@ -1,0 +1,183 @@
+{
+  "version": "2.0",
+  "sources": {
+    "https://awslabs.github.io/duvet/v2/sources.json#inline": {
+      "src-2f0b704726e8bb97": {
+        "file_name": "rfc/spec.md",
+        "contents": "# Shared protocol\n\n## Requests\n\nThe server MUST reply.\n\nThe client MUST ask.\n\nThe server answers in the same language as the request.\n"
+      }
+    },
+    "https://awslabs.github.io/duvet/v2/sources.json#linked": {
+      "lnk-2014467d2cf195db": {
+        "file_name": ".duvet/requirements/rfc/spec/requests.toml"
+      },
+      "lnk-7e153b1def5b95f5": {
+        "file_name": "rfc/.duvet/spec/spec.toml"
+      },
+      "lnk-8da05963cabfe41a": {
+        "file_name": "src/server.py"
+      },
+      "lnk-c0d211cf8de95ba8": {
+        "file_name": "tests/test_server.py"
+      }
+    }
+  },
+  "annotations": {
+    "https://awslabs.github.io/duvet/v2/annotations.json#specification": {
+      "spc-e7ee61d5e6713f4d": {
+        "source": {
+          "src": "src-2f0b704726e8bb97",
+          "start": 0,
+          "end": 134
+        },
+        "title": "Shared protocol",
+        "format": "markdown"
+      }
+    },
+    "https://awslabs.github.io/duvet/v2/annotations.json#section": {
+      "sec-a161c1a23c6e810a": {
+        "source": {
+          "src": "src-2f0b704726e8bb97",
+          "start": 22,
+          "end": 133
+        },
+        "short_name": "requests",
+        "long_name": "Requests"
+      },
+      "sec-ec67b7186d30c9e9": {
+        "source": {
+          "src": "src-2f0b704726e8bb97",
+          "start": 2,
+          "end": 17
+        },
+        "short_name": "shared-protocol",
+        "long_name": "Shared protocol"
+      }
+    },
+    "https://awslabs.github.io/duvet/v2/annotations.json#requirement": {
+      "req-2761ffc0e7105083": {
+        "source": {
+          "src": "lnk-7e153b1def5b95f5",
+          "line": 1
+        },
+        "origin": {
+          "src": "src-2f0b704726e8bb97",
+          "ranges": [
+            {
+              "start": 78,
+              "end": 133
+            }
+          ]
+        },
+        "level": "SHOULD",
+        "coverage": {
+          "cite-8c9f027ded36654c": [
+            {
+              "start": 78,
+              "end": 133
+            }
+          ]
+        }
+      },
+      "req-3e4c7720ee9708a7": {
+        "source": {
+          "src": "lnk-2014467d2cf195db",
+          "line": 11
+        },
+        "origin": {
+          "src": "src-2f0b704726e8bb97",
+          "ranges": [
+            {
+              "start": 32,
+              "end": 54
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-117c0cb0828773da": [
+            {
+              "start": 32,
+              "end": 54
+            }
+          ],
+          "cite-2295dd2f0e202b0d": [
+            {
+              "start": 32,
+              "end": 54
+            }
+          ]
+        }
+      },
+      "req-67479d4a21fe2cdb": {
+        "source": {
+          "src": "lnk-2014467d2cf195db",
+          "line": 17
+        },
+        "origin": {
+          "src": "src-2f0b704726e8bb97",
+          "ranges": [
+            {
+              "start": 56,
+              "end": 76
+            }
+          ]
+        },
+        "level": "MUST"
+      }
+    },
+    "https://awslabs.github.io/duvet/v2/annotations.json#cite": {
+      "cite-117c0cb0828773da": {
+        "source": {
+          "src": "lnk-8da05963cabfe41a",
+          "line": 2
+        },
+        "target": {
+          "src": "src-2f0b704726e8bb97",
+          "ranges": [
+            {
+              "start": 32,
+              "end": 54
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-2295dd2f0e202b0d": {
+        "source": {
+          "src": "lnk-c0d211cf8de95ba8",
+          "line": 2
+        },
+        "target": {
+          "src": "src-2f0b704726e8bb97",
+          "ranges": [
+            {
+              "start": 32,
+              "end": 54
+            }
+          ]
+        },
+        "type": "TEST",
+        "level": "AUTO"
+      },
+      "cite-8c9f027ded36654c": {
+        "source": {
+          "src": "lnk-8da05963cabfe41a",
+          "line": 8
+        },
+        "target": {
+          "src": "src-2f0b704726e8bb97",
+          "ranges": [
+            {
+              "start": 78,
+              "end": 133
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      }
+    }
+  }
+}

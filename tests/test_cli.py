@@ -230,3 +230,51 @@ def test_module(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(SystemExit) as exit_info:
         runpy.run_module("sphinx_duvet", run_name="__main__")
     assert exit_info.value.code == 0
+
+
+def test_export(
+    capsys: pytest.CaptureFixture[str], depending_root: Path, tmp_path: Path
+) -> None:
+    """The export runs Duvet with the dependencies, and writes its report."""
+    executable = tmp_path / "duvet"
+    executable.write_text(
+        f"#!{sys.executable}\n"
+        "import json, pathlib, sys\n"
+        "config = pathlib.Path(sys.argv[sys.argv.index('--config-path') + 1]).read_text()\n"
+        "open(sys.argv[3], 'w').write(json.dumps({'café': config}))\n"
+    )
+    executable.chmod(0o755)
+    output = tmp_path / "report.json"
+    code = main(
+        [
+            "export",
+            str(output),
+            "--root",
+            str(depending_root),
+            "--duvet",
+            str(executable),
+        ]
+    )
+    assert code == 0
+    report = json.loads(output.read_text())
+    assert "site-packages/fakelib/**/*.py" in report["café"]
+    assert output.read_text().startswith('{\n  "café"')
+
+
+def test_dependency_report(
+    capsys: pytest.CaptureFixture[str], depending_root: Path
+) -> None:
+    """Requirements implemented by a dependency do not need a test in the project."""
+    code, out, _ = run(
+        capsys,
+        "check",
+        "--root",
+        str(depending_root),
+        "--report-json",
+        str(depending_root / "report.json"),
+        "--targets",
+        "role=server",
+        "--fail-on",
+        "untested",
+    )
+    assert (code, out) == (0, "No failure.\n")

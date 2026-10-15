@@ -1,0 +1,24 @@
+[[target]]
+id = "server"
+role = "server"
+
+[[target]]
+id = "client"
+role = "client"
+
+[[default]]
+pattern = "src/server.py"
+covers = "role=server"
+
+[[default]]
+pattern = "src/client.py"
+covers = "role=client"
+
+[[default]]
+pattern = "tests/**"
+covers = "role=server"
+
+[[dependency]]
+package = "fakelib"
+covers = "role=server"
+link = "https://github.com/example/fakelib/blob/v{version}/src/{path}"

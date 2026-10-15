@@ -5,6 +5,8 @@ from collections.abc import Sequence
 
 from docutils import nodes
 
+from .report import Cite
+
 # Key words of RFC 2119 and RFC 8174, the longest first, with their strength.
 _BCP14 = {
     "MUST NOT": "must",
@@ -28,6 +30,14 @@ CITE_TYPES = {
     "TODO": "todo",
     "TEST": "test",
 }
+
+
+def cite_kind(cite: Cite) -> str:
+    """Return the kind of a cite, and the dependency it comes from."""
+    kind = CITE_TYPES.get(cite.type, cite.type.lower())
+    if cite.dependency is None:
+        return kind
+    return f"{kind}, {cite.dependency} {cite.version}".rstrip()
 
 
 def paragraph(*children: nodes.Node, classes: Sequence[str] = ()) -> nodes.paragraph:

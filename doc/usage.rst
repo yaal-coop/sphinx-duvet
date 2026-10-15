@@ -244,6 +244,73 @@ It matches the targets that have every attribute: ``role=server,framework=flask`
 Several selectors are separated by semicolons or new lines.
 A target matches if it matches one of them: ``role=server; role=client``.
 
+Shared configuration
+~~~~~~~~~~~~~~~~~~~~
+
+Several projects can share the specifications, the targets, the ``[[applies]]`` entries,
+the requirements without key words and the notes.
+Put them in a project of their own, and add it to each project as a git submodule:
+
+.. code-block:: shell
+
+   git submodule add https://github.com/example/specs rfc
+
+Then include it in :file:`.duvet/targets.toml`:
+
+.. code-block:: toml
+
+   include = "rfc"
+
+The included project brings its targets, its ``[[applies]]`` entries,
+its ``test-granularity`` and its notes.
+Its specification paths get the folder of the submodule as a prefix:
+``spec.md`` in the shared project is ``rfc/spec.md`` in the project.
+Its ``[[default]]`` and ``[[dependency]]`` entries are its own, and are not included.
+
+Duvet still needs the specifications and the requirements without key words
+in :file:`.duvet/config.toml`:
+
+.. code-block:: toml
+
+   [[specification]]
+   source = "rfc/rfc7643.txt"
+   format = "ietf"
+
+   [[requirement]]
+   pattern = "rfc/.duvet/spec/**/*.toml"
+
+Annotations use the path of the project: ``##= rfc/rfc7643.txt#section-3``.
+
+Dependencies
+~~~~~~~~~~~~
+
+The annotations of the installed Python packages that a project depends on can count for it.
+For instance, a Django integration can rely on the models of another package:
+
+.. code-block:: toml
+
+   [[dependency]]
+   package = "scim2_models"
+   covers = "role=server; role=client"
+   link = "https://github.com/python-scim/scim2-models/blob/{version}/{path}"
+
+``covers`` gives the targets that the annotations of the package cover, every target by default.
+``link`` gives the address of a file of the package in its repository,
+from its version and its path in the package, such as ``scim2_models/base.py``.
+``comment-style`` sets the comment style of its annotations,
+the style of the first source of the project by default.
+
+sphinx-duvet finds the package in the current Python environment,
+and adds it to the sources of Duvet.
+The reports then show the annotations of the installed version.
+
+Packages do not ship their tests. So a requirement that only a dependency implements
+needs no test in the project: the dependency tests it in its own repository.
+A test of the project still counts.
+
+To use ``duvet_report_json`` or ``--report-json`` with dependencies,
+produce the report with ``sphinx-duvet export`` rather than ``duvet report``.
+
 Notes
 -----
 
@@ -287,7 +354,11 @@ Like the documentation, it runs Duvet, or reads a report given with ``--report-j
    The requirements that fail, with their column and the reason.
    The command fails if there are some.
 
-The three commands take the specifications to show, all by default,
+``export``
+   Runs Duvet with the dependencies, and writes its report:
+   ``sphinx-duvet export report.json``.
+
+The ``report``, ``recap`` and ``check`` commands take the specifications to show, all by default,
 and the options of the directives: ``--targets``, ``--group-by``, ``--sections``, ``--levels``,
 and ``--show`` for ``report``. ``--labels`` is ``symbols`` or ``text``.
 

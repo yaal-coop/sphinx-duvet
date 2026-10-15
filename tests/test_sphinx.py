@@ -501,3 +501,24 @@ def test_text_builder(app: SphinxTestApp) -> None:
     text = (Path(app.outdir) / "report.txt").read_text()
     assert "✔ done · ✘ missing" in text
     assert "(done)" not in text
+
+
+@pytest.mark.sphinx("html", testroot="depending", freshenv=True)
+def test_dependency_cites(
+    make_app: Callable[..., SphinxTestApp], app_params: tuple, depending_root: Path
+) -> None:
+    """Cites of a dependency show its name and version, and link to its repository."""
+    args, kwargs = app_params
+    kwargs["confoverrides"] = {
+        "duvet_root": str(depending_root),
+        "duvet_report_json": str(depending_root / "report.json"),
+    }
+    app = make_app(*args, **kwargs)
+    app.build()
+    doctree = app.env.get_doctree("index")
+    assert "fakelib/__init__.py:2 (implementation, fakelib 1.2.3)" in doctree.astext()
+    uris = [ref["refuri"] for ref in doctree.findall(nodes.reference)]
+    assert (
+        "https://github.com/example/fakelib/blob/v1.2.3/src/fakelib/__init__.py#L2"
+        in uris
+    )

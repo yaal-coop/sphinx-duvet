@@ -4,6 +4,7 @@ import pytest
 
 from sphinx_duvet.targets import ConfigError
 from sphinx_duvet.targets import Default
+from sphinx_duvet.targets import Dependency
 from sphinx_duvet.targets import Selector
 from sphinx_duvet.targets import Target
 from sphinx_duvet.targets import TargetConfig
@@ -154,5 +155,100 @@ def test_invalid_targets_file(tmp_path: Path, content: str, message: str) -> Non
     """Missing keys and non-string attributes are reported."""
     path = tmp_path / "targets.toml"
     path.write_text(content)
+    with pytest.raises(ConfigError, match=message):
+        load_targets(path)
+
+
+def test_dependencies(tmp_path: Path) -> None:
+    """Dependencies have a package, and optionally covered targets, a link and a comment style."""
+    path = tmp_path / "targets.toml"
+    path.write_text(
+        '[[dependency]]\npackage = "a"\n'
+        '[[dependency]]\npackage = "b"\ncovers = "role=server"\nlink = "https://x/{path}"\n'
+        'comment-style = { meta = "//=", content = "//#" }\n'
+    )
+    first, second = load_targets(path).dependencies
+    assert first == Dependency("a")
+    assert first.covers is None
+    assert second.covers == parse_selectors("role=server")
+    assert second.link == "https://x/{path}"
+    assert second.comment_style == {"meta": "//=", "content": "//#"}
+
+
+@pytest.mark.parametrize(
+    "content,message",
+    [
+        ("[[dependency]]\n", "Each \\[\\[dependency\\]\\] entry needs a 'package'"),
+        ('[[dependency]]\npackage = "a"\nlink = 1\n', "'link' must be a string"),
+        (
+            '[[dependency]]\npackage = "a"\ncomment-style = "##="\n',
+            "'comment-style' must be a table of strings",
+        ),
+    ],
+)
+def test_invalid_dependencies(tmp_path: Path, content: str, message: str) -> None:
+    """Invalid dependencies are reported."""
+    path = tmp_path / "targets.toml"
+    path.write_text(content)
+    with pytest.raises(ConfigError, match=message):
+        load_targets(path)
+
+
+INCLUDING = Path(__file__).parent / "projects" / "including"
+
+
+def test_include() -> None:
+    """An included project brings its targets, applicability, granularity and notes."""
+    config = load_targets(INCLUDING / ".duvet/targets.toml")
+    assert [t.id for t in config.targets] == ["server", "client", "server-local"]
+    assert config.test_granularity == {"role"}
+    assert [a.target for a in config.applies] == ["rfc/spec.md#requests"] * 3
+    assert [d.pattern for d in config.defaults] == ["src/**"]
+    assert config.notes == [
+        (INCLUDING / "rfc/.duvet/notes", "rfc/"),
+        (INCLUDING / ".duvet/notes", ""),
+    ]
+    assert config.files == [
+        INCLUDING / ".duvet/targets.toml",
+        INCLUDING / "rfc/.duvet/targets.toml",
+    ]
+
+
+def make_project(root: Path, content: str) -> Path:
+    """Write the targets.toml of a project, and return its path."""
+    (root / ".duvet").mkdir(parents=True)
+    path = root / ".duvet/targets.toml"
+    path.write_text(content)
+    return path
+
+
+def test_include_list(tmp_path: Path) -> None:
+    """Several projects can be included."""
+    make_project(tmp_path / "a", '[[target]]\nid = "a"\n')
+    make_project(tmp_path / "b", '[[target]]\nid = "b"\n')
+    path = make_project(tmp_path / "main", 'include = ["../a", "../b/"]\n')
+    assert [t.id for t in load_targets(path).targets] == ["a", "b"]
+    assert load_targets(path).notes[1] == (tmp_path / "main/../b/.duvet/notes", "../b/")
+
+
+def test_include_without_targets(tmp_path: Path) -> None:
+    """A project that includes only projects without targets has the default target."""
+    make_project(tmp_path / "a", "")
+    path = make_project(tmp_path / "main", 'include = "../a"\n')
+    assert load_targets(path).targets == [Target("default")]
+
+
+@pytest.mark.parametrize(
+    "content,message",
+    [
+        ('include = "missing"\n', "git submodule update --init"),
+        ("include = 1\n", "'include' must be a string or an array of strings"),
+        ('include = "../a"\n[[target]]\nid = "a"\n', "Target 'a' is defined twice"),
+    ],
+)
+def test_invalid_include(tmp_path: Path, content: str, message: str) -> None:
+    """Missing included projects, invalid includes and duplicate targets are reported."""
+    make_project(tmp_path / "a", '[[target]]\nid = "a"\n')
+    path = make_project(tmp_path / "main", content)
     with pytest.raises(ConfigError, match=message):
         load_targets(path)

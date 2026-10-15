@@ -1,0 +1,21 @@
+"$schema" = "https://awslabs.github.io/duvet/config/v0.4.0.json"
+
+[[source]]
+pattern = "src/**/*.py"
+type = "implementation"
+comment-style = { meta = "##=", content = "##%" }
+
+[[source]]
+pattern = "tests/**/*.py"
+type = "test"
+comment-style = { meta = "##=", content = "##%" }
+
+[[specification]]
+source = "rfc/spec.md"
+format = "markdown"
+
+[[requirement]]
+pattern = "rfc/.duvet/spec/**/*.toml"
+
+[report.html]
+enabled = false

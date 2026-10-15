@@ -43,10 +43,19 @@ class Cite:
     reason: str = ""
     blob_link: str | None = None
     covers: list[Selector] | None = None
+    dependency: str | None = None
+    version: str = ""
+    link: str | None = None
 
     @property
     def url(self) -> str | None:
-        """The link to the annotation in the repository, if Duvet knows the blob link."""
+        """The link to the annotation in its repository, if it is known.
+
+        Annotations of the project use the blob link of the Duvet report.
+        Annotations of a dependency use the link of the dependency.
+        """
+        if self.dependency is not None:
+            return self.link
         if self.blob_link is None:
             return None
         return f"{self.blob_link.rstrip('/')}/{self.path}#L{self.line}"
@@ -120,26 +129,47 @@ def read_report(path: Path) -> Report:
     return report
 
 
-def run_duvet(root: Path, executable: str = "duvet") -> Report:
-    """Run Duvet in a project and return its v2 JSON report."""
+def run_duvet(
+    root: Path, executable: str = "duvet", config: str | None = None
+) -> Report:
+    """Run Duvet in a project and return its v2 JSON report.
+
+    ``config`` replaces the content of :file:`.duvet/config.toml`.
+    """
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "report.json"
-        try:
-            subprocess.run(
-                [executable, "report", "--json-v2", str(path)],
-                cwd=root,
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except FileNotFoundError as exc:
-            raise DuvetNotFound(
-                f"Duvet is not installed: {executable!r} not found. "
-                "Install it with: cargo install duvet --locked"
-            ) from exc
-        except subprocess.CalledProcessError as exc:
-            raise DuvetError(f"Duvet failed:\n{exc.stderr}") from exc
-        return read_report(path)
+        command = [executable, "report", "--json-v2", str(path)]
+        if config is None:
+            return _run(command, root, executable, path)
+        # Duvet reads the extracted requirements next to its configuration,
+        # so the generated configuration must be in the .duvet folder.
+        with tempfile.NamedTemporaryFile(
+            "w", suffix=".toml", prefix=".sphinx-duvet-", dir=root / ".duvet"
+        ) as config_file:
+            config_file.write(config)
+            config_file.flush()
+            command += ["--config-path", config_file.name]
+            return _run(command, root, executable, path)
+
+
+def _run(command: list[str], root: Path, executable: str, path: Path) -> Report:
+    """Run a Duvet command that writes a v2 JSON report, and read the report."""
+    try:
+        subprocess.run(
+            command,
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError as exc:
+        raise DuvetNotFound(
+            f"Duvet is not installed: {executable!r} not found. "
+            "Install it with: cargo install duvet --locked"
+        ) from exc
+    except subprocess.CalledProcessError as exc:
+        raise DuvetError(f"Duvet failed:\n{exc.stderr}") from exc
+    return read_report(path)
 
 
 def parse_report(report: Report) -> dict[str, Specification]:

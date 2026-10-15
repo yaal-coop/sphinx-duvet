@@ -1,0 +1,28 @@
+test-granularity = ["role"]
+
+[[target]]
+id = "server"
+role = "server"
+
+[[target]]
+id = "client"
+role = "client"
+
+[[applies]]
+target = "spec.md#requests"
+quote = "The server MUST reply."
+applies-to = "role=server"
+
+[[applies]]
+target = "spec.md#requests"
+quote = "The client MUST ask."
+applies-to = "role=client"
+
+[[applies]]
+target = "spec.md#requests"
+quote = "The server answers in the same language as the request."
+applies-to = "role=server"
+
+[[default]]
+pattern = "**"
+covers = "role=client"

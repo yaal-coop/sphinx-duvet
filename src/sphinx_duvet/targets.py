@@ -107,6 +107,16 @@ class Applies:
     applies_to: list[Selector] = field(hash=False)
 
 
+@dataclass(frozen=True)
+class Dependency:
+    """An installed Python package whose annotations count for the project."""
+
+    package: str
+    covers: list[Selector] | None = field(default=None, hash=False)
+    link: str | None = None
+    comment_style: dict[str, str] | None = field(default=None, hash=False)
+
+
 @dataclass
 class TargetConfig:
     """The targets of a project, read from :file:`.duvet/targets.toml`."""
@@ -115,6 +125,9 @@ class TargetConfig:
     test_granularity: set[str] = field(default_factory=set)
     defaults: list[Default] = field(default_factory=list)
     applies: list[Applies] = field(default_factory=list)
+    dependencies: list[Dependency] = field(default_factory=list)
+    notes: list[tuple[Path, str]] = field(default_factory=list)
+    files: list[Path] = field(default_factory=list)
 
     def covers(self, path: str) -> list[Selector] | None:
         """Return the targets covered by the annotations of a file.
@@ -137,16 +150,84 @@ class TargetConfig:
 
 
 def load_targets(path: Path) -> TargetConfig:
-    """Read a :file:`targets.toml` file.
+    """Read a :file:`targets.toml` file, and the projects it includes.
 
     Without the file, the project has a single ``default`` target.
+    An included project brings its targets, its ``[[applies]]`` entries,
+    its test granularity and its notes. Their specification paths get the
+    path of the included project as a prefix.
     """
+    root = path.parent.parent
     if not path.exists():
-        return TargetConfig([Target("default")])
+        return TargetConfig([Target("default")], notes=[(root / ".duvet/notes", "")])
     config = tomllib.loads(path.read_text())
-    targets = [_target(entry) for entry in config.get("target", [])]
+    own = _load_own(config)
+    targets: list[Target] = []
+    applies: list[Applies] = []
+    granularity: set[str] = set()
+    notes: list[tuple[Path, str]] = []
+    files = [path]
+    for include in _includes(config):
+        included = _load_included(root, include)
+        targets += included.targets
+        applies += included.applies
+        granularity |= included.test_granularity
+        notes += included.notes
+        files += included.files
+    targets += own.targets
+    ids = [t.id for t in targets]
+    duplicates = sorted({i for i in ids if ids.count(i) > 1})
+    if duplicates:
+        raise ConfigError(f"Target {duplicates[0]!r} is defined twice")
     return TargetConfig(
         targets=targets or [Target("default")],
+        test_granularity=granularity | own.test_granularity,
+        defaults=own.defaults,
+        applies=applies + own.applies,
+        dependencies=own.dependencies,
+        notes=[*notes, (root / ".duvet/notes", "")],
+        files=files,
+    )
+
+
+def _includes(config: dict[str, Any]) -> list[str]:
+    """Return the included projects of a configuration."""
+    value = config.get("include", [])
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        raise ConfigError("'include' must be a string or an array of strings")
+    return value
+
+
+def _load_included(root: Path, include: str) -> TargetConfig:
+    """Read the configuration of an included project, with prefixed specification paths.
+
+    Included projects are read without their own includes.
+    """
+    folder = root / include
+    path = folder / ".duvet/targets.toml"
+    if not path.exists():
+        raise ConfigError(
+            f"The included project {include!r} has no .duvet/targets.toml. "
+            "If it is a git submodule, run: git submodule update --init"
+        )
+    prefix = include.rstrip("/") + "/"
+    included = _load_own(tomllib.loads(path.read_text()))
+    included.applies = [
+        Applies(prefix + entry.target, entry.quote, entry.applies_to)
+        for entry in included.applies
+    ]
+    included.notes = [(folder / ".duvet/notes", prefix)]
+    included.files = [path]
+    return included
+
+
+def _load_own(config: dict[str, Any]) -> TargetConfig:
+    """Read the entries of a configuration, without its includes."""
+    targets = [_target(entry) for entry in config.get("target", [])]
+    return TargetConfig(
+        targets=targets,
         test_granularity=set(config.get("test-granularity", [])),
         defaults=[
             Default(
@@ -163,6 +244,7 @@ def load_targets(path: Path) -> TargetConfig:
             )
             for entry in config.get("applies", [])
         ],
+        dependencies=[_dependency(entry) for entry in config.get("dependency", [])],
     )
 
 
@@ -180,6 +262,27 @@ def _selectors(entry: dict[str, Any], key: str, table: str) -> list[Selector]:
     if isinstance(value, list) and all(isinstance(item, str) for item in value):
         return parse_selectors(value)
     return parse_selectors(_get(entry, key, table))
+
+
+def _dependency(entry: dict[str, Any]) -> Dependency:
+    """Read a [[dependency]] entry. Without covers, its annotations cover every target."""
+    package = _get(entry, "package", "dependency")
+    link = entry.get("link")
+    if link is not None and not isinstance(link, str):
+        raise ConfigError(f"Dependency {package!r}: 'link' must be a string")
+    style = entry.get("comment-style")
+    if style is not None and not (
+        isinstance(style, dict) and all(isinstance(v, str) for v in style.values())
+    ):
+        raise ConfigError(
+            f"Dependency {package!r}: 'comment-style' must be a table of strings"
+        )
+    return Dependency(
+        package=package,
+        covers=_selectors(entry, "covers", "dependency") if "covers" in entry else None,
+        link=link,
+        comment_style=style,
+    )
 
 
 def _target(entry: dict[str, Any]) -> Target:

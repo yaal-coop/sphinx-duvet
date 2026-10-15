@@ -1,0 +1,308 @@
+{
+  "version": "2.0",
+  "repositories": {
+    "repo-150b008641a12d90": {
+      "blob_link": "https://github.com/example/depending/blob/main"
+    }
+  },
+  "sources": {
+    "https://awslabs.github.io/duvet/v2/sources.json#inline": {
+      "src-d3a7ffbd5e4d1e64": {
+        "file_name": "spec/spec.md",
+        "contents": "# Example protocol\n\n## Requests\n\nThe server MUST reply.\n\nThe server MUST validate the request and MUST log it.\n\nThe server MUST answer quickly.\n\nThe client MUST ask.\n"
+      }
+    },
+    "https://awslabs.github.io/duvet/v2/sources.json#linked": {
+      "lnk-2e8b6ae08b293f29": {
+        "file_name": "src/client.py",
+        "repository": "repo-150b008641a12d90"
+      },
+      "lnk-6edca64386039555": {
+        "file_name": "src/server.py",
+        "repository": "repo-150b008641a12d90"
+      },
+      "lnk-8e9b510c442b0573": {
+        "file_name": "tests/test_server.py",
+        "repository": "repo-150b008641a12d90"
+      },
+      "lnk-e77a82cc46b7cab6": {
+        "file_name": ".duvet/requirements/spec/spec/requests.toml",
+        "repository": "repo-150b008641a12d90"
+      },
+      "lnk-efbbad21e7182d70": {
+        "file_name": "site-packages/fakelib/__init__.py",
+        "repository": "repo-150b008641a12d90"
+      }
+    }
+  },
+  "annotations": {
+    "https://awslabs.github.io/duvet/v2/annotations.json#specification": {
+      "spc-3cb315e0791e5e1a": {
+        "source": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "start": 0,
+          "end": 166
+        },
+        "title": "Example protocol",
+        "format": "markdown"
+      }
+    },
+    "https://awslabs.github.io/duvet/v2/annotations.json#section": {
+      "sec-54b4afa065490a80": {
+        "source": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "start": 2,
+          "end": 18
+        },
+        "short_name": "example-protocol",
+        "long_name": "Example protocol"
+      },
+      "sec-8a01c90d37749dfe": {
+        "source": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "start": 23,
+          "end": 165
+        },
+        "short_name": "requests",
+        "long_name": "Requests"
+      }
+    },
+    "https://awslabs.github.io/duvet/v2/annotations.json#requirement": {
+      "req-6d87c90f5ff5bd2e": {
+        "source": {
+          "src": "lnk-e77a82cc46b7cab6",
+          "line": 19
+        },
+        "origin": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 57,
+              "end": 110
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-1b5aa21e777ef0a4": [
+            {
+              "start": 94,
+              "end": 110
+            }
+          ],
+          "cite-37680d31a369b094": [
+            {
+              "start": 57,
+              "end": 93
+            }
+          ],
+          "cite-6d4b25159921c5e5": [
+            {
+              "start": 94,
+              "end": 110
+            }
+          ]
+        }
+      },
+      "req-971f73537a666b0f": {
+        "source": {
+          "src": "lnk-e77a82cc46b7cab6",
+          "line": 25
+        },
+        "origin": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 112,
+              "end": 143
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-7e8da0708dfe1eb6": [
+            {
+              "start": 112,
+              "end": 143
+            }
+          ],
+          "cite-b9a72f2b2162963b": [
+            {
+              "start": 112,
+              "end": 143
+            }
+          ]
+        }
+      },
+      "req-b4c2c48cd557ad82": {
+        "source": {
+          "src": "lnk-e77a82cc46b7cab6",
+          "line": 31
+        },
+        "origin": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 145,
+              "end": 165
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-1a8c14fb315e277f": [
+            {
+              "start": 145,
+              "end": 165
+            }
+          ]
+        }
+      },
+      "req-c017266e3a721af0": {
+        "source": {
+          "src": "lnk-e77a82cc46b7cab6",
+          "line": 13
+        },
+        "origin": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 33,
+              "end": 55
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-cd97fcc5e9820542": [
+            {
+              "start": 33,
+              "end": 55
+            }
+          ]
+        }
+      }
+    },
+    "https://awslabs.github.io/duvet/v2/annotations.json#cite": {
+      "cite-1a8c14fb315e277f": {
+        "source": {
+          "src": "lnk-2e8b6ae08b293f29",
+          "line": 2
+        },
+        "target": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 145,
+              "end": 165
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-1b5aa21e777ef0a4": {
+        "source": {
+          "src": "lnk-6edca64386039555",
+          "line": 2
+        },
+        "target": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 94,
+              "end": 110
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-37680d31a369b094": {
+        "source": {
+          "src": "lnk-efbbad21e7182d70",
+          "line": 8
+        },
+        "target": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 57,
+              "end": 93
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-6d4b25159921c5e5": {
+        "source": {
+          "src": "lnk-8e9b510c442b0573",
+          "line": 2
+        },
+        "target": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 94,
+              "end": 110
+            }
+          ]
+        },
+        "type": "TEST",
+        "level": "AUTO"
+      },
+      "cite-7e8da0708dfe1eb6": {
+        "source": {
+          "src": "lnk-8e9b510c442b0573",
+          "line": 9
+        },
+        "target": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 112,
+              "end": 143
+            }
+          ]
+        },
+        "type": "TEST",
+        "level": "AUTO"
+      },
+      "cite-b9a72f2b2162963b": {
+        "source": {
+          "src": "lnk-efbbad21e7182d70",
+          "line": 14
+        },
+        "target": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 112,
+              "end": 143
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-cd97fcc5e9820542": {
+        "source": {
+          "src": "lnk-efbbad21e7182d70",
+          "line": 2
+        },
+        "target": {
+          "src": "src-d3a7ffbd5e4d1e64",
+          "ranges": [
+            {
+              "start": 33,
+              "end": 55
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      }
+    }
+  }
+}

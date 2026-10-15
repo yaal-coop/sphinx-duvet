@@ -1,0 +1,4 @@
+[[spec]]
+target = "spec.md#requests"
+level = "SHOULD"
+quote = "The server answers in the same language as the request."
