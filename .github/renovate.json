@@ -1,4 +1,134 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>python-scim/renovate-config#1.0.5"]
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":enablePreCommit"
+  ],
+  "timezone": "Europe/Paris",
+  "schedule": [
+    "before 7am on monday"
+  ],
+  "prConcurrentLimit": 5,
+  "minimumReleaseAge": "14 days",
+  "customManagers": [
+    {
+      "description": "Renovate has no manager for the Ubuntu image of Read the Docs builds, so it follows the Ubuntu releases of Docker Hub.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/(^|/)\\.readthedocs\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "os:\\s*[\"']?ubuntu-(?<currentValue>\\d{2}\\.\\d{2})[\"']?"
+      ],
+      "depNameTemplate": "readthedocs/ubuntu",
+      "packageNameTemplate": "ubuntu",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "ubuntu"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Our packages are libraries. The >= floors in [project.dependencies] are a compatibility contract with downstream users, so Renovate only refreshes uv.lock and never raises a floor. Floors are raised by hand, when the code starts relying on a newer API.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "rangeStrategy": "update-lockfile"
+    },
+    {
+      "description": "build-system.requires is not recorded in uv.lock, so update-lockfile would freeze the build backend forever. Widen the bound instead.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchDepTypes": [
+        "build-system.requires"
+      ],
+      "rangeStrategy": "widen"
+    },
+    {
+      "description": "One pull request per repository for every non-major Python update.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "python dependencies",
+      "automerge": true
+    },
+    {
+      "description": "One pull request per repository for GitHub Actions. Digests stay pinned and the trailing # vX.Y.Z comment is kept in sync.",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "github actions",
+      "automerge": true
+    },
+    {
+      "description": "One pull request per repository for pre-commit hook revisions.",
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "pre-commit hooks",
+      "automerge": true
+    },
+    {
+      "description": "uv builds the releases with its bundled backend only when its version matches the uv_build range of build-system.requires, so the uv of setup-uv, the uv container image and that range move together in one pull request.",
+      "matchPackageNames": [
+        "astral-sh/uv",
+        "docker.io/astral/uv",
+        "uv-build"
+      ],
+      "groupName": "uv",
+      "automerge": true
+    },
+    {
+      "description": "Read the Docs only provides the LTS releases of Ubuntu. The Ubuntu tags of Docker Hub are pushed again at every rebuild, so the cooldown would hold them forever. Moving to a new Ubuntu release is a major update, so it still waits for a human.",
+      "matchDepNames": [
+        "readthedocs/ubuntu"
+      ],
+      "allowedVersions": "/^\\d[02468]\\.04$/",
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "GitHub runner labels have no release date, so the cooldown would hold them forever. Moving to a new Ubuntu release is a major update, so it still waits for a human.",
+      "matchDatasources": [
+        "github-runners"
+      ],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "Major updates are never grouped and never automerged: each one gets its own pull request and a human review.",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
+    }
+  ],
+  "lockFileMaintenance": {
+    "description": "Weekly full refresh of uv.lock, which is the only way transitive dependencies ever move.",
+    "enabled": true,
+    "automerge": true,
+    "schedule": [
+      "before 7am on monday"
+    ]
+  },
+  "vulnerabilityAlerts": {
+    "description": "Security fixes bypass the weekly schedule and the 14 day cooldown, and always wait for a human.",
+    "schedule": [
+      "at any time"
+    ],
+    "minimumReleaseAge": null,
+    "automerge": false
+  }
 }
