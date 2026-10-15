@@ -1,0 +1,158 @@
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[project]
+name = "sphinx-duvet"
+version = "0.1.0"
+description = "Specification compliance reports from Duvet in Sphinx"
+authors = [{name="Yaal Coop", email="contact@yaal.coop"}]
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+keywords = ["sphinx", "duvet", "rfc", "specification", "compliance", "traceability"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Development Status :: 2 - Pre-Alpha",
+    "Framework :: Sphinx",
+    "Framework :: Sphinx :: Extension",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python",
+    "Operating System :: OS Independent",
+    "Topic :: Documentation :: Sphinx",
+]
+
+requires-python = ">= 3.11"
+dependencies = [
+    "sphinx>=7.3",
+]
+
+[project.urls]
+documentation = "https://sphinx-duvet.readthedocs.io"
+repository = "https://github.com/yaal-coop/sphinx-duvet"
+changelog = "https://sphinx-duvet.readthedocs.io/en/latest/changelog.html"
+
+[tool.uv]
+exclude-newer = "14 days"
+
+[tool.uv.build-backend]
+module-root = ""
+
+[dependency-groups]
+dev = [
+    "defusedxml>=0.7.1",
+    "mypy>=1.13.0",
+    "prek>=0.1.0",
+    "pytest>=8.2.1",
+    "pytest-cov>=6.0.0",
+    "tox-uv>=1.16.0",
+]
+doc = [
+    "shibuya>=2024.5.15",
+    "sphinx>=7.3",
+]
+
+[tool.coverage.run]
+source = [
+    "sphinx_duvet",
+    "tests",
+]
+omit = [".tox/*"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "@pytest.mark.skip",
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+
+[tool.ruff.lint]
+select = [
+    "B", # flake8-bugbear
+    "D", # pydocstyle
+    "E", # pycodestyle
+    "FURB", # refurb
+    "F", # pyflakes
+    "I", # isort
+    "PERF", # perflint
+    "PIE", # flake8-pie
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line-too-long
+    "D100", # public module
+    "D101", # public class
+    "D102", # public method
+    "D103", # public function
+    "D104", # public package
+    "D105", # magic method
+    "D106", # nested class
+    "D107", # public init
+    "D203", # no-blank-line-before-class
+    "D213", # multi-line-summary-second-line
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+files = ["sphinx_duvet"]
+strict = true
+
+[tool.tox]
+requires = ["tox>=4.19"]
+env_list = [
+    "style",
+    "py311",
+    "py312",
+    "py313",
+    "py314",
+    "py315",
+    "minversions",
+    "doc",
+    "coverage",
+]
+
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+dependency_groups = ["dev"]
+commands = [
+    ["pytest", "--showlocals", "--full-trace", "{posargs}"],
+]
+
+[tool.tox.env.style]
+skip_install = true
+runner = "uv-venv-runner"
+commands = [
+    ["prek", "run", "--all-files", "--show-diff-on-failure"],
+]
+
+[tool.tox.env.minversions]
+runner = "uv-venv-runner"
+uv_resolution = "lowest-direct"
+base_python = ["3.11"]
+
+[tool.tox.env.doc]
+dependency_groups = ["doc"]
+commands = [
+    ["sphinx-build", "-W", "--keep-going", "--builder", "html", "doc", "build/sphinx/html"],
+]
+
+[tool.tox.env.coverage]
+commands = [
+    ["pytest", "--cov", "--cov-fail-under=100", "--cov-report", "term:skip-covered", "{posargs}"],
+    ["coverage", "html"],
+]
