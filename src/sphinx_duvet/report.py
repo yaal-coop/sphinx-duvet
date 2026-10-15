@@ -389,7 +389,8 @@ def ietf_title(text: str) -> str | None:
         return None
     block: list[str] = []
     for line in reversed(lines[:end]):
-        if line.strip() and line.startswith(" " * 5):
+        # A long title line is centered with a single space.
+        if line.strip() and line.startswith(" "):
             block.insert(0, line.strip())
         elif block:
             break

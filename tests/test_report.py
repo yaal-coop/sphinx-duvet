@@ -260,3 +260,18 @@ def test_requirement_in_a_list_item() -> None:
     assert requirement.text == "The client MUST send a token."
     start = requirement.ranges[0][0]
     assert spec.contents[start : start + 10] == b"The client"
+
+
+def test_ietf_title_with_a_long_line() -> None:
+    """A title on two lines is read whole, even when its first line is long."""
+    text = (
+        "Request for Comments: 9865                                       Entrust\n"
+        "                                                            October 2025\n\n\n"
+        " Cursor-Based Pagination of System of Cross-domain Identity Management\n"
+        "                            (SCIM) Resources\n\n"
+        "Abstract\n"
+    )
+    assert ietf_title(text) == (
+        "RFC 9865: Cursor-Based Pagination of System of Cross-domain Identity "
+        "Management (SCIM) Resources"
+    )
