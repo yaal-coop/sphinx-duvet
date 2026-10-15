@@ -293,14 +293,14 @@ def test_outside() -> None:
     assert not Status(State.OUTSIDE, State.OUTSIDE).gap
 
 
-def test_outside_with_cites(project: Project) -> None:
-    """A requirement out of scope keeps its state while the project cites it."""
-    req = requirement(project, "The client MUST send the token.")
-    req.outside = "Not for this project."
-    status = project.group(req, project.targets)
-    assert status.implementation == State.OK
-    req.cites = []
-    assert project.group(req, project.targets).implementation == State.OUTSIDE
+def test_outside_with_cites() -> None:
+    """A requirement that the project cites stays in scope, without the reason."""
+    root = Path(__file__).parent / "projects" / "outside"
+    project = Project(root, read_report(root / "report.json"))
+    [spec] = project.specifications.values()
+    cited = next(r for r in spec.requirements if r.id == "rfc9997#1.1.1-1")
+    assert cited.outside is None
+    assert project.group(cited, project.targets).implementation == State.OK
 
 
 def test_citation_with_todo(project: Project) -> None:

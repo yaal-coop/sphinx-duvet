@@ -179,7 +179,10 @@ class Project:
         return unused
 
     def _attach_outside(self, requirements: list[Requirement]) -> list[Outside]:
-        """Mark the requirements out of the scope of the project. Return the entries that match nothing."""
+        """Mark the requirements out of the scope of the project. Return the entries that match nothing.
+
+        A requirement that the project cites stays in scope, even in a section out of scope.
+        """
         unused = []
         for entry in self.config.outside:
             if entry.quote is None:
@@ -189,7 +192,8 @@ class Project:
             if not matches:
                 unused.append(entry)
             for requirement in matches:
-                requirement.outside = entry.reason
+                if not requirement.cites:
+                    requirement.outside = entry.reason
         return unused
 
     def _attach_notes(self, requirements: list[Requirement]) -> list[Note]:
@@ -249,7 +253,7 @@ class Project:
         """
         if target not in self.applicable(requirement):
             return _NOT_APPLICABLE
-        if requirement.outside is not None and not requirement.cites:
+        if requirement.outside is not None:
             return _OUTSIDE
         if not requirement.cites:
             return Status(State.UNANNOTATED, State.NOT_EXPECTED)
