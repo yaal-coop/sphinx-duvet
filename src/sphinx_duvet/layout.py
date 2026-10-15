@@ -211,7 +211,7 @@ def _without_page_breaks(lines: list[Line]) -> list[Line | None]:
 
 
 def _continues(previous: Line | None, following: Line | None) -> bool:
-    """Return True if a page break cuts a sentence in two.
+    """Return True if a page break cuts a sentence or a table in two.
 
     The end of a figure, such as a closing brace, is not the start of a sentence.
     """
@@ -219,6 +219,9 @@ def _continues(previous: Line | None, following: Line | None) -> bool:
         return False
     if previous.indent != following.indent:
         return False
+    # A table goes on over the page break.
+    if previous.text.lstrip()[0] in "|+" and following.text.lstrip()[0] in "|+":
+        return True
     last = previous.text.rstrip()[-1]
     first = following.text.lstrip()[0]
     return (last.isalnum() or last in ",;-\"')") and (

@@ -367,6 +367,21 @@ def test_page_break_after_a_figure() -> None:
     assert len(result) == 2
 
 
+def test_page_break_in_a_table() -> None:
+    """A page break in a table keeps it whole."""
+    contents = (
+        b"1.  Title\n\n"
+        b"   +----+----+\n   | a  | b  |\n   |    |    |\n\n\n\n"
+        b"Author                        Experimental                      [Page 3]\n"
+        b"\f\nRFC 9998                        Layout                      October 2026\n\n\n"
+        b"   | c  | d  |\n   +----+----+\n"
+    )
+    result = blocks(contents, contents.index(b"Title"), len(contents))
+    [table] = structure(result)
+    assert isinstance(table, Table)
+    assert len(table.rows) == 2
+
+
 def test_appendix_heading() -> None:
     """Appendices keep their name in their heading."""
     spec = specification()
