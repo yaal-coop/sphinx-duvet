@@ -755,15 +755,14 @@ def test_spec_text(app: SphinxTestApp) -> None:
     html = (Path(app.outdir) / "text.html").read_text()
     assert (
         '<span class="duvet-rule duvet-rule-partial" id="duvet-text-rfc9999-2.1-1">'
-        "The server <span" in html
-    )
+        '<a class="reference internal" href="report.html#duvet-rfc9999-2.1-1"'
+    ) in html
     assert (
         'class="duvet-rule duvet-rule-unannotated" id="duvet-text-rfc9999-3-1"' in html
     )
     assert (
-        'send the token.</span><a class="reference internal" '
         'href="report.html#duvet-rfc9999-2-1" title="The client MUST send the token.">'
-        '<span class="duvet-rule-link">¶</span></a>'
+        '<span class="duvet-rule-text">The client '
     ) in html
     assert "The server MUST validate the café parameter" in doctree.astext()
 
@@ -897,7 +896,7 @@ def test_spec_layout(app: SphinxTestApp) -> None:
     assert html.count("highlight-json") == 2
     assert 'class="duvet-rule-link"' not in html
     assert (
-        'answer as in <a class="reference internal" href="#section-2">Section 2</a>.'
+        'answer as in </span><a class="reference internal" href="#section-2">Section 2</a>'
         in html
     )
     assert (

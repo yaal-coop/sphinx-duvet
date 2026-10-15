@@ -11,6 +11,7 @@ from pygments.lexers import get_lexer_by_name
 from pygments.token import Error
 from pygments.token import is_token_subtype
 from pygments.util import ClassNotFound
+from sphinx import addnodes
 from sphinx.util import logging
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import OptionSpec
@@ -366,7 +367,6 @@ class DuvetSpec(_DuvetDirective):
     references: dict[str, str]
     reference_ids: dict[int, str]
     anchored: set[str]
-    last_runs: dict[str, nodes.inline]
     requirements: list[Requirement]
 
     def run(self) -> list[nodes.Node]:
@@ -410,7 +410,6 @@ class DuvetSpec(_DuvetDirective):
             )
         self.note_references()
         self.anchored = set()
-        self.last_runs = {}
         self.requirements = spec.requirements
         result: list[nodes.Node] = [render.state_legend(), *self.front_matter()]
         parents: list[nodes.Element] = []
@@ -419,7 +418,6 @@ class DuvetSpec(_DuvetDirective):
             del parents[text.depth - 1 :]
             (parents[-1] if parents else result).append(section)
             parents.append(section)
-        self.add_rule_links()
         self.note_unanchored()
         return result
 
@@ -670,8 +668,9 @@ class DuvetSpec(_DuvetDirective):
         ]
 
     def run_nodes(self, run: layout.Run, links: bool) -> list[nodes.Node]:
-        """Return a run of text. A requirement is highlighted, with its key words and its links.
+        """Return a run of text. A requirement is highlighted, and links to its report.
 
+        The links of the text, such as [RFC7644], cut the link to the report in parts.
         The run gets an anchor for each requirement that starts in it,
         so a requirement hidden by another one can still be referenced.
         """
@@ -683,33 +682,34 @@ class DuvetSpec(_DuvetDirective):
             return children
         anchors = [self.anchor(requirement) for requirement in pending]
         state = self.states[run.owner.id]
-        highlight = nodes.inline(
-            "",
-            "",
-            *(
-                node
-                for child in children
-                for node in (
-                    render.bcp14_text(child.astext())
-                    if isinstance(child, nodes.Text)
-                    else [child]
-                )
-            ),
-            ids=anchors,
-            classes=["duvet-rule", f"duvet-rule-{state.name.lower()}"],
-        )
-        self.last_runs[run.owner.id] = highlight
-        return [highlight]
-
-    def add_rule_links(self) -> None:
-        """Add a link to the report after the last run of each requirement."""
-        icon = self.config.html_permalinks_icon
-        for rule_id, highlight in self.last_runs.items():
-            link = render.optional_link(
-                icon, "status", rule_id, classes=["duvet-rule-link"]
+        parts = [
+            addnodes.pending_xref(
+                "",
+                nodes.inline(
+                    "",
+                    "",
+                    *render.bcp14_text(child.astext()),
+                    classes=["duvet-rule-text"],
+                ),
+                refdomain="duvet",
+                reftype="status",
+                reftarget=run.owner.id,
+                refexplicit=True,
+                refwarn=False,
             )
-            parent = highlight.parent
-            parent.insert(parent.index(highlight) + 1, link)
+            if isinstance(child, nodes.Text)
+            else child
+            for child in children
+        ]
+        return [
+            nodes.inline(
+                "",
+                "",
+                *parts,
+                ids=anchors,
+                classes=["duvet-rule", f"duvet-rule-{state.name.lower()}"],
+            )
+        ]
 
     def anchor(self, requirement: Requirement) -> str:
         """Return a new anchor for a requirement in the text, and record it."""

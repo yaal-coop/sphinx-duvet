@@ -170,8 +170,9 @@ Directives
 .. rst:directive:: .. duvet-spec:: path
 
    The whole text of an IETF specification, with a section per section of the specification.
-   Each requirement is highlighted by its worst state among the targets.
-   A link to its row in a report follows it, and shows on hover.
+   Each requirement is highlighted by its worst state among the targets,
+   and links to its row in a report. The links in its text, such as ``[RFC7644]``,
+   keep their own target.
 
    The text keeps its structure, guessed from its indentation:
 
