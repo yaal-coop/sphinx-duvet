@@ -28,6 +28,7 @@ _HEADER = re.compile(rb"^RFC \d+ .*\S\s*$")
 _LIST_ITEM = re.compile(r"^(o|\*|-|\d+\.|[a-z]\.|\(\d+\)|\([a-z]\))\s+\S")
 _MARKER = re.compile(r"(?P<marker>[o*+-]|\d+\.|[a-z]\.|\(\d+\)|\([a-zA-Z]\)) +(?=\S)")
 _BULLETS = ("o", "*", "+", "-")
+_LABEL = re.compile(r"\[[^\]\s]+\]( +)(?=\S)")
 _TERM_GAP = re.compile(r"\S( {2,})(?=\S)")
 _CAPTION = re.compile(r"(Figure|Table) \d+: \S")
 _GRID_BORDER = re.compile(r"\+(-+\+)+")
@@ -405,20 +406,43 @@ def _base_indent(spec_blocks: list[Block]) -> int:
 
 
 def _captions(spec_blocks: list[Block]) -> tuple[list[Block], dict[int, Block]]:
-    """Remove the captions from the blocks, and return them by the block they follow."""
+    """Remove the captions from the blocks, and return them by the block they follow.
+
+    A caption starts with "Figure 1:" or "Table 1:". A single centered line after
+    a figure or a table is a caption too, as in older RFCs.
+    """
     kept: list[Block] = []
     captions: dict[int, Block] = {}
     for block in spec_blocks:
         previous = kept[-1] if kept else None
-        if (
-            previous is not None
-            and len(block.lines) <= 2
-            and _CAPTION.match(block.lines[0].text.strip())
+        if previous is not None and (
+            (len(block.lines) <= 2 and _CAPTION.match(block.lines[0].text.strip()))
+            or (_is_figure(previous) and _is_centered(block))
         ):
             captions[id(previous)] = Block(PARAGRAPH, block.lines)
             continue
         kept.append(block)
     return kept, captions
+
+
+def _is_figure(block: Block) -> bool:
+    """Return True if a block looks like a figure or a table, not like prose."""
+    first = block.lines[0].text.strip()
+    return block.kind == PREFORMATTED or bool(_GRID_BORDER.fullmatch(first))
+
+
+def _is_centered(block: Block) -> bool:
+    """Return True if a block is a single short line, centered on the page of 72 columns."""
+    if len(block.lines) != 1:
+        return False
+    line = block.lines[0]
+    text = line.text.strip()
+    margin = (72 - len(text)) / 2
+    return (
+        line.indent >= 8
+        and abs(line.indent - margin) <= 3
+        and not text.endswith((".", ":", ",", ";"))
+    )
 
 
 def _parse(
@@ -445,7 +469,10 @@ def _parse(
             element, index = table
             result.append(element)
             continue
-        after = bool(result) and isinstance(result[-1], Definition)
+        after = (bool(result) and isinstance(result[-1], Definition)) or (
+            index + 1 < len(spec_blocks)
+            and _starts_definition(spec_blocks[index + 1], prose)
+        )
         nested = _nested(spec_blocks, index, prose, after, captions)
         if nested is not None:
             item, index = nested
@@ -467,7 +494,7 @@ def _parse(
 def _looks_like_code(text: str) -> bool:
     """Return True if a line looks like code or a drawing, not like a sentence."""
     return (
-        " " not in text
+        (" " not in text and not text.isalpha())
         or text[0] in "{}]|+"
         or text.startswith(('["', "[{"))
         or text == "["
@@ -515,7 +542,7 @@ def _nested(
 ) -> tuple[Item | Definition, int] | None:
     """Return a list item or a definition with its content, and the index after it.
 
-    After a definition, a definition can fit on one line.
+    Next to a definition, a definition can fit on one line.
     """
     block = spec_blocks[index]
     head = _head(block, prose, after)
@@ -548,14 +575,15 @@ def _head(block: Block, prose: bool, after: bool) -> _Head | None:
         )
         content = Block(PARAGRAPH, [_cut(first, column, len(first.text)), *rest])
         return marker.group("marker"), None, content, body_indent
-    gap = _TERM_GAP.search(text)
+    # A reference label, such as [RFC7644], can be followed by a single space.
+    gap = _LABEL.match(text) or _TERM_GAP.search(text)
     if not prose or not (rest or (after and gap)):
         return None
     body_indent = min((line.indent for line in rest), default=first.indent + 1)
     if body_indent <= first.indent:
         return None
     term_end = first.indent + gap.start(1) if gap else len(first.text.rstrip())
-    if not _is_term(first.text[first.indent : term_end]):
+    if not _is_term(first.text[first.indent : term_end], label=gap is not None):
         return None
     term = Block(PARAGRAPH, [_cut(first, first.indent, term_end)])
     lines = (
@@ -564,6 +592,12 @@ def _head(block: Block, prose: bool, after: bool) -> _Head | None:
         else rest
     )
     return None, term, Block(PARAGRAPH, lines), body_indent
+
+
+def _starts_definition(block: Block, prose: bool) -> bool:
+    """Return True if a block starts a definition, not a list item."""
+    head = _head(block, prose, False)
+    return head is not None and head[0] is None
 
 
 def _alone_term(spec_blocks: list[Block], index: int, prose: bool) -> _Head | None:
@@ -577,13 +611,19 @@ def _alone_term(spec_blocks: list[Block], index: int, prose: bool) -> _Head | No
     return None, block, None, following.indent
 
 
-def _is_term(text: str) -> bool:
-    """Return True if a text looks like a term, not like the start of a sentence."""
+def _is_term(text: str, label: bool = False) -> bool:
+    """Return True if a text looks like a term, not like the start of a sentence.
+
+    A label, followed by its text on the same line, can end with a colon.
+    """
+    endings = (
+        (".", ",", ";", "{", "[", "=") if label else (".", ":", ",", ";", "{", "[", "=")
+    )
     return (
         len(text) <= 40
         and len(text.split()) <= 5
         and any(char.isalpha() for char in text)
-        and not text.endswith((".", ":", ",", ";", "{", "[", "="))
+        and not text.endswith(endings)
     )
 
 

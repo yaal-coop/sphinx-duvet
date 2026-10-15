@@ -424,3 +424,49 @@ def test_figure_requirements() -> None:
     definition = rule("It MUST be two.")
     spec.requirements = [prose, item, definition]
     assert figure_requirements(spec) == [item, definition]
+
+
+def test_reference_with_a_long_label() -> None:
+    """A reference label is a term, even when a single space follows it."""
+    elements = parse(
+        '   [RFC7644]  Hunt, P., "SCIM Protocol",\n'
+        "              RFC 7644.\n\n"
+        '   [Olson-TZ] Internet Assigned Numbers Authority, "IANA Time Zone\n'
+        '              Database", <https://www.iana.org/time-zones>.\n'
+    )
+    [definitions] = elements
+    assert isinstance(definitions, DefinitionList)
+    terms = [d.term.lines[0].text for d in definitions.items]
+    assert terms == ["[RFC7644]", "[Olson-TZ]"]
+
+
+def test_centered_caption() -> None:
+    """A centered line after a table is its caption. A centered line after prose is not."""
+    elements = parse(
+        "   +------+------+\n   | a    | b    |\n   +------+------+\n\n"
+        "                    SCIM Server-Related Schema URIs\n\n"
+        "   A paragraph of prose that ends here.\n\n"
+        "                    A Centered Line After Prose\n"
+    )
+    table = elements[0]
+    assert isinstance(table, Table)
+    assert table.caption is not None
+    assert table.caption.lines[0].text.strip() == "SCIM Server-Related Schema URIs"
+    assert isinstance(elements[-1], Figure)
+
+
+def test_labels_with_a_colon() -> None:
+    """Labels that end with a colon are terms, even the first one, on a single line."""
+    elements = parse(
+        "   A schema is defined by completing the following template:\n\n"
+        "   Schema URI:  A unique URI for the schema.\n\n"
+        "   Schema Name:  A descriptive name of the schema (e.g.,\n"
+        '      "Generic Device").\n\n'
+        "   For example:\n\n"
+        "      None\n"
+    )
+    assert [type(e) for e in elements] == [Paragraph, DefinitionList, Paragraph, Figure]
+    definitions = elements[1]
+    assert isinstance(definitions, DefinitionList)
+    terms = [d.term.lines[0].text for d in definitions.items]
+    assert terms == ["Schema URI:", "Schema Name:"]
