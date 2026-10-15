@@ -40,6 +40,9 @@ Abstract
 
    The token MUST NOT be empty.
 
+   The server MUST reject replayed tokens and SHOULD alert the
+   administrator.
+
    The server MUST:
 
    o  reject expired tokens,

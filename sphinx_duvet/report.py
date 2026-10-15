@@ -62,14 +62,19 @@ class Requirement:
     applies: list[Selector] | None = None
     notes: list[Note] = field(default_factory=list)
 
-    def covered_by(self, cites: list[Cite]) -> bool:
-        """Return :data:`True` if the cites quote every non-blank byte of the requirement."""
+    def covered_by(self, cites: list[Cite], within: list[Cite] | None = None) -> bool:
+        """Return :data:`True` if the cites quote every non-blank byte of the requirement.
+
+        With ``within``, only the bytes that these other cites quote are checked.
+        """
         quoted = [r for cite in cites for r in cite.ranges]
+        scope = None if within is None else [r for cite in within for r in cite.ranges]
         return all(
             self.contents[offset : offset + 1].isspace()
             or any(start <= offset < end for start, end in quoted)
             for start, end in self.ranges
             for offset in range(start, end)
+            if scope is None or any(a <= offset < b for a, b in scope)
         )
 
     def _overlaps(self, ranges: list[tuple[int, int]]) -> bool:

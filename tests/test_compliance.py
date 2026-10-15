@@ -43,15 +43,26 @@ def statuses(project: Project, text: str) -> list[str]:
         ("The client MUST send the token.", ["n/a/n/a", "n/a/n/a", "ok/missing"]),
         ("The server MUST reject invalid tokens.", ["ok/ok", "ok/ok", "n/a/n/a"]),
         ("The server SHOULD log the request.", ["ok/missing", "todo/-", "n/a/n/a"]),
-        ("The server MUST validate", ["partial/missing"] * 3),
+        (
+            "The server MUST validate",
+            ["partial/ok", "partial/ok", "partial/missing"],
+        ),
         ("The client MAY cache the response.", ["n/a/n/a", "n/a/n/a", "exception/-"]),
         ("Servers SHOULD rotate their keys.", ["unannotated/-"] * 3),
         ("The token MUST NOT be empty.", ["ok/-"] * 3),
         ("reject expired tokens,", ["ok/missing", "missing/-", "n/a/n/a"]),
+        (
+            "The server MUST reject replayed tokens",
+            ["ok/ok", "partial/-", "n/a/n/a"],
+        ),
     ],
 )
 def test_status(project: Project, text: str, expected: list[str]) -> None:
-    """Each target gets an implementation status and a test status."""
+    """Each target gets an implementation status and a test status.
+
+    Tests only need to cover the part of a requirement cited as implemented.
+    Parts cited as exceptions need no test.
+    """
     assert statuses(project, text) == expected
 
 
@@ -67,13 +78,13 @@ def test_test_granularity(basic_root: Path, basic_report: Report) -> None:
 
 
 def test_gap() -> None:
-    """A gap is a missing implementation or a missing test."""
+    """A gap is a missing implementation or a missing test, not an unannotated requirement."""
     assert not Status(State.OK, State.OK).gap
     assert not Status(State.EXCEPTION, State.NOT_EXPECTED).gap
     assert not Status(State.NOT_APPLICABLE, State.NOT_APPLICABLE).gap
     assert Status(State.OK, State.MISSING).gap
     assert Status(State.TODO, State.NOT_EXPECTED).gap
-    assert Status(State.UNANNOTATED, State.NOT_EXPECTED).gap
+    assert not Status(State.UNANNOTATED, State.NOT_EXPECTED).gap
 
 
 @pytest.mark.parametrize(
@@ -100,13 +111,13 @@ def test_recap(project: Project) -> None:
     )
     assert recap == {
         "MUST": Counts(
-            requirements=6,
+            requirements=7,
             implemented=2,
-            partial=1,
+            partial=2,
             missing=1,
             unannotated=2,
-            needs_test=3,
-            tested=1,
+            needs_test=4,
+            tested=3,
         ),
         "SHOULD": Counts(requirements=2, todo=1, unannotated=1, needs_test=1),
         "MAY": Counts(),

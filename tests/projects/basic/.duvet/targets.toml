@@ -62,5 +62,10 @@ applies-to = "role=server"
 
 [[applies]]
 target = "spec/rfc9999.txt#section-3"
+quote = "The server MUST reject replayed tokens"
+applies-to = "role=server"
+
+[[applies]]
+target = "spec/rfc9999.txt#section-3"
 quote = "This text is not in the specification."
 applies-to = "role=server"

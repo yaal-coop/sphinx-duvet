@@ -2,4 +2,4 @@
 
 ## Discovery
 
-The server SHOULD publish its metadata.
+The server SHOULD publish its "metadata".

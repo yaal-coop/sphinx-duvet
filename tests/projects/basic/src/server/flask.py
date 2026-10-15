@@ -10,3 +10,7 @@ def check(token):
     ##% reject expired tokens,
     if token.expired:
         raise ValueError
+    ##= spec/rfc9999.txt#section-3
+    ##% The server MUST reject replayed tokens
+    if token.replayed:
+        raise ValueError

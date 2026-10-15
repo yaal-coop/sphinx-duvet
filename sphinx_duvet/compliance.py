@@ -56,8 +56,11 @@ class Status:
 
     @property
     def gap(self) -> bool:
-        """:data:`True` if the implementation or a test is missing."""
-        done = (State.OK, State.EXCEPTION, State.NOT_APPLICABLE)
+        """:data:`True` if the implementation or a test is missing.
+
+        A requirement without any annotation is not a gap: it has not been studied yet.
+        """
+        done = (State.OK, State.EXCEPTION, State.NOT_APPLICABLE, State.UNANNOTATED)
         return self.implementation not in done or self.test == State.MISSING
 
 
@@ -153,7 +156,12 @@ class Project:
         return [t for t in self.targets if matches_any(requirement.applies, t)]
 
     def status(self, requirement: Requirement, target: Target) -> Status:
-        """Return the implementation and test states of a requirement for a target."""
+        """Return the implementation and test states of a requirement for a target.
+
+        A test is expected if a part of the requirement is cited as implemented.
+        The tests must then cover that part.
+        Parts cited as exceptions need no test.
+        """
         if target not in self.applicable(requirement):
             return _NOT_APPLICABLE
         if not requirement.cites:
@@ -175,10 +183,12 @@ class Project:
         else:
             implementation = State.MISSING
 
-        if not any(c.type == "CITATION" for c in implementations):
+        citations = [c for c in implementations if c.type == "CITATION"]
+        if not citations:
             return Status(implementation, State.NOT_EXPECTED)
 
-        # Tests may cover the target at a coarser granularity, e.g. per role only.
+        # Tests only need to cover the implemented part of the requirement.
+        # They may cover the target at a coarser granularity, e.g. per role only.
         keys = self.config.test_granularity
         tests = [
             c
@@ -186,7 +196,7 @@ class Project:
             if c.type in _TEST_TYPES
             and (c.covers is None or matches_any(_project(c.covers, keys), target))
         ]
-        tested = bool(tests) and requirement.covered_by(tests)
+        tested = bool(tests) and requirement.covered_by(tests, within=citations)
         return Status(implementation, State.OK if tested else State.MISSING)
 
     def group(self, requirement: Requirement, targets: list[Target]) -> Status:
