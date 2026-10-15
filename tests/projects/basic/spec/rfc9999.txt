@@ -1,0 +1,47 @@
+
+
+
+
+
+Internet Engineering Task Force (IETF)                          A. Author
+Request for Comments: 9999                                     Example Org
+Category: Standards Track                                     October 2026
+ISSN: 2070-1721
+
+
+                      Example Token Exchange Protocol
+
+Abstract
+
+   This document describes an example protocol for tests.
+
+1.  Introduction
+
+   This section has no requirement.
+
+2.  Requests
+
+   The client MUST send the token.
+
+   The server MUST reject invalid tokens.
+
+   The server SHOULD log the request.
+
+2.1.  Parameters
+
+   The server MUST validate the café parameter and the response
+   MUST be encoded as JSON.
+
+   The client MAY cache the response.
+
+3.  Security
+
+   Servers SHOULD rotate their keys.
+
+   The token MUST NOT be empty.
+
+   The server MUST:
+
+   o  reject expired tokens,
+
+   o  reject revoked tokens.

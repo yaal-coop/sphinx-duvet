@@ -1,0 +1,9 @@
+[[spec]]
+target = "spec/rfc9999.txt#section-3"
+level = "MUST"
+quote = "reject expired tokens,"
+
+[[spec]]
+target = "spec/rfc9999.txt#section-3"
+level = "MUST"
+quote = "reject revoked tokens."

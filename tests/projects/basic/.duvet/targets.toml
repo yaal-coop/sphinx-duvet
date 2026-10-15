@@ -1,0 +1,66 @@
+test-granularity = ["role"]
+
+[[target]]
+id = "server-flask"
+role = "server"
+framework = "flask"
+
+[[target]]
+id = "server-django"
+role = "server"
+framework = "django"
+
+[[target]]
+id = "client"
+role = "client"
+
+[[default]]
+pattern = "src/server/flask.py"
+covers = "role=server,framework=flask"
+
+[[default]]
+pattern = "src/server/django.py"
+covers = "role=server,framework=django"
+
+[[default]]
+pattern = "src/client.py"
+covers = "role=client"
+
+[[default]]
+pattern = "tests/**"
+covers = "role=server,framework=flask"
+
+[[applies]]
+target = "spec/rfc9999.txt#section-2"
+quote = "The client MUST send the token."
+applies-to = "role=client"
+
+[[applies]]
+target = "spec/rfc9999.txt#section-2"
+quote = "The server MUST reject invalid tokens."
+applies-to = "role=server"
+
+[[applies]]
+target = "spec/rfc9999.txt#section-2"
+quote = "The server SHOULD log the request."
+applies-to = "role=server"
+
+[[applies]]
+target = "spec/rfc9999.txt#section-2.1"
+quote = "The client MAY cache the response."
+applies-to = "role=client"
+
+[[applies]]
+target = "spec/rfc9999.txt#section-3"
+quote = "reject expired tokens,"
+applies-to = "role=server"
+
+[[applies]]
+target = "spec/rfc9999.txt#section-3"
+quote = "reject revoked tokens."
+applies-to = "role=server"
+
+[[applies]]
+target = "spec/rfc9999.txt#section-3"
+quote = "This text is not in the specification."
+applies-to = "role=server"

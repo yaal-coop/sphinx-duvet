@@ -1,0 +1,11 @@
+.. duvet-note:: spec/rfc9999.txt#section-2
+   :quote: The server SHOULD log the request.
+
+   Logging uses the standard *logging* module.
+
+      Indented line.
+
+.. duvet-note:: spec/rfc9999.txt#section-3
+   :quote: This text is not in the specification.
+
+   This note matches no requirement.

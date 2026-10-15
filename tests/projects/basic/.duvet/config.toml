@@ -1,0 +1,31 @@
+"$schema" = "https://awslabs.github.io/duvet/config/v0.4.0.json"
+
+[[source]]
+pattern = "src/**/*.py"
+type = "implementation"
+comment-style = { meta = "##=", content = "##%" }
+
+[[source]]
+pattern = "tests/**/*.py"
+type = "test"
+comment-style = { meta = "##=", content = "##%" }
+
+[[source]]
+pattern = ".duvet/exceptions/**/*.md"
+type = "exception"
+comment-style = { meta = "##=", content = "##%" }
+
+[[specification]]
+source = "spec/rfc9999.txt"
+format = "ietf"
+
+[[specification]]
+source = "spec/extension.md"
+format = "markdown"
+
+[[requirement]]
+pattern = ".duvet/spec/**/*.toml"
+
+[report.html]
+enabled = false
+blob-link = "https://github.com/example/project/blob/${{ GITHUB_SHA || 'main' }}"
