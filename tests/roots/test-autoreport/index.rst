@@ -1,0 +1,6 @@
+Autoreport
+==========
+
+.. toctree::
+
+   compliance/index

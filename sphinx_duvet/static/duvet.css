@@ -1,0 +1,172 @@
+/* Light tokens by default, so themes without a dark mode stay readable.
+   Dark tokens follow the mode of the theme: Shibuya sets a class on <html>,
+   PyData a data-theme attribute on <html>, and Furo one on <body>. */
+:root,
+body[data-theme="light"] {
+  --duvet-ok: #1a7f37;
+  --duvet-warn: #9a6700;
+  --duvet-missing: #cf222e;
+  --duvet-muted: #6e7781;
+  --duvet-strong: #24292f;
+  --duvet-on-strong: #ffffff;
+}
+
+/* Furo in auto mode follows the system preference. */
+@media (prefers-color-scheme: dark) {
+  body[data-theme="auto"] {
+    --duvet-ok: #3fb950;
+    --duvet-warn: #d29922;
+    --duvet-missing: #f85149;
+    --duvet-muted: #8b949e;
+    --duvet-strong: #e6edf3;
+    --duvet-on-strong: #0d1117;
+  }
+}
+
+:root.dark,
+:root[data-theme="dark"],
+body[data-theme="dark"] {
+  --duvet-ok: #3fb950;
+  --duvet-warn: #d29922;
+  --duvet-missing: #f85149;
+  --duvet-muted: #8b949e;
+  --duvet-strong: #e6edf3;
+  --duvet-on-strong: #0d1117;
+}
+
+.duvet-status {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Labels are <abbr> elements, so their description shows on hover.
+   Themes often underline them, which would clutter the tables. */
+.duvet-state {
+  white-space: nowrap;
+}
+
+abbr.duvet-status {
+  text-decoration: none;
+  border-bottom: 0;
+  cursor: help;
+}
+
+.duvet-ok {
+  color: var(--duvet-ok);
+}
+
+.duvet-exception,
+.duvet-todo,
+.duvet-partial {
+  color: var(--duvet-warn);
+}
+
+.duvet-missing {
+  color: var(--duvet-missing);
+}
+
+.duvet-none,
+.duvet-na {
+  color: var(--duvet-muted);
+  font-weight: normal;
+}
+
+.duvet-cites {
+  font-size: 0.85em;
+  margin: 0.25em 0 0;
+}
+
+.duvet-cites p {
+  margin: 0;
+}
+
+.duvet-caption {
+  color: var(--duvet-muted);
+  font-size: 0.8em;
+}
+
+/* The stronger the key word, the heavier the badge. */
+.duvet-level {
+  display: inline-block;
+  padding: 0 0.4em;
+  border: 1px solid transparent;
+  border-radius: 0.25em;
+  font-size: 0.75em;
+  letter-spacing: 0.04em;
+}
+
+.duvet-level-must {
+  background: var(--duvet-strong);
+  color: var(--duvet-on-strong);
+  font-weight: 700;
+}
+
+.duvet-level-should {
+  border-color: var(--duvet-strong);
+  color: var(--duvet-strong);
+  font-weight: 600;
+}
+
+.duvet-level-may {
+  color: var(--duvet-muted);
+}
+
+/* Key words in the requirement text, as in the HTML RFCs (<bcp14>). */
+.duvet-bcp14 {
+  font-size: 0.9em;
+  letter-spacing: 0.04em;
+}
+
+.duvet-bcp14-must {
+  font-weight: 800;
+}
+
+.duvet-bcp14-should {
+  font-weight: 650;
+}
+
+.duvet-bcp14-may {
+  font-weight: 500;
+  font-style: italic;
+}
+
+.duvet-table td p {
+  margin: 0;
+}
+
+.duvet-note {
+  margin-top: 0.5em;
+  padding: 0.25em 0.75em;
+  border-left: 3px solid var(--duvet-warn);
+  font-size: 0.9em;
+}
+
+.duvet-note p {
+  margin: 0.25em 0;
+}
+
+.duvet-unannotated {
+  color: var(--duvet-muted);
+}
+
+.duvet-legend {
+  color: var(--duvet-muted);
+  font-size: 0.85em;
+}
+
+.duvet-table th {
+  hyphens: auto;
+}
+
+/* The recap has many narrow columns of numbers. The selector is specific
+   enough to override the cell padding of themes, such as Shibuya. */
+table.duvet-table.duvet-recap th,
+table.duvet-table.duvet-recap td {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+table.duvet-table.duvet-recap td:nth-child(n + 3),
+table.duvet-table.duvet-recap th:nth-child(n + 3) {
+  text-align: right;
+}

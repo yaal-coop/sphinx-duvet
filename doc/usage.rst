@@ -1,0 +1,230 @@
+Usage
+=====
+
+sphinx-duvet reads the Duvet project of your repository.
+It finds the closest :file:`.duvet/config.toml` above the folder of :file:`conf.py`.
+
+Getting the report
+------------------
+
+By default, sphinx-duvet runs ``duvet report --json-v2`` when the build starts.
+Duvet must then be installed where the documentation is built.
+
+If Duvet is not available, for instance on Read the Docs,
+produce the report elsewhere and give its path:
+
+.. code-block:: shell
+
+   duvet report --json-v2 compliance.json
+
+.. code-block:: python
+
+   duvet_report_json = "../compliance.json"
+
+The build stops if the report cannot be read or if Duvet fails.
+
+Configuration
+-------------
+
+.. confval:: duvet_root
+
+   The folder that contains :file:`.duvet/`, relative to :file:`conf.py`.
+   By default, the closest parent folder that contains :file:`.duvet/config.toml`.
+
+.. confval:: duvet_report_json
+
+   A v2 JSON report of Duvet, relative to :file:`conf.py`.
+   If it is not set, Duvet runs during the build.
+
+.. confval:: duvet_executable
+
+   The Duvet executable. The default is ``duvet``.
+
+.. confval:: duvet_autoreport
+
+   Default options of the generated pages, as a dictionary.
+   If it is set, sphinx-duvet writes an index page and a page per specification.
+   For instance ``{"group-by": "role", "show": "missing"}``.
+
+.. confval:: duvet_autoreport_dir
+
+   The folder of the generated pages, relative to the source folder.
+   The default is ``compliance``. Add ``compliance/index`` to a toctree.
+
+.. confval:: duvet_labels
+
+   The labels of the states in the reports.
+   ``"symbols"`` (the default) or ``"text"``, or a dictionary.
+   See :ref:`labels`.
+
+Directives
+----------
+
+.. rst:directive:: .. duvet-report:: path
+
+   A table with a row per requirement of a specification, and a column per target.
+   The path is the path of the specification in :file:`.duvet/config.toml`.
+
+   Each row shows the section and the level of the requirement, its text,
+   the annotations that cite it and its notes.
+   Each cell shows the implementation state and the test state.
+
+   .. rst:directive:option:: targets: selectors
+      :type: text
+
+      Only show some targets. See :ref:`selectors`.
+
+   .. rst:directive:option:: group-by: attribute
+      :type: text
+
+      One column per value of a target attribute, such as ``role``.
+      The worst state of the targets of a group wins.
+
+   .. rst:directive:option:: sections: sections
+      :type: comma separated list
+
+      Only show some sections and their subsections, such as ``4.1, 5``.
+
+   .. rst:directive:option:: levels: levels
+      :type: comma separated list
+
+      Only show some levels, such as ``MUST, SHOULD``.
+
+   .. rst:directive:option:: show: all, missing or unannotated
+      :type: text
+
+      With ``missing``, only show the gaps:
+      the requirements with annotations, but a missing implementation or test.
+      With ``unannotated``, only show the requirements without any annotation.
+      The default is ``all``.
+
+.. rst:directive:: .. duvet-recap:: [path]
+
+   A table that counts the requirements per level and per column.
+   Without a path, it counts the requirements of every specification.
+   It takes the same options as :rst:dir:`duvet-report`, except ``show``.
+
+   There is no global percentage: a MUST and a MAY do not weigh the same.
+   Deliberate deviations are counted apart from missing requirements.
+   Requirements without any annotation are counted as "not annotated".
+
+States
+------
+
+The implementation state of a requirement for a target is one of:
+
+- **done**: the annotations of the target cite the whole requirement;
+- **exception**: the requirement is a deliberate deviation;
+- **todo**: an annotation plans the requirement;
+- **partial**: the annotations cite only a part of the requirement;
+- **missing**: the requirement has annotations, but none for this target;
+- **not annotated**: the requirement has no annotation at all;
+- **n/a**: the requirement does not apply to the target.
+
+A test is expected when a part of the requirement is cited as implemented.
+The tests must cover that part. Parts cited as exceptions need no test.
+
+.. _labels:
+
+Labels
+~~~~~~
+
+The reports show each state with a label. On hover, a label shows the description of its state.
+
+==================  =======  =============  ====================
+Key                 Symbol   Text           Description
+==================  =======  =============  ====================
+``ok``              ✔        done           done
+``missing``         ✘        missing        missing
+``unannotated``     ?        not annotated  not annotated yet
+``todo``            …        todo           planned
+``partial``         ½        partial        partly done
+``exception``       ≠        exception      deliberate deviation
+``not_expected``    —        not expected   no test expected
+``not_applicable``  ∅        n/a            not applicable
+==================  =======  =============  ====================
+
+:confval:`duvet_labels` can also be a dictionary.
+Its values are inline reStructuredText, so they can use roles,
+such as the icons of `sphinx-iconify <https://sphinx-iconify.lepture.com>`_.
+The states that are not in the dictionary keep their symbol.
+
+.. code-block:: python
+
+   extensions = ["sphinx_duvet", "sphinx_iconify"]
+   duvet_labels = {
+       "ok": ":iconify:`mdi:check-circle`",
+       "missing": ":iconify:`mdi:close-circle`",
+   }
+
+Icons take the color of their state.
+
+Targets
+-------
+
+Without :file:`.duvet/targets.toml`, the project has a single target.
+This file describes the targets of a project, such as a server and a client,
+and which annotations and requirements apply to them.
+
+.. code-block:: toml
+
+   # Tests are checked per role only: a Flask test covers every server target.
+   test-granularity = ["role"]
+
+   [[target]]
+   id = "server-flask"
+   role = "server"
+   framework = "flask"
+
+   [[target]]
+   id = "client"
+   role = "client"
+
+   # The targets covered by the annotations of a file. The first match wins.
+   # Annotations in .duvet/ and in other files cover every target.
+   [[default]]
+   pattern = "src/server/flask/**"
+   covers = "role=server,framework=flask"
+
+   # The targets a requirement applies to. By default, every target.
+   [[applies]]
+   target = "spec/rfc9999.txt#section-2"
+   quote = "The client MUST send the token."
+   applies-to = "role=client"
+
+.. _selectors:
+
+Selectors
+~~~~~~~~~
+
+A selector is a list of ``key=value`` pairs separated by commas.
+It matches the targets that have every attribute: ``role=server,framework=flask``.
+
+Several selectors are separated by semicolons or new lines.
+A target matches if it matches one of them: ``role=server; role=client``.
+
+Notes
+-----
+
+Notes add free text to a requirement, such as a design choice or a link to an issue.
+Write them in reStructuredText files in :file:`.duvet/notes/`:
+
+.. code-block:: rst
+
+   .. duvet-note:: spec/rfc9999.txt#section-2
+      :quote: The server SHOULD log the request.
+
+      Logging uses the standard *logging* module.
+
+The note is shown in the row of the requirement.
+
+Warnings
+--------
+
+All the warnings of sphinx-duvet have the ``duvet`` type.
+The ``duvet.unused`` subtype is for ``[[applies]]`` entries and notes that match no requirement.
+Silence them with :confval:`suppress_warnings`:
+
+.. code-block:: python
+
+   suppress_warnings = ["duvet.unused"]

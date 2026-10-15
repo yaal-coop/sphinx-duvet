@@ -974,6 +974,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "tox-uv" },
+    { name = "types-docutils" },
 ]
 doc = [
     { name = "shibuya" },
@@ -992,6 +993,7 @@ dev = [
     { name = "pytest", specifier = ">=8.2.1" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "tox-uv", specifier = ">=1.16.0" },
+    { name = "types-docutils", specifier = ">=0.23.0.20260923" },
 ]
 doc = [
     { name = "shibuya", specifier = ">=2024.5.15" },
@@ -1160,6 +1162,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/56/df/9f90a59de8c87cece6e691eee53dc1cb0a824d73aea8f380ae2f6ecb71de/tox_uv_bare-1.36.0.tar.gz", hash = "sha256:d9b0a2fd0f74fa65d9597108f8a0ef7abb08651c9196a998a6073b781b45cfd0", size = 32548, upload-time = "2026-07-21T13:09:56.435Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f7/0a/6dc462e4fb543305283a6157c80f43e3d12ca4702da6ae6521d541c6b55c/tox_uv_bare-1.36.0-py3-none-any.whl", hash = "sha256:ba397dd0396df95a75744d4e42a50ee27207c0ffcf277b62ffba9c3de455a939", size = 22489, upload-time = "2026-07-21T13:09:55.389Z" },
+]
+
+[[package]]
+name = "types-docutils"
+version = "0.23.0.20260923"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/ff/e5c4e5383a226703fc81e3e53bb2072526ec4b7e834eeb7146ea674192ed/types_docutils-0.23.0.20260923.tar.gz", hash = "sha256:486d9054ea84410cc201a30c15759077a5f32234247cfc08aa7290ff2509f770", size = 58327, upload-time = "2026-09-23T06:51:56.366Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/43/b39c0af29de3b02bcf6194a3d6675685d2d7b8b336a31af4525bc0022c4b/types_docutils-0.23.0.20260923-py3-none-any.whl", hash = "sha256:62851b429db623e36853a4a189ce15a846e0636fe090c135d6dc5dd4f9108ef5", size = 92174, upload-time = "2026-09-23T06:51:54.908Z" },
 ]
 
 [[package]]

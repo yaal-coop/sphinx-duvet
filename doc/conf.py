@@ -27,3 +27,8 @@ html_theme = "shibuya"
 html_theme_options = {
     "github_url": "https://github.com/yaal-coop/sphinx-duvet",
 }
+
+# The example page uses the test project. Its unused entries are on purpose.
+duvet_root = "../tests/projects/basic"
+duvet_report_json = "../tests/projects/basic/report.json"
+suppress_warnings = ["duvet.unused"]

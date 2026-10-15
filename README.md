@@ -6,7 +6,10 @@ sphinx-duvet reads the reports of [Duvet](https://github.com/awslabs/duvet),
 which links the requirements of a specification to the code and the tests that
 implement them.
 
-sphinx-duvet is at an early stage. It does not provide any feature yet.
+For each requirement, the reports show whether each target of the project
+implements and tests it, such as a server and a client.
+
+sphinx-duvet is at an early stage. Its options may change.
 
 ## Installation
 

@@ -8,7 +8,7 @@ that implement them.
 
 .. warning::
 
-   sphinx-duvet is at an early stage. It does not provide any feature yet.
+   sphinx-duvet is at an early stage. Its options may change.
 
 Installation
 ------------
@@ -26,4 +26,6 @@ Then enable the extension in your ``conf.py``:
 .. toctree::
    :maxdepth: 1
 
+   usage
+   example
    changelog
