@@ -10,6 +10,10 @@ body[data-theme="light"] {
   --duvet-strong: #24292f;
   --duvet-on-strong: #ffffff;
   --duvet-section: rgba(110, 119, 129, 0.08);
+  --duvet-ok-bg: rgba(26, 127, 55, 0.14);
+  --duvet-warn-bg: rgba(154, 103, 0, 0.16);
+  --duvet-missing-bg: rgba(207, 34, 46, 0.14);
+  --duvet-muted-bg: rgba(110, 119, 129, 0.14);
 }
 
 /* Furo in auto mode follows the system preference. */
@@ -22,6 +26,10 @@ body[data-theme="light"] {
     --duvet-strong: #e6edf3;
     --duvet-on-strong: #0d1117;
     --duvet-section: rgba(139, 148, 158, 0.12);
+    --duvet-ok-bg: rgba(63, 185, 80, 0.22);
+    --duvet-warn-bg: rgba(210, 153, 34, 0.22);
+    --duvet-missing-bg: rgba(248, 81, 73, 0.22);
+    --duvet-muted-bg: rgba(139, 148, 158, 0.2);
   }
 }
 
@@ -35,6 +43,10 @@ body[data-theme="dark"] {
   --duvet-strong: #e6edf3;
   --duvet-on-strong: #0d1117;
   --duvet-section: rgba(139, 148, 158, 0.12);
+  --duvet-ok-bg: rgba(63, 185, 80, 0.22);
+  --duvet-warn-bg: rgba(210, 153, 34, 0.22);
+  --duvet-missing-bg: rgba(248, 81, 73, 0.22);
+  --duvet-muted-bg: rgba(139, 148, 158, 0.2);
 }
 
 .duvet-status {
@@ -216,4 +228,111 @@ table.duvet-table tr:hover a.headerlink {
     visibility: visible;
     opacity: 0.4;
   }
+}
+
+/* Requirements in the text of a specification, highlighted by their worst state.
+   A line under the text tells the states apart, beyond the light background. */
+.duvet-rule {
+  border-radius: 0.2em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.duvet-rule-ok {
+  background: var(--duvet-ok-bg);
+  box-shadow: inset 0 -2px 0 var(--duvet-ok);
+}
+
+.duvet-rule-partial,
+.duvet-rule-todo {
+  background: var(--duvet-warn-bg);
+  box-shadow: inset 0 -2px 0 var(--duvet-warn);
+}
+
+.duvet-rule-missing {
+  background: var(--duvet-missing-bg);
+  box-shadow: inset 0 -2px 0 var(--duvet-missing);
+}
+
+.duvet-rule-unannotated {
+  background: var(--duvet-muted-bg);
+  box-shadow: inset 0 -2px 0 var(--duvet-muted);
+}
+
+.duvet-rule-exception {
+  background: var(--duvet-muted-bg);
+  text-decoration: underline dashed 2px var(--duvet-muted);
+  text-underline-offset: 0.25em;
+}
+
+/* After a requirement, a link to its report shows on hover, as the permalinks of headings.
+   Without hover, on touch screens, it stays visible but faint. */
+.duvet-rule-link {
+  margin-left: 0.2em;
+  visibility: hidden;
+}
+
+:is(p, dd, li, td, th):hover .duvet-rule-link,
+a:focus > .duvet-rule-link {
+  visibility: visible;
+}
+
+@media (hover: none) {
+  .duvet-rule-link {
+    visibility: visible;
+    opacity: 0.4;
+  }
+}
+
+/* The text of a specification keeps its layout in figures and lists.
+   Its lines are at most 72 characters long. */
+pre.duvet-figure,
+div.duvet-figure pre {
+  font-size: 0.85em;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* Lists with markers such as (A) or 1. keep their markers, in the margin. */
+ul.duvet-enumerated {
+  list-style: none;
+  padding-left: 2.5em;
+}
+
+ul.duvet-enumerated > li > p:first-child > .duvet-marker {
+  display: inline-block;
+  min-width: 2.5em;
+  margin-left: -2.5em;
+}
+
+/* The header of the first page: the organization on the left, the authors on the right. */
+table.duvet-table.duvet-front-matter td {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  border: 0;
+  background: none;
+  font-size: 0.9em;
+}
+
+table.duvet-table.duvet-front-matter td:last-child {
+  text-align: right;
+}
+
+/* The table of contents stays compact, as in the specification. */
+ul.duvet-contents li,
+ul.duvet-contents li > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Captions are below figures and tables, as in the specification. */
+table.duvet-spec-table > caption {
+  caption-side: bottom;
+}
+
+.duvet-figure-wrapper > .code-block-caption {
+  justify-content: center;
+  text-align: center;
+  background: none;
+  border: 0;
 }

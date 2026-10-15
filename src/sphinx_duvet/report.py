@@ -113,6 +113,10 @@ class Specification:
     requirements: list[Requirement]
     name: str = ""
     """A short name, unique in the project: the file name without its extension."""
+    contents: bytes = field(default=b"", repr=False, compare=False)
+    """The text of the specification, encoded in UTF-8."""
+    section_ranges: dict[str, tuple[int, int]] = field(default_factory=dict, repr=False)
+    """The byte range of each section, from its title to its end."""
 
     @property
     def url(self) -> str | None:
@@ -255,6 +259,11 @@ def parse_report(report: Report) -> dict[str, Specification]:
                 title=item.get("title") or ietf_title(contents[src].decode()) or path,
                 format=item.get("format", ""),
                 sections={short: long for _, _, short, long in sections.get(src, [])},
+                contents=contents[src],
+                section_ranges={
+                    short: (start, end)
+                    for start, end, short, _ in sections.get(src, [])
+                },
                 requirements=sorted(
                     requirements.get(src, []), key=lambda r: r.ranges[0]
                 ),

@@ -28,4 +28,5 @@ Then enable the extension in your ``conf.py``:
 
    usage
    example
+   example-text
    changelog

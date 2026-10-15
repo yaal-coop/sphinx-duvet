@@ -98,6 +98,13 @@ Configuration
    ``"symbols"`` (the default) or ``"text"``, or a dictionary.
    See :ref:`labels`.
 
+.. confval:: duvet_spec_highlight
+
+   The language of the figures in :rst:dir:`duvet-spec`.
+   ``"auto"`` (the default) highlights JSON and HTTP examples.
+   ``"none"`` disables highlighting.
+   Any other value is the name of a `Pygments lexer <https://pygments.org/docs/lexers/>`_.
+
 Directives
 ----------
 
@@ -143,6 +150,51 @@ Directives
       With ``unannotated``, only show the requirements without any annotation.
       The default is ``all``.
 
+.. rst:directive:: .. duvet-spec:: path
+
+   The whole text of an IETF specification, with a section per section of the specification.
+   Each requirement is highlighted by its worst state among the targets.
+   A link to its row in a report follows it, and shows on hover.
+
+   The text keeps its structure, guessed from its indentation:
+
+   - Paragraphs are joined, so they follow the width of the page.
+     Page headers and footers are removed.
+   - The header of the first page is a table. The title is left out,
+     as it should be the title of the page.
+   - The table of contents is a list of links to the sections.
+   - Lists and definitions, such as parameters and references, are HTML lists.
+     Markers such as ``(A)`` or ``1.`` are kept.
+   - Tables drawn with ``+---+`` borders, or with columns underlined with dashes,
+     are HTML tables.
+   - Figures and examples keep their layout. A caption such as ``Figure 2: Example``
+     is shown below its figure or its table.
+   - ``Section 3.1`` links to the section. ``[RFC7644]`` links to its entry in the references.
+     ``Section 3.1 of [RFC7644]``, ``RFC 7644``, web addresses and email addresses link to
+     their target. Addresses on the example domains of :rfc:`2606` are not links.
+
+   A block that does not follow these rules keeps its layout, as a figure.
+
+   Figures are examples, so their requirements are not highlighted.
+   For instance, the JSON schemas of :rfc:`7643` repeat requirements of its section 4.
+   The :rst:role:`duvet:rule` role links them to the section of their figure.
+
+   JSON and HTTP examples are highlighted.
+   The ``highlight`` option, or :confval:`duvet_spec_highlight`, sets the language.
+
+   .. code-block:: rst
+
+      .. duvet-spec:: rfc/rfc7643.txt
+         :highlight: none
+
+   With :confval:`duvet_autoreport`, each IETF specification gets a page with its text,
+   titled as the specification, next to its compliance page, such as "RFC 7643 compliance".
+
+   The IETF Trust allows to copy and distribute RFCs in full and without modification
+   (`Trust Legal Provisions <https://trustee.ietf.org/documents/trust-legal-provisions/>`_,
+   section 3.c). So the whole text is shown, with its header, its copyright notice
+   and its table of contents.
+
 .. rst:directive:: .. duvet-recap:: [path]
 
    A table that counts the requirements per level and per column.
@@ -164,7 +216,8 @@ If two specification files share a name, the identifier uses their whole path.
 
 .. rst:role:: duvet:rule
 
-   A link to a requirement, in the report that shows it:
+   A link to a requirement, in the text of its specification,
+   or in a report if no page shows the text:
 
    .. code-block:: rst
 
@@ -172,6 +225,14 @@ If two specification files share a name, the identifier uses their whole path.
       See :duvet:rule:`this requirement <rfc7643#3.1-9>`.
 
    The ``any`` role finds requirements too.
+
+.. rst:role:: duvet:status
+
+   A link to the row of a requirement in a report, with its states:
+
+   .. code-block:: rst
+
+      See the status of :duvet:status:`rfc7643#3.1-9`.
 
 Requirements are in the inventory of the documentation,
 so other documentations can refer to them with intersphinx:

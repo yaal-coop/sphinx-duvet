@@ -1,0 +1,152 @@
+Internet Engineering Task Force (IETF)                         A. Author
+Request for Comments: 9997                                   Example Org
+Category: Standards Track                                   October 2026
+ISSN: 2070-1721
+
+
+                          Updated Edition
+
+
+                       Example Layout Protocol
+                              for Tests
+
+Abstract
+
+   This document shows the layout of the text of an RFC.  Its text is
+   at http://www.rfc-editor.org/info/rfc9997.
+
+Table of Contents
+
+   1. Introduction ....................................................1
+      1.1. Terms ......................................................1
+   2. Lists and Tables ................................................2
+   3. Figures .........................................................3
+   4. References ......................................................4
+   Appendix A. Notes ..................................................5
+   Author's Address ...................................................5
+
+   This list MUST stay short.
+
+1.  Introduction
+
+   Clients use the server at https://example.com/ per Section 2 and
+   Section 9.  Section 4 of [RFC9998] and Section 1 of RFC 9999 are
+   other parts.  See [RFC9998], [RFC1234] and [OTHER] for more, but
+   not [NOWHERE].
+
+   Section 3 has figures.
+
+1.1.  Terms
+
+   Client
+      A program that sends requests.
+
+   Server  A program that answers requests.  The server MUST
+      answer as in Section 2.
+
+   Token  A secret value.
+
+   Endpoint
+
+      A path on the server.
+
+1.1.1.  Details
+
+   This section is too deep for the table of contents.
+
+2.  Lists and Tables
+
+   The client sends these parameters:
+
+   o  The client MUST send a token.
+
+   o  a name,
+
+      with a second paragraph.
+
+   The flow has these steps:
+
+   (A)  The client sends a request.
+
+   (B)  The server answers.
+
+   +-----------+-------------------+
+   | Name      | Use               |
+   +-----------+-------------------+
+   | token     | The server MUST   |
+   |           | check it.         |
+   |           |                   |
+   | name      |                   |
+   +-----------+-------------------+
+
+               Table 1: Parameters
+
+   +-------+-------+
+   | one   | two   |
+   +-------+-------+
+
+   Method Use
+   ------ -----------------------
+   GET    Reads a resource.
+
+   POST   Creates a resource.
+
+                 Table 2: Methods
+
+3.  Figures
+
+   A request:
+
+     GET /tokens HTTP/1.1
+     Host: server.example.com
+
+   A response:
+
+     {
+       "token": "abc"
+     }
+
+                 Figure 1: A token
+
+   An abbreviated response:
+
+     {
+       "token": "abc",
+       ...
+     }
+
+   A rule in a figure:
+
+     {
+       "description": "The token MUST be secret."
+     }
+
+   A diagram:
+
+     +--------+       +--------+
+     | Client |------>| Server |
+     +--------+       +--------+
+
+4.  References
+
+   The references are:
+
+   [RFC9998]  Author, A., "Example Other Protocol", RFC 9998,
+              DOI 10.17487/RFC9998, October 2026,
+              <https://www.rfc-editor.org/info/rfc9998>.
+
+   [OTHER]    Author, B., "Other Document", 2026.
+
+   Unlabeled  A reference without a label.
+
+Appendix A.  Notes
+
+   Some notes, after Appendix A.
+
+Author's Address
+
+   A. Author
+   Example Org
+
+   Email: author@example.org
+   Email: author@yaal.coop

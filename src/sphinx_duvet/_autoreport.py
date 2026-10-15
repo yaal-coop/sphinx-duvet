@@ -1,5 +1,6 @@
 """Generate a compliance page per specification, as autosummary does for modules."""
 
+import re
 from pathlib import Path
 
 from sphinx.application import Sphinx
@@ -37,9 +38,16 @@ def generate_pages(app: Sphinx) -> None:
     for spec in project.specifications.values():
         name = _page_name(spec.path, pages)
         pages.append(name)
-        content = _title(spec.title)
+        content = _title(_compliance_title(spec.title))
         if spec.url:
             content += f"Specification: {spec.url}\n\n"
+        if spec.format == "ietf":
+            content += (
+                f"Full text, with the requirements highlighted: :doc:`{name}-text`\n\n"
+            )
+            content += f".. toctree::\n   :hidden:\n\n   {name}-text\n\n"
+            text = _title(spec.title) + f".. duvet-spec:: {spec.path}\n"
+            _write_if_changed(folder / f"{name}-text.rst", text)
         content += f".. duvet-recap:: {spec.path}\n{recap_options}\n"
         content += f".. duvet-report:: {spec.path}\n{report_options}"
         _write_if_changed(folder / f"{name}.rst", content)
@@ -57,6 +65,12 @@ def _page_name(path: str, taken: list[str]) -> str:
     if name in taken:
         name = path.replace("/", "-").rsplit(".", 1)[0]
     return name
+
+
+def _compliance_title(title: str) -> str:
+    """Return the title of a compliance page, such as RFC 7643 compliance."""
+    match = re.match(r"RFC \d+(?=: )", title)
+    return f"{match.group() if match else title} compliance"
 
 
 def _title(text: str) -> str:

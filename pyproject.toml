@@ -29,6 +29,7 @@ classifiers = [
 
 requires-python = ">= 3.11"
 dependencies = [
+    "pygments>=2.14",
     "sphinx>=7.3",
 ]
 
@@ -54,6 +55,7 @@ dev = [
     "pytest-cov>=6.0.0",
     "tox-uv>=1.16.0",
     "types-docutils>=0.23.0.20260923",
+    "types-pygments>=2.21.0.20260819",
 ]
 doc = [
     "shibuya>=2024.5.15",

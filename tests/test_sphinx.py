@@ -14,6 +14,8 @@ from sphinx.testing.util import SphinxTestApp
 import sphinx_duvet
 from sphinx_duvet import _render as render
 from sphinx_duvet._autoreport import _page_name
+from sphinx_duvet._domain import REPORT
+from sphinx_duvet._domain import TEXT
 from sphinx_duvet._domain import RuleLocation
 from sphinx_duvet._labels import duvet_label
 
@@ -21,6 +23,11 @@ PROJECT = Path(__file__).parent / "projects" / "basic"
 CONF = {
     "duvet_root": str(PROJECT),
     "duvet_report_json": str(PROJECT / "report.json"),
+}
+LAYOUT = Path(__file__).parent / "projects" / "layout"
+LAYOUT_CONF = {
+    "duvet_root": str(LAYOUT),
+    "duvet_report_json": str(LAYOUT / "report.json"),
 }
 
 
@@ -246,9 +253,10 @@ def test_missing_config(app: SphinxTestApp) -> None:
     """Without a Duvet project, the directives warn and render nothing."""
     app.build()
     messages = warnings(app)
-    assert len(messages) == 2
+    assert len(messages) == 3
     assert "index.rst:4: WARNING: no .duvet/config.toml found above" in messages[0]
     assert "index.rst:6: WARNING: no .duvet/config.toml found above" in messages[1]
+    assert "index.rst:8: WARNING: no .duvet/config.toml found above" in messages[2]
     assert not tables(app, "index")
 
 
@@ -335,12 +343,17 @@ def test_autoreport(app: SphinxTestApp) -> None:
     assert sorted(path.name for path in folder.iterdir()) == [
         "extension.rst",
         "index.rst",
+        "rfc9999-text.rst",
         "rfc9999.rst",
     ]
     assert (folder / "rfc9999.rst").read_text() == (
-        "RFC 9999: Example Token Exchange Protocol\n"
-        "=========================================\n\n"
+        "RFC 9999 compliance\n"
+        "===================\n\n"
         "Specification: https://www.rfc-editor.org/rfc/rfc9999\n\n"
+        "Full text, with the requirements highlighted: :doc:`rfc9999-text`\n\n"
+        ".. toctree::\n"
+        "   :hidden:\n\n"
+        "   rfc9999-text\n\n"
         ".. duvet-recap:: spec/rfc9999.txt\n"
         "   :group-by: role\n\n"
         ".. duvet-report:: spec/rfc9999.txt\n"
@@ -348,6 +361,16 @@ def test_autoreport(app: SphinxTestApp) -> None:
         "   :show: unannotated\n"
     )
     assert "Specification:" not in (folder / "extension.rst").read_text()
+    assert (
+        (folder / "extension.rst")
+        .read_text()
+        .startswith("Example extension compliance\n")
+    )
+    assert (folder / "rfc9999-text.rst").read_text() == (
+        "RFC 9999: Example Token Exchange Protocol\n"
+        "=========================================\n\n"
+        ".. duvet-spec:: spec/rfc9999.txt\n"
+    )
     assert (folder / "index.rst").read_text() == (
         "Specification compliance\n"
         "========================\n\n"
@@ -655,7 +678,10 @@ def test_rule_inventory(app: SphinxTestApp) -> None:
 
 @pytest.mark.sphinx("html", testroot="rules", confoverrides=CONF, freshenv=True)
 def test_rule_locations(app: SphinxTestApp) -> None:
-    """The main place of a requirement follows the documents that are read again."""
+    """The places of a requirement follow the documents that are read again.
+
+    The rule role prefers the text of the specification, the status role a report.
+    """
     app.build()
     domain = app.env.get_domain("duvet")
     assert domain.location("rfc9999#2-1").docname == "report"
@@ -663,15 +689,19 @@ def test_rule_locations(app: SphinxTestApp) -> None:
     assert domain.location("rfc9999#2-1").docname == "twice"
     assert domain.location("rfc9999#3-5") is None
     domain.merge_domaindata(
-        ["report"],
+        ["report", "text"],
         {
             "rules": {
-                "rfc9999#2-1": [RuleLocation("report", "a", 1, "t")],
-                "other#1-1": [RuleLocation("ignored", "b", 1, "t")],
+                "rfc9999#2-1": [
+                    RuleLocation("report", "a", REPORT, "t"),
+                    RuleLocation("text", "b", TEXT, "t"),
+                ],
+                "other#1-1": [RuleLocation("ignored", "b", REPORT, "t")],
             }
         },
     )
-    assert domain.location("rfc9999#2-1").docname == "report"
+    assert domain.location("rfc9999#2-1").docname == "text"
+    assert domain.location("rfc9999#2-1", "status").docname == "report"
     assert domain.location("other#1-1") is None
 
 
@@ -692,3 +722,246 @@ def test_without_permalinks(app: SphinxTestApp) -> None:
 def test_link_without_uri() -> None:
     """Without an address, a link is plain text, such as a cite without a repository link."""
     assert isinstance(render.link("src/a.py:1", None), nodes.Text)
+
+
+@pytest.mark.sphinx("html", testroot="spec", confoverrides=CONF, freshenv=True)
+def test_spec_text(app: SphinxTestApp) -> None:
+    """The text of a specification has its sections, with the requirements highlighted."""
+    app.build()
+    doctree = app.env.get_doctree("text")
+    titles = [section[0].astext() for section in doctree.findall(nodes.section)][1:]
+    assert titles == [
+        "Abstract",
+        "1. Introduction",
+        "2. Requests",
+        "2.1. Parameters",
+        "3. Security",
+    ]
+    nested = next(
+        s for s in doctree.findall(nodes.section) if s["ids"] == ["section-2.1"]
+    )
+    assert nested.parent["ids"] == ["section-2"]
+    legend = next(doctree.findall(nodes.paragraph))
+    assert legend.astext().startswith("Requirements: done · partly done or planned")
+    header = next(doctree.findall(nodes.table))
+    assert "duvet-front-matter" in header["classes"]
+    assert "Request for Comments: 9999" in header.astext()
+    assert (
+        "Example Token Exchange Protocol"
+        not in header.parent.astext().split("Abstract")[0]
+    )
+    html = (Path(app.outdir) / "text.html").read_text()
+    assert (
+        '<span class="duvet-rule duvet-rule-partial" id="duvet-text-rfc9999-2.1-1">'
+        "The server <span" in html
+    )
+    assert (
+        'class="duvet-rule duvet-rule-unannotated" id="duvet-text-rfc9999-3-1"' in html
+    )
+    assert (
+        'send the token.</span><a class="reference internal" '
+        'href="report.html#duvet-rfc9999-2-1" title="The client MUST send the token.">'
+        '<span class="duvet-rule-link">¶</span></a>'
+    ) in html
+    assert "The server MUST validate the café parameter" in doctree.astext()
+
+
+@pytest.mark.sphinx("html", testroot="spec", confoverrides=CONF, freshenv=True)
+def test_spec_roles(app: SphinxTestApp) -> None:
+    """The rule role links to the text, the status role to the report."""
+    app.build()
+    html = (Path(app.outdir) / "index.html").read_text()
+    assert 'href="text.html#duvet-text-rfc9999-2-1"' in html
+    assert 'href="report.html#duvet-rfc9999-2-1"' in html
+    messages = warnings(app)
+    assert any(
+        "index.rst:9: WARNING: no report shows the requirement extension#discovery-1"
+        in m
+        for m in messages
+    )
+    assert any(
+        "index.rst:12: WARNING: duvet-spec only shows IETF text specifications, "
+        "not spec/extension.md" in m
+        for m in messages
+    )
+    assert any(
+        "index.rst:14: WARNING: unknown specification spec/unknown.txt" in m
+        for m in messages
+    )
+
+
+@pytest.mark.sphinx("html", testroot="spec", confoverrides=CONF, freshenv=True)
+def test_spec_without_report(app: SphinxTestApp) -> None:
+    """Without a report, requirements in the text are highlighted, but are not links."""
+    (Path(app.srcdir) / "report.rst").write_text("Report\n======\n")
+    app.build()
+    html = (Path(app.outdir) / "text.html").read_text()
+    assert 'id="duvet-text-rfc9999-2-1"' in html
+    assert "report.html#duvet-rfc9999" not in html
+    assert "duvet-rule-link" not in html
+
+
+@pytest.mark.sphinx("text", testroot="spec", confoverrides=CONF, freshenv=True)
+def test_spec_text_builder(app: SphinxTestApp) -> None:
+    """Out of HTML, requirements have no link to their report."""
+    app.build()
+    text = (Path(app.outdir) / "text.txt").read_text()
+    assert "The client MUST send the token." in text
+    assert "¶" not in text
+
+
+@pytest.mark.sphinx("html", testroot="layout", confoverrides=LAYOUT_CONF, freshenv=True)
+def test_spec_layout(app: SphinxTestApp) -> None:
+    """The text keeps its structure: header, contents, definitions, lists, tables and figures."""
+    app.build()
+    assert warnings(app) == []
+    doctree = app.env.get_doctree("index")
+    header, *spec_tables = tables(app, "index")
+    assert [row.astext().split("\n\n") for row in header.findall(nodes.row)][:2] == [
+        ["Internet Engineering Task Force (IETF)", "A. Author"],
+        ["Request for Comments: 9997", "Example Org"],
+    ]
+    blocks = [block.astext() for block in doctree.findall(nodes.literal_block)]
+    assert blocks[0] == "Updated Edition"
+    assert not any("Example Layout Protocol" in block for block in blocks)
+
+    contents = next(
+        node
+        for node in doctree.findall(nodes.bullet_list)
+        if "duvet-contents" in node["classes"]
+    )
+    assert [ref["refid"] for ref in contents.findall(nodes.reference)] == [
+        "section-1",
+        "section-1.1",
+        "section-2",
+        "section-3",
+        "section-4",
+        "appendix-A",
+        "name-author-s-address",
+    ]
+    terms = [term.astext() for term in doctree.findall(nodes.term)]
+    assert terms == [
+        "Client",
+        "Server",
+        "Token",
+        "Endpoint",
+        "[RFC9998]",
+        "[OTHER]",
+        "Unlabeled",
+    ]
+
+    lists = [
+        [item.astext().removesuffix("¶") for item in node.children]
+        for node in doctree.findall(nodes.bullet_list)
+        if node is not contents and node.parent is not contents
+    ]
+    assert lists[-2:] == [
+        ["The client MUST send a token.", "a name,\n\nwith a second paragraph."],
+        ["(A) The client sends a request.", "(B) The server answers."],
+    ]
+
+    captions = [
+        table[0].astext() for table in spec_tables if table[0].tagname == "title"
+    ]
+    assert captions == ["Table 1: Parameters", "Table 2: Methods"]
+    parameters = [
+        row.astext().replace("¶", "").split("\n\n")
+        for row in spec_tables[0].findall(nodes.row)
+    ]
+    assert parameters == [
+        ["Name", "Use"],
+        ["token", "The server MUST check it."],
+        ["name", ""],
+    ]
+    assert not list(spec_tables[1].findall(nodes.thead))
+
+    lines = [line.astext() for line in doctree.findall(nodes.line)]
+    assert lines == [
+        "A. Author",
+        "Example Org",
+        "Email: author@example.org",
+        "Email: author@yaal.coop",
+    ]
+
+    html = (Path(app.outdir) / "index.html").read_text()
+    assert '<div class="duvet-figure highlight-http notranslate">' in html
+    [wrapper] = [
+        node
+        for node in doctree.findall(nodes.container)
+        if "duvet-figure-wrapper" in node["classes"]
+    ]
+    assert [child.tagname for child in wrapper.children] == ["literal_block", "caption"]
+    assert '<span class="caption-text">Figure 1: A token</span>' in html
+    assert html.count("highlight-json") == 2
+    assert 'class="duvet-rule-link"' not in html
+    assert (
+        'answer as in <a class="reference internal" href="#section-2">Section 2</a>.'
+        in html
+    )
+    assert (
+        'per <a class="reference internal" href="#section-2">Section 2</a> and Section 9.'
+        in html
+    )
+    assert (
+        'href="https://www.rfc-editor.org/rfc/rfc9998#section-4">Section 4</a>' in html
+    )
+    assert (
+        'href="https://www.rfc-editor.org/rfc/rfc9999#section-1">Section 1</a>' in html
+    )
+    assert (
+        '<a class="reference internal" href="#reference-rfc9998">[RFC9998]</a>' in html
+    )
+    assert 'href="https://www.rfc-editor.org/rfc/rfc1234">[RFC1234]</a>' in html
+    assert '<a class="reference internal" href="#reference-other">[OTHER]</a>' in html
+    assert "server at https://example.com/ per" in html
+    assert "but not [NOWHERE]." in html
+    assert (
+        '<p><a class="reference internal" href="#section-3">Section 3</a> has' in html
+    )
+    assert '<dt id="reference-rfc9998">' in html
+    assert 'href="#appendix-A">Appendix A</a>' in html
+    assert 'href="mailto:' in html
+
+    domain = app.env.get_domain("duvet")
+    assert domain.location("rfc9997#2-1").anchor == "duvet-text-rfc9997-2-1"
+    assert domain.location("rfc9997#2-2").anchor == "duvet-text-rfc9997-2-2"
+    assert domain.location("rfc9997#name-table-of-contents-1").anchor == (
+        "name-table-of-contents"
+    )
+    assert domain.location("rfc9997#3-1").anchor == "section-3"
+
+
+@pytest.mark.sphinx("html", testroot="layout", confoverrides=LAYOUT_CONF, freshenv=True)
+def test_spec_highlight_option(app: SphinxTestApp) -> None:
+    """The highlight option sets the language of every figure, or disables highlighting."""
+    app.build()
+    plain = (Path(app.outdir) / "plain.html").read_text()
+    assert "highlight-json" not in plain
+    assert "highlight-http" not in plain
+    json = (Path(app.outdir) / "json.html").read_text()
+    assert json.count("highlight-json") == 2
+    assert "highlight-http" not in json
+
+
+@pytest.mark.sphinx(
+    "html",
+    testroot="layout",
+    confoverrides={**LAYOUT_CONF, "duvet_spec_highlight": "nope"},
+    freshenv=True,
+)
+def test_spec_highlight_config(app: SphinxTestApp) -> None:
+    """An unknown language in the configuration is reported, and figures are highlighted automatically."""
+    (Path(app.srcdir) / "plain.rst").write_text(
+        "Plain\n=====\n\n.. duvet-spec:: spec/rfc9997.txt\n   :highlight: nope\n"
+    )
+    app.build()
+    messages = warnings(app)
+    assert any(
+        "index.rst:9: WARNING: duvet_spec_highlight: unknown Pygments lexer 'nope'" in m
+        for m in messages
+    )
+    output = app.warning.getvalue()
+    assert 'plain.rst:4: ERROR: Error in "duvet-spec" directive' in output
+    assert "unknown Pygments lexer 'nope'" in output.split("plain.rst:4")[1]
+    html = (Path(app.outdir) / "index.html").read_text()
+    assert "highlight-http" in html

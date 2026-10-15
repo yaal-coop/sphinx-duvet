@@ -20,5 +20,10 @@ Added
 - Checker targets, such as a conformance test suite, show the requirements they check.
 - Each requirement has an identifier, such as ``rfc7643#3.1-9``.
   The ``duvet:rule`` role links to it, also from other documentations with intersphinx.
+- ``duvet-spec`` shows the whole text of an IETF specification, with its requirements highlighted.
+  Lists, definitions and tables are rendered in HTML, figures have their caption,
+  and references to sections, RFCs and addresses are links.
+  JSON and HTTP examples are highlighted, see ``duvet_spec_highlight``.
+  ``duvet_autoreport`` gives each specification a page with its text.
 - The documentation explains how to install Duvet on Read the Docs and in the CI.
 - ``duvet_labels`` shows the states as symbols, as text, or with any inline markup such as icons.

@@ -3,9 +3,9 @@
 
 
 
-Internet Engineering Task Force (IETF)                          A. Author
-Request for Comments: 9999                                     Example Org
-Category: Standards Track                                     October 2026
+Internet Engineering Task Force (IETF)                         A. Author
+Request for Comments: 9999                                   Example Org
+Category: Standards Track                                   October 2026
 ISSN: 2070-1721
 
 

@@ -4,6 +4,7 @@ import re
 from collections.abc import Sequence
 
 from docutils import nodes
+from sphinx.transforms.post_transforms import SphinxPostTransform
 from sphinx.writers.html5 import HTML5Translator
 
 from .report import Cite
@@ -146,20 +147,70 @@ def table(
     widths: Sequence[int],
     classes: Sequence[str] = (),
 ) -> nodes.table:
-    """Return a table. Each row is a row node, or a list of cells."""
+    """Return a table. Each row is a row node, or a list of cells.
+
+    Without headers, the table has no header row.
+    """
     node = nodes.table(classes=["duvet-table", *classes])
-    group = nodes.tgroup(cols=len(headers))
+    group = nodes.tgroup(cols=len(widths))
     node += group
     for width in widths:
         group += nodes.colspec(colwidth=width)
-    head = nodes.thead()
-    group += head
-    header_row = nodes.row()
-    for header in headers:
-        header_row += nodes.entry("", paragraph(nodes.Text(header)))
-    head += header_row
+    if headers:
+        header_row = nodes.row()
+        for header in headers:
+            header_row += nodes.entry("", paragraph(nodes.Text(header)))
+        group += nodes.thead("", header_row)
     body = nodes.tbody()
     group += body
     for item in rows:
         body += item if isinstance(item, nodes.row) else row(item)
     return node
+
+
+_RULE_STATES = [
+    ("ok", "done"),
+    ("partial", "partly done or planned"),
+    ("missing", "missing"),
+    ("exception", "deliberate deviation"),
+    ("unannotated", "not annotated yet"),
+]
+
+
+def state_legend() -> nodes.paragraph:
+    """Return a line that explains the highlight colors of the requirements."""
+    node = paragraph(nodes.Text("Requirements: "), classes=["duvet-legend"])
+    for index, (state, text) in enumerate(_RULE_STATES):
+        if index:
+            node += nodes.Text(" · ")
+        node += nodes.inline(text=text, classes=["duvet-rule", f"duvet-rule-{state}"])
+    return node
+
+
+class duvet_rule_link(nodes.inline):
+    """The icon of a link from a requirement in the text to its report.
+
+    Formats other than HTML leave it out, as the permalinks.
+    """
+
+
+def visit_rule_link_html(translator: HTML5Translator, node: duvet_rule_link) -> None:
+    """Open the icon, as any inline text."""
+    translator.visit_inline(node)
+
+
+def depart_rule_link_html(translator: HTML5Translator, node: duvet_rule_link) -> None:
+    """Close the icon, as any inline text."""
+    translator.depart_inline(node)
+
+
+class RuleLinks(SphinxPostTransform):
+    """Remove the links from the text of a specification to a report, when no report shows the requirement."""
+
+    default_priority = 20
+
+    def run(self, **kwargs: object) -> None:
+        """Remove the icons that are not in a link."""
+        for icon in list(self.document.findall(duvet_rule_link)):
+            if not isinstance(icon.parent, nodes.reference):
+                icon.parent.remove(icon)

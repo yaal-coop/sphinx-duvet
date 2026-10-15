@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -962,6 +962,7 @@ name = "sphinx-duvet"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "pygments" },
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
@@ -975,6 +976,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "tox-uv" },
     { name = "types-docutils" },
+    { name = "types-pygments" },
 ]
 doc = [
     { name = "shibuya" },
@@ -983,7 +985,10 @@ doc = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "sphinx", specifier = ">=7.3" }]
+requires-dist = [
+    { name = "pygments", specifier = ">=2.14" },
+    { name = "sphinx", specifier = ">=7.3" },
+]
 
 [package.metadata.requires-dev]
 dev = [
@@ -994,6 +999,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "tox-uv", specifier = ">=1.16.0" },
     { name = "types-docutils", specifier = ">=0.23.0.20260923" },
+    { name = "types-pygments", specifier = ">=2.21.0.20260819" },
 ]
 doc = [
     { name = "shibuya", specifier = ">=2024.5.15" },
@@ -1171,6 +1177,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/00/ff/e5c4e5383a226703fc81e3e53bb2072526ec4b7e834eeb7146ea674192ed/types_docutils-0.23.0.20260923.tar.gz", hash = "sha256:486d9054ea84410cc201a30c15759077a5f32234247cfc08aa7290ff2509f770", size = 58327, upload-time = "2026-09-23T06:51:56.366Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/43/b39c0af29de3b02bcf6194a3d6675685d2d7b8b336a31af4525bc0022c4b/types_docutils-0.23.0.20260923-py3-none-any.whl", hash = "sha256:62851b429db623e36853a4a189ce15a846e0636fe090c135d6dc5dd4f9108ef5", size = 92174, upload-time = "2026-09-23T06:51:54.908Z" },
+]
+
+[[package]]
+name = "types-pygments"
+version = "2.21.0.20260819"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/84/2b/b3e929c39fb056f0e44560acbe53a7c3f28f428af5362d043642d80b31ec/types_pygments-2.21.0.20260819.tar.gz", hash = "sha256:68e0cb27115b08b681c843e30a153b5d9850c048e1158623ada36ccd4cf7e89b", size = 21509, upload-time = "2026-08-19T02:47:15.827Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d9/a5/10a2de06b53a36f4334391fcf292b51877cbc71d3f6eac353e7b87a0a17e/types_pygments-2.21.0.20260819-py3-none-any.whl", hash = "sha256:85e216770d616db6a7e96fb70c2de9d9f283b746c37edb7768ce645bdbcaddb2", size = 29099, upload-time = "2026-08-19T02:47:14.81Z" },
 ]
 
 [[package]]

@@ -7,9 +7,9 @@
   },
   "sources": {
     "https://awslabs.github.io/duvet/v2/sources.json#inline": {
-      "src-c56bda0a1c966037": {
+      "src-960281a3e276111b": {
         "file_name": "spec/rfc9999.txt",
-        "contents": "\n\n\n\n\nInternet Engineering Task Force (IETF)                          A. Author\nRequest for Comments: 9999                                     Example Org\nCategory: Standards Track                                     October 2026\nISSN: 2070-1721\n\n\n                      Example Token Exchange Protocol\n\nAbstract\n\n   This document describes an example protocol for tests.\n\n1.  Introduction\n\n   This section has no requirement.\n\n2.  Requests\n\n   The client MUST send the token.\n\n   The server MUST reject invalid tokens.\n\n   The server SHOULD log the request.\n\n2.1.  Parameters\n\n   The server MUST validate the café parameter and the response\n   MUST be encoded as JSON.\n\n   The client MAY cache the response.\n\n3.  Security\n\n   Servers SHOULD rotate their keys.\n\n   The token MUST NOT be empty.\n\n   The server MUST reject replayed tokens and SHOULD alert the\n   administrator.\n\n   The server MUST:\n\n   o  reject expired tokens,\n\n   o  reject revoked tokens.\n"
+        "contents": "\n\n\n\n\nInternet Engineering Task Force (IETF)                         A. Author\nRequest for Comments: 9999                                   Example Org\nCategory: Standards Track                                   October 2026\nISSN: 2070-1721\n\n\n                      Example Token Exchange Protocol\n\nAbstract\n\n   This document describes an example protocol for tests.\n\n1.  Introduction\n\n   This section has no requirement.\n\n2.  Requests\n\n   The client MUST send the token.\n\n   The server MUST reject invalid tokens.\n\n   The server SHOULD log the request.\n\n2.1.  Parameters\n\n   The server MUST validate the café parameter and the response\n   MUST be encoded as JSON.\n\n   The client MAY cache the response.\n\n3.  Security\n\n   Servers SHOULD rotate their keys.\n\n   The token MUST NOT be empty.\n\n   The server MUST reject replayed tokens and SHOULD alert the\n   administrator.\n\n   The server MUST:\n\n   o  reject expired tokens,\n\n   o  reject revoked tokens.\n"
       },
       "src-db74e075a778c87e": {
         "file_name": "spec/extension.md",
@@ -65,11 +65,11 @@
   },
   "annotations": {
     "https://awslabs.github.io/duvet/v2/annotations.json#specification": {
-      "spc-98532bd886137fc7": {
+      "spc-7fb47e760d085dd4": {
         "source": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "start": 0,
-          "end": 956
+          "end": 951
         },
         "format": "ietf"
       },
@@ -84,50 +84,41 @@
       }
     },
     "https://awslabs.github.io/duvet/v2/annotations.json#section": {
-      "sec-1066737a8cb01098": {
+      "sec-2ac3b85bb945c209": {
         "source": {
-          "src": "src-c56bda0a1c966037",
-          "start": 430,
-          "end": 556
-        },
-        "short_name": "section-2",
-        "long_name": "Requests"
-      },
-      "sec-2ad3d1d297c4c350": {
-        "source": {
-          "src": "src-c56bda0a1c966037",
-          "start": 302,
-          "end": 369
-        },
-        "short_name": "name-abstract",
-        "long_name": "Abstract"
-      },
-      "sec-37b6379d7ea649f4": {
-        "source": {
-          "src": "src-c56bda0a1c966037",
-          "start": 375,
-          "end": 424
+          "src": "src-960281a3e276111b",
+          "start": 370,
+          "end": 419
         },
         "short_name": "section-1",
         "long_name": "Introduction"
       },
-      "sec-9f8fbb0a763e63d7": {
+      "sec-47f77ebb4e44e6c8": {
         "source": {
-          "src": "src-c56bda0a1c966037",
-          "start": 713,
-          "end": 955
+          "src": "src-960281a3e276111b",
+          "start": 297,
+          "end": 364
         },
-        "short_name": "section-3",
-        "long_name": "Security"
+        "short_name": "name-abstract",
+        "long_name": "Abstract"
       },
-      "sec-b68d587e349fa21a": {
+      "sec-7cc3e3725f80c35f": {
         "source": {
-          "src": "src-c56bda0a1c966037",
-          "start": 564,
-          "end": 707
+          "src": "src-960281a3e276111b",
+          "start": 559,
+          "end": 702
         },
         "short_name": "section-2.1",
         "long_name": "Parameters"
+      },
+      "sec-b6ad26bdbc837fde": {
+        "source": {
+          "src": "src-960281a3e276111b",
+          "start": 708,
+          "end": 950
+        },
+        "short_name": "section-3",
+        "long_name": "Security"
       },
       "sec-ba373592ce183a13": {
         "source": {
@@ -137,6 +128,15 @@
         },
         "short_name": "discovery",
         "long_name": "Discovery"
+      },
+      "sec-dd43a3b1de031e51": {
+        "source": {
+          "src": "src-960281a3e276111b",
+          "start": 425,
+          "end": 551
+        },
+        "short_name": "section-2",
+        "long_name": "Requests"
       },
       "sec-f59bfcecaf4b5858": {
         "source": {
@@ -149,201 +149,179 @@
       }
     },
     "https://awslabs.github.io/duvet/v2/annotations.json#requirement": {
-      "req-619b49343bb308f7": {
-        "source": {
-          "src": "lnk-34451b6514e0fc09",
-          "line": 17
-        },
-        "origin": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 673,
-              "end": 707
-            }
-          ]
-        },
-        "level": "MAY",
-        "coverage": {
-          "cite-54ae3b832692dde4": [
-            {
-              "start": 673,
-              "end": 707
-            }
-          ]
-        }
-      },
-      "req-630f7b8de09cbe80": {
-        "source": {
-          "src": "lnk-a00dec1358960d3a",
-          "line": 23
-        },
-        "origin": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 522,
-              "end": 556
-            }
-          ]
-        },
-        "level": "SHOULD",
-        "coverage": {
-          "cite-2f02096b55cf8654": [
-            {
-              "start": 522,
-              "end": 556
-            }
-          ],
-          "cite-6fd9b61f468184b9": [
-            {
-              "start": 522,
-              "end": 556
-            }
-          ]
-        }
-      },
-      "req-660a06b8da0977c9": {
-        "source": {
-          "src": "lnk-34451b6514e0fc09",
-          "line": 10
-        },
-        "origin": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 579,
-              "end": 640
-            },
-            {
-              "start": 644,
-              "end": 668
-            }
-          ]
-        },
-        "level": "MUST",
-        "coverage": {
-          "cite-1f32e61a69e99166": [
-            {
-              "start": 579,
-              "end": 623
-            }
-          ],
-          "cite-2c556f745d0a6289": [
-            {
-              "start": 579,
-              "end": 623
-            }
-          ]
-        }
-      },
-      "req-66bee3ea3be945f3": {
-        "source": {
-          "src": "lnk-49441967673a6c3f",
-          "line": 24
-        },
-        "origin": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 764,
-              "end": 792
-            }
-          ]
-        },
-        "level": "MUST",
-        "coverage": {
-          "cite-fe14bfde53f85370": [
-            {
-              "start": 764,
-              "end": 792
-            }
-          ]
-        }
-      },
-      "req-7d81a40d58fafbd8": {
-        "source": {
-          "src": "lnk-49441967673a6c3f",
-          "line": 30
-        },
-        "origin": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 797,
-              "end": 856
-            },
-            {
-              "start": 860,
-              "end": 874
-            }
-          ]
-        },
-        "level": "MUST",
-        "coverage": {
-          "cite-6bb5883174107c4d": [
-            {
-              "start": 797,
-              "end": 835
-            }
-          ],
-          "cite-76fd30d5bcff3a60": [
-            {
-              "start": 836,
-              "end": 856
-            },
-            {
-              "start": 860,
-              "end": 874
-            }
-          ],
-          "cite-f3f3fe6db2584945": [
-            {
-              "start": 797,
-              "end": 835
-            }
-          ]
-        }
-      },
-      "req-7dc91fcd75e8610a": {
-        "source": {
-          "src": "lnk-f8ab51bc5fdcdd8c",
-          "line": 6
-        },
-        "origin": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 933,
-              "end": 955
-            }
-          ]
-        },
-        "level": "MUST"
-      },
-      "req-8d514ea20bd1bc64": {
+      "req-143990833c3c08da": {
         "source": {
           "src": "lnk-a00dec1358960d3a",
           "line": 11
         },
         "origin": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 443,
-              "end": 474
+              "start": 438,
+              "end": 469
             }
           ]
         },
         "level": "MUST",
         "coverage": {
-          "cite-e912ed44b3ed012d": [
+          "cite-56b0ab55cf662117": [
             {
-              "start": 443,
-              "end": 474
+              "start": 438,
+              "end": 469
             }
           ]
         }
+      },
+      "req-2525e908d24ba0e2": {
+        "source": {
+          "src": "lnk-49441967673a6c3f",
+          "line": 30
+        },
+        "origin": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 792,
+              "end": 851
+            },
+            {
+              "start": 855,
+              "end": 869
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-242afe1e6fb79b3f": [
+            {
+              "start": 792,
+              "end": 830
+            }
+          ],
+          "cite-2d91d182be2e4337": [
+            {
+              "start": 792,
+              "end": 830
+            }
+          ],
+          "cite-c992deddeac7018a": [
+            {
+              "start": 831,
+              "end": 851
+            },
+            {
+              "start": 855,
+              "end": 869
+            }
+          ]
+        }
+      },
+      "req-2569ca30acf4a8eb": {
+        "source": {
+          "src": "lnk-a00dec1358960d3a",
+          "line": 23
+        },
+        "origin": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 517,
+              "end": 551
+            }
+          ]
+        },
+        "level": "SHOULD",
+        "coverage": {
+          "cite-2dc33c3f0c4e4e5e": [
+            {
+              "start": 517,
+              "end": 551
+            }
+          ],
+          "cite-bbf24299679d84b3": [
+            {
+              "start": 517,
+              "end": 551
+            }
+          ]
+        }
+      },
+      "req-25d5b71a2d60150f": {
+        "source": {
+          "src": "lnk-49441967673a6c3f",
+          "line": 24
+        },
+        "origin": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 759,
+              "end": 787
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-639616357ea4e37a": [
+            {
+              "start": 759,
+              "end": 787
+            }
+          ]
+        }
+      },
+      "req-5954365e4f0b0e61": {
+        "source": {
+          "src": "lnk-a00dec1358960d3a",
+          "line": 17
+        },
+        "origin": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 474,
+              "end": 512
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-00a0b4a0169b8a9a": [
+            {
+              "start": 474,
+              "end": 512
+            }
+          ],
+          "cite-7776274e5bf22bd4": [
+            {
+              "start": 474,
+              "end": 512
+            }
+          ],
+          "cite-7f25d7996348980f": [
+            {
+              "start": 474,
+              "end": 512
+            }
+          ]
+        }
+      },
+      "req-5c1f0e947a3905c6": {
+        "source": {
+          "src": "lnk-49441967673a6c3f",
+          "line": 37
+        },
+        "origin": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 874,
+              "end": 890
+            }
+          ]
+        },
+        "level": "MUST"
       },
       "req-9531c6d167c0b4d6": {
         "source": {
@@ -361,93 +339,115 @@
         },
         "level": "SHOULD"
       },
-      "req-96d82d2a9d79983b": {
+      "req-96b75d8b0e3783f6": {
         "source": {
-          "src": "lnk-a00dec1358960d3a",
+          "src": "lnk-34451b6514e0fc09",
           "line": 17
         },
         "origin": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 479,
-              "end": 517
+              "start": 668,
+              "end": 702
             }
           ]
         },
-        "level": "MUST",
+        "level": "MAY",
         "coverage": {
-          "cite-15d757cc40d1090e": [
+          "cite-97d027c96d36144e": [
             {
-              "start": 479,
-              "end": 517
-            }
-          ],
-          "cite-5040d5f1f5e76710": [
-            {
-              "start": 479,
-              "end": 517
-            }
-          ],
-          "cite-fe3c89892d5d7eb5": [
-            {
-              "start": 479,
-              "end": 517
+              "start": 668,
+              "end": 702
             }
           ]
         }
       },
-      "req-a511102a8607f39c": {
-        "source": {
-          "src": "lnk-49441967673a6c3f",
-          "line": 37
-        },
-        "origin": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 879,
-              "end": 895
-            }
-          ]
-        },
-        "level": "MUST"
-      },
-      "req-aa5f620aa523a72b": {
+      "req-a27b36244bb277a9": {
         "source": {
           "src": "lnk-f8ab51bc5fdcdd8c",
           "line": 1
         },
         "origin": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 903,
-              "end": 925
+              "start": 898,
+              "end": 920
             }
           ]
         },
         "level": "MUST",
         "coverage": {
-          "cite-38c59528bf0bba0a": [
+          "cite-9cf3328f7c719b70": [
             {
-              "start": 903,
-              "end": 925
+              "start": 898,
+              "end": 920
             }
           ]
         }
       },
-      "req-ed571e60c5343d67": {
+      "req-a63060c6544e6f81": {
+        "source": {
+          "src": "lnk-34451b6514e0fc09",
+          "line": 10
+        },
+        "origin": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 574,
+              "end": 635
+            },
+            {
+              "start": 639,
+              "end": 663
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-13f6f037bbfc9c23": [
+            {
+              "start": 574,
+              "end": 618
+            }
+          ],
+          "cite-280c5b815d63d35c": [
+            {
+              "start": 574,
+              "end": 618
+            }
+          ]
+        }
+      },
+      "req-d0eb715f9e29a7a1": {
+        "source": {
+          "src": "lnk-f8ab51bc5fdcdd8c",
+          "line": 6
+        },
+        "origin": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 928,
+              "end": 950
+            }
+          ]
+        },
+        "level": "MUST"
+      },
+      "req-ef937b55306c8d6b": {
         "source": {
           "src": "lnk-49441967673a6c3f",
           "line": 18
         },
         "origin": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 726,
-              "end": 759
+              "start": 721,
+              "end": 754
             }
           ]
         },
@@ -455,119 +455,187 @@
       }
     },
     "https://awslabs.github.io/duvet/v2/annotations.json#cite": {
-      "cite-15d757cc40d1090e": {
+      "cite-00a0b4a0169b8a9a": {
         "source": {
-          "src": "lnk-1108ed34a315489b",
+          "src": "lnk-51c19dd5418d453d",
           "line": 2
         },
         "target": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 479,
-              "end": 517
-            }
-          ]
-        },
-        "type": "TEST",
-        "level": "AUTO"
-      },
-      "cite-1f32e61a69e99166": {
-        "source": {
-          "src": "lnk-29a48cfbf36c41ef",
-          "line": 2
-        },
-        "target": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 579,
-              "end": 623
+              "start": 474,
+              "end": 512
             }
           ]
         },
         "type": "CITATION",
         "level": "AUTO"
       },
-      "cite-2c556f745d0a6289": {
+      "cite-13f6f037bbfc9c23": {
         "source": {
           "src": "lnk-1108ed34a315489b",
           "line": 9
         },
         "target": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 579,
-              "end": 623
+              "start": 574,
+              "end": 618
             }
           ]
         },
         "type": "TEST",
         "level": "AUTO"
       },
-      "cite-2f02096b55cf8654": {
+      "cite-242afe1e6fb79b3f": {
+        "source": {
+          "src": "lnk-1108ed34a315489b",
+          "line": 16
+        },
+        "target": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 792,
+              "end": 830
+            }
+          ]
+        },
+        "type": "TEST",
+        "level": "AUTO"
+      },
+      "cite-280c5b815d63d35c": {
+        "source": {
+          "src": "lnk-29a48cfbf36c41ef",
+          "line": 2
+        },
+        "target": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 574,
+              "end": 618
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-2d91d182be2e4337": {
+        "source": {
+          "src": "lnk-2cd291088bc9a7f1",
+          "line": 13
+        },
+        "target": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 792,
+              "end": 830
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-2dc33c3f0c4e4e5e": {
         "source": {
           "src": "lnk-51c19dd5418d453d",
           "line": 6
         },
         "target": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 522,
-              "end": 556
+              "start": 517,
+              "end": 551
             }
           ]
         },
         "type": "TODO",
         "level": "AUTO"
       },
-      "cite-38c59528bf0bba0a": {
+      "cite-56b0ab55cf662117": {
         "source": {
-          "src": "lnk-2cd291088bc9a7f1",
-          "line": 9
-        },
-        "target": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 903,
-              "end": 925
-            }
-          ]
-        },
-        "type": "CITATION",
-        "level": "AUTO"
-      },
-      "cite-5040d5f1f5e76710": {
-        "source": {
-          "src": "lnk-51c19dd5418d453d",
+          "src": "lnk-e5f652a56a6d06fd",
           "line": 2
         },
         "target": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 479,
-              "end": 517
+              "start": 438,
+              "end": 469
             }
           ]
         },
         "type": "CITATION",
         "level": "AUTO"
       },
-      "cite-54ae3b832692dde4": {
+      "cite-639616357ea4e37a": {
+        "source": {
+          "src": "lnk-29a48cfbf36c41ef",
+          "line": 4
+        },
+        "target": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 759,
+              "end": 787
+            }
+          ]
+        },
+        "type": "IMPLICATION",
+        "level": "AUTO"
+      },
+      "cite-7776274e5bf22bd4": {
+        "source": {
+          "src": "lnk-1108ed34a315489b",
+          "line": 2
+        },
+        "target": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 474,
+              "end": 512
+            }
+          ]
+        },
+        "type": "TEST",
+        "level": "AUTO"
+      },
+      "cite-7f25d7996348980f": {
+        "source": {
+          "src": "lnk-2cd291088bc9a7f1",
+          "line": 2
+        },
+        "target": {
+          "src": "src-960281a3e276111b",
+          "ranges": [
+            {
+              "start": 474,
+              "end": 512
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-97d027c96d36144e": {
         "source": {
           "src": "lnk-a4320bb3db026166",
           "line": 3
         },
         "target": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 673,
-              "end": 707
+              "start": 668,
+              "end": 702
             }
           ]
         },
@@ -575,129 +643,61 @@
         "level": "AUTO",
         "comment": "Caching is up to the application."
       },
-      "cite-6bb5883174107c4d": {
+      "cite-9cf3328f7c719b70": {
         "source": {
           "src": "lnk-2cd291088bc9a7f1",
-          "line": 13
+          "line": 9
         },
         "target": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 797,
-              "end": 835
+              "start": 898,
+              "end": 920
             }
           ]
         },
         "type": "CITATION",
         "level": "AUTO"
       },
-      "cite-6fd9b61f468184b9": {
+      "cite-bbf24299679d84b3": {
         "source": {
           "src": "lnk-2cd291088bc9a7f1",
           "line": 6
         },
         "target": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 522,
-              "end": 556
+              "start": 517,
+              "end": 551
             }
           ]
         },
         "type": "CITATION",
         "level": "AUTO"
       },
-      "cite-76fd30d5bcff3a60": {
+      "cite-c992deddeac7018a": {
         "source": {
           "src": "lnk-a4320bb3db026166",
           "line": 7
         },
         "target": {
-          "src": "src-c56bda0a1c966037",
+          "src": "src-960281a3e276111b",
           "ranges": [
             {
-              "start": 836,
-              "end": 856
+              "start": 831,
+              "end": 851
             },
             {
-              "start": 860,
-              "end": 874
+              "start": 855,
+              "end": 869
             }
           ]
         },
         "type": "EXCEPTION",
         "level": "AUTO",
         "comment": "Alerts are up to the application."
-      },
-      "cite-e912ed44b3ed012d": {
-        "source": {
-          "src": "lnk-e5f652a56a6d06fd",
-          "line": 2
-        },
-        "target": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 443,
-              "end": 474
-            }
-          ]
-        },
-        "type": "CITATION",
-        "level": "AUTO"
-      },
-      "cite-f3f3fe6db2584945": {
-        "source": {
-          "src": "lnk-1108ed34a315489b",
-          "line": 16
-        },
-        "target": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 797,
-              "end": 835
-            }
-          ]
-        },
-        "type": "TEST",
-        "level": "AUTO"
-      },
-      "cite-fe14bfde53f85370": {
-        "source": {
-          "src": "lnk-29a48cfbf36c41ef",
-          "line": 4
-        },
-        "target": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 764,
-              "end": 792
-            }
-          ]
-        },
-        "type": "IMPLICATION",
-        "level": "AUTO"
-      },
-      "cite-fe3c89892d5d7eb5": {
-        "source": {
-          "src": "lnk-2cd291088bc9a7f1",
-          "line": 2
-        },
-        "target": {
-          "src": "src-c56bda0a1c966037",
-          "ranges": [
-            {
-              "start": 479,
-              "end": 517
-            }
-          ]
-        },
-        "type": "CITATION",
-        "level": "AUTO"
       }
     }
   }
