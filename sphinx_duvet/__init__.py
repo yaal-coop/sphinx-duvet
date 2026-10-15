@@ -9,6 +9,7 @@ __version__ = metadata.version("sphinx-duvet")
 
 
 def setup(app: Sphinx) -> dict[str, Any]:
+    """Register the extension in Sphinx."""
     return {
         "version": __version__,
         "parallel_read_safe": True,
