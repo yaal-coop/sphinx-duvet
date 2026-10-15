@@ -31,5 +31,6 @@ Added
 - ``[[outside]]`` entries mark the requirements that another project implements.
   They show their reason, and are not counted.
 - A requirement cited in full with a todo annotation is partly done.
+- ``group-by: all`` shows every target in one column.
 - The documentation explains how to install Duvet on Read the Docs and in the CI.
 - ``duvet_labels`` shows the states as symbols, as text, or with any inline markup such as icons.

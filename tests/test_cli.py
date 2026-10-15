@@ -300,3 +300,10 @@ def test_outside(capsys: pytest.CaptureFixture[str]) -> None:
     assert "no requirement matches the [[outside]] entry" in err
     code, _, _ = run(capsys, "check", *options, "--fail-on", "missing", "--strict")
     assert code == 1
+
+
+def test_group_by_all(capsys: pytest.CaptureFixture[str]) -> None:
+    """With --group-by all, the report has one column."""
+    _, out, _ = run(capsys, "report", *REPORT, "--group-by", "all", "--labels", "text")
+    assert "State" in out
+    assert "server-flask" not in out

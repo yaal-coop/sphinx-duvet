@@ -26,6 +26,8 @@ from .targets import matches_any
 
 _IMPLEMENTATION_TYPES = {"CITATION", "IMPLICATION", "EXCEPTION"}
 _TEST_TYPES = {"TEST", "IMPLICATION"}
+ALL = "all"
+"""The group-by value that puts every target in one column."""
 LEVELS = ("MUST", "SHOULD", "MAY")
 """Requirement levels of BCP 14, from the strongest to the weakest."""
 
@@ -365,10 +367,13 @@ class Project:
         """Return (label, targets) pairs, one per column.
 
         A target without the attribute of the groups gets a column of its own.
+        With ``all``, every target is in one column.
         """
         targets = self.config.select(selectors)
         if not group_by:
             return [(t.id, [t]) for t in targets]
+        if group_by == ALL:
+            return [("State", targets)]
         groups: dict[str, list[Target]] = {}
         for target in targets:
             groups.setdefault(target.attrs.get(group_by, target.id), []).append(target)

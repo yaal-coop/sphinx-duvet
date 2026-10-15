@@ -106,6 +106,13 @@ def test_group(project: Project, text: str, selectors: str, expected: str) -> No
     assert f"{status.implementation}/{status.test}" == expected
 
 
+def test_group_by_all(project: Project) -> None:
+    """With group-by all, every target is in one column, and the worst state wins."""
+    [(label, targets)] = project.columns(group_by="all")
+    assert label == "State"
+    assert targets == project.targets
+
+
 def test_recap(project: Project) -> None:
     """Requirements are counted per level, and unannotated ones apart from missing ones."""
     requirements = project.specifications["spec/rfc9999.txt"].requirements

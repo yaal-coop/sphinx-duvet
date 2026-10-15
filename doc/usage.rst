@@ -148,6 +148,8 @@ Directives
 
       One column per value of a target attribute, such as ``role``.
       The worst state of the targets of a group wins.
+      With ``all``, one column for every target, such as for a library
+      that every role uses.
 
    .. rst:directive:option:: sections: sections
       :type: comma separated list
