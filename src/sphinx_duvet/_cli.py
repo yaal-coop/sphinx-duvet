@@ -293,6 +293,11 @@ def _parser() -> argparse.ArgumentParser:
     common.add_argument("--sections", help="sections, separated by commas")
     common.add_argument("--levels", help="levels, separated by commas")
     common.add_argument("--labels", choices=sorted(PRESETS), default="symbols")
+    common.add_argument(
+        "--figure-requirements",
+        action="store_true",
+        help="keep the requirements found in the figures of IETF specifications",
+    )
 
     parser = argparse.ArgumentParser(
         prog="sphinx-duvet", description="Compliance reports from Duvet."
@@ -351,9 +356,10 @@ def _root(args: argparse.Namespace) -> Path:
 def _load(args: argparse.Namespace) -> Project:
     """Load the project and its report."""
     root = _root(args)
+    figures = args.figure_requirements
     if args.report_json is None:
-        return Project.from_duvet(root, args.duvet)
-    return Project(root, read_report(args.report_json))
+        return Project.from_duvet(root, args.duvet, figures)
+    return Project(root, read_report(args.report_json), figures)
 
 
 def _specifications(project: Project, paths: list[str]) -> list[Specification]:

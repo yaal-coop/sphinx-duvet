@@ -98,6 +98,15 @@ Configuration
    from :rst:dir:`duvet-recap`. The default is ``True``.
    The index page always shows the counts of every specification.
 
+.. confval:: duvet_figure_requirements
+
+   Whether to keep the requirements that Duvet finds in the figures of IETF specifications.
+   The default is ``False``.
+   Figures are examples, such as the JSON schemas of :rfc:`7643`.
+   Duvet still finds key words in them, for instance in the descriptions of the attributes.
+   These requirements are left out of the reports, the counts and the checks.
+   Their identifiers are kept, so the other requirements keep theirs.
+
 .. confval:: duvet_labels
 
    The labels of the states in the reports.
@@ -184,8 +193,8 @@ Directives
    A block that does not follow these rules keeps its layout, as a figure.
 
    Figures are examples, so their requirements are not highlighted.
-   For instance, the JSON schemas of :rfc:`7643` repeat requirements of its section 4.
-   The :rst:role:`duvet:rule` role links them to the section of their figure.
+   They are left out of the reports, unless :confval:`duvet_figure_requirements` is set.
+   Then the :rst:role:`duvet:rule` role links them to the section of their figure.
 
    JSON and HTTP examples are highlighted.
    The ``highlight`` option, or :confval:`duvet_spec_highlight`, sets the language.
@@ -485,6 +494,8 @@ Like the documentation, it runs Duvet, or reads a report given with ``--report-j
 The ``report``, ``recap`` and ``check`` commands take the specifications to show, all by default,
 and the options of the directives: ``--targets``, ``--group-by``, ``--sections``, ``--levels``,
 and ``--show`` for ``report``. ``--labels`` is ``symbols`` or ``text``.
+``--figure-requirements`` keeps the requirements found in figures,
+as :confval:`duvet_figure_requirements` does.
 
 ``check`` also takes:
 

@@ -843,3 +843,35 @@ def figure_language(text: str) -> str | None:
     if _HTTP.fullmatch(stripped.split("\n", 1)[0].strip()):
         return "http"
     return None
+
+
+def figure_requirements(spec: Specification) -> list[Requirement]:
+    """Return the requirements that start in a figure of an IETF specification.
+
+    Figures are examples, such as JSON schemas, so these requirements are not normative.
+    """
+    # Workaround for Duvet: requirements are also extracted from figures.
+    # Remove when Duvet skips them (draft ticket T17).
+    if spec.format != "ietf":
+        return []
+    figures: list[tuple[int, int]] = []
+    for text in sections(spec):
+        _figure_ranges(structure(text.blocks), figures)
+    return [
+        requirement
+        for requirement in spec.requirements
+        if any(start <= requirement.ranges[0][0] < end for start, end in figures)
+    ]
+
+
+def _figure_ranges(elements: list[Element], ranges: list[tuple[int, int]]) -> None:
+    """Add the byte ranges of the figures in elements, and in their lists and definitions."""
+    for element in elements:
+        if isinstance(element, Figure):
+            ranges.append((element.block.lines[0].start, element.block.lines[-1].end))
+        elif isinstance(element, ItemList):
+            for item in element.items:
+                _figure_ranges(item.body, ranges)
+        elif isinstance(element, DefinitionList):
+            for definition in element.items:
+                _figure_ranges(definition.body, ranges)

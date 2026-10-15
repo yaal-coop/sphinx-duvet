@@ -46,6 +46,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
     app.add_config_value("duvet_autoreport_recap", True, "env", types=[bool])
     app.add_config_value("duvet_labels", "symbols", "env", types=[str, dict])
     app.add_config_value("duvet_spec_highlight", "auto", "env", types=[str])
+    app.add_config_value("duvet_figure_requirements", False, "env", types=[bool])
     app.add_node(duvet_label, html=(visit_label_html, depart_label_html))
     skip = (skip_permalink, None)
     app.add_node(

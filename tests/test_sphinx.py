@@ -930,6 +930,19 @@ def test_spec_layout(app: SphinxTestApp) -> None:
     assert domain.location("rfc9997#name-table-of-contents-1").anchor == (
         "name-table-of-contents"
     )
+    assert domain.location("rfc9997#3-1") is None
+
+
+@pytest.mark.sphinx(
+    "html",
+    testroot="layout",
+    confoverrides={**LAYOUT_CONF, "duvet_figure_requirements": True},
+    freshenv=True,
+)
+def test_spec_figure_requirements(app: SphinxTestApp) -> None:
+    """The requirements of figures can be kept. They link to the section of their figure."""
+    app.build()
+    domain = app.env.get_domain("duvet")
     assert domain.location("rfc9997#3-1").anchor == "section-3"
 
 

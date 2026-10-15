@@ -9,6 +9,7 @@ from sphinx_duvet.layout import Paragraph
 from sphinx_duvet.layout import Table
 from sphinx_duvet.layout import blocks
 from sphinx_duvet.layout import figure_language
+from sphinx_duvet.layout import figure_requirements
 from sphinx_duvet.layout import front_matter
 from sphinx_duvet.layout import header_rows
 from sphinx_duvet.layout import links
@@ -373,3 +374,53 @@ def test_appendix_heading() -> None:
     spec.sections = {"appendix-A": "Notes"}
     [text] = sections(spec)
     assert text.heading == "Appendix A. Notes"
+
+
+def test_figure_requirements_of_other_formats() -> None:
+    """Only IETF specifications have figures."""
+    spec = specification()
+    spec.format = "markdown"
+    spec.requirements = [requirement("ABNF = DIGIT")]
+    assert figure_requirements(spec) == []
+
+
+def test_figure_requirements() -> None:
+    """Requirements that start in a figure, even in a list or a definition, are found."""
+    text = (
+        "1.  Examples\n\n"
+        "   The client MUST send a request.\n\n"
+        "   o  An item:\n\n"
+        '        { "a": "It MUST be one." }\n\n'
+        "   term\n"
+        "      A definition:\n\n"
+        '        { "b": "It MUST be two." }\n'
+    )
+    contents = text.encode()
+    spec = Specification(
+        path="spec.txt",
+        title="Examples",
+        format="ietf",
+        sections={"section-1": "Examples"},
+        requirements=[],
+        name="spec",
+        contents=contents,
+        section_ranges={"section-1": (contents.index(b"Examples"), len(contents))},
+    )
+
+    def rule(quote: str) -> Requirement:
+        """Return a requirement on a quote of the text."""
+        start = contents.index(quote.encode())
+        return Requirement(
+            spec="spec.txt",
+            section="section-1",
+            level="MUST",
+            text=quote,
+            ranges=[(start, start + len(quote))],
+            contents=contents,
+        )
+
+    prose = rule("The client MUST send a request.")
+    item = rule("It MUST be one.")
+    definition = rule("It MUST be two.")
+    spec.requirements = [prose, item, definition]
+    assert figure_requirements(spec) == [item, definition]

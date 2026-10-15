@@ -277,3 +277,15 @@ def test_dependency_report(
         "untested",
     )
     assert (code, out) == (0, "No failure.\n")
+
+
+def test_figure_requirements(capsys: pytest.CaptureFixture[str]) -> None:
+    """Requirements in figures are left out, unless they are asked for."""
+    layout = Path(__file__).parent / "projects" / "layout"
+    options = ["--root", str(layout), "--report-json", str(layout / "report.json")]
+    _, out, _ = run(capsys, "check", *options, "--fail-on", "unannotated")
+    assert "rfc9997#3-1" not in out
+    _, out, _ = run(
+        capsys, "check", *options, "--fail-on", "unannotated", "--figure-requirements"
+    )
+    assert "rfc9997#3-1 MUST default: unannotated" in out

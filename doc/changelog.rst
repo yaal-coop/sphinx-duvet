@@ -26,5 +26,7 @@ Added
   JSON and HTTP examples are highlighted, see ``duvet_spec_highlight``.
   ``duvet_autoreport`` gives each specification a page with its text.
 - ``duvet_autoreport_recap`` removes the counts at the top of the generated pages.
+- Requirements that Duvet finds in the figures of IETF specifications are left out.
+  ``duvet_figure_requirements`` and ``--figure-requirements`` keep them.
 - The documentation explains how to install Duvet on Read the Docs and in the CI.
 - ``duvet_labels`` shows the states as symbols, as text, or with any inline markup such as icons.

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .dependencies import duvet_config
 from .dependencies import locate
+from .layout import figure_requirements
 from .notes import Note
 from .notes import load_notes
 from .report import Cite
@@ -98,12 +99,20 @@ _COUNTERS = {
 class Project:
     """A Duvet project, its report and its targets."""
 
-    def __init__(self, root: Path, report: Report) -> None:
-        """Load the targets and notes of a project, and the report of Duvet."""
+    def __init__(self, root: Path, report: Report, figures: bool = False) -> None:
+        """Load the targets and notes of a project, and the report of Duvet.
+
+        Requirements in the figures of IETF specifications are left out,
+        unless figures is True.
+        """
         self.root = Path(root)
         self.config = load_targets(self.root / ".duvet/targets.toml")
         self.installed = [locate(d) for d in self.config.dependencies]
         self.specifications = parse_report(report)
+        if not figures:
+            for spec in self.specifications.values():
+                examples = figure_requirements(spec)
+                spec.requirements = [r for r in spec.requirements if r not in examples]
         self.notes = [
             note
             for folder, prefix in self.config.notes
@@ -118,12 +127,14 @@ class Project:
         self.unused_notes = self._attach_notes(requirements)
 
     @classmethod
-    def from_duvet(cls, root: Path, executable: str = "duvet") -> "Project":
+    def from_duvet(
+        cls, root: Path, executable: str = "duvet", figures: bool = False
+    ) -> "Project":
         """Load a project and run Duvet to get its report.
 
         The report includes the annotations of the installed dependencies.
         """
-        return cls(root, run_duvet(root, executable, duvet_config_for(root)))
+        return cls(root, run_duvet(root, executable, duvet_config_for(root)), figures)
 
     @property
     def targets(self) -> list[Target]:

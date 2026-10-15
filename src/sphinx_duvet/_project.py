@@ -44,10 +44,11 @@ def load_project(app: Sphinx) -> None:
         return
     report_path = _report_file(app)
     try:
+        figures = app.config.duvet_figure_requirements
         if report_path is None:
-            project = Project.from_duvet(root, app.config.duvet_executable)
+            project = Project.from_duvet(root, app.config.duvet_executable, figures)
         else:
-            project = Project(root, read_report(report_path))
+            project = Project(root, read_report(report_path), figures)
     except DuvetNotFound as exc:
         raise ExtensionError(
             f"Cannot load the Duvet report: {exc}. "
