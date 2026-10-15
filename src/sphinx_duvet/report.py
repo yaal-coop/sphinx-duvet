@@ -247,6 +247,10 @@ def parse_report(report: Report) -> dict[str, Specification]:
             if requirement._overlaps(cite.ranges):
                 requirement.cites.append(cite)
 
+    for src, spec_requirements in requirements.items():
+        ends = {short: end for _, end, short, _ in sections.get(src, [])}
+        _separate_duplicates(spec_requirements, contents[src], ends)
+
     specifications = []
     for item in annotations.get(_SPECIFICATION, {}).values():
         src = item["source"]["src"]
@@ -272,6 +276,52 @@ def parse_report(report: Report) -> dict[str, Specification]:
     specifications.sort(key=lambda s: s.path)
     _name(specifications)
     return {spec.path: spec for spec in specifications}
+
+
+def _separate_duplicates(
+    requirements: list[Requirement], contents: bytes, ends: dict[str, int]
+) -> None:
+    """Move the requirements that share a sentence to the next places the sentence appears.
+
+    The cites stay with every one of them, as an annotation cannot tell them apart.
+    """
+    # Workaround for Duvet: requirements with the same text in a section get
+    # the range of the first sentence. Remove when Duvet keeps the range of
+    # each one (draft ticket T16).
+    same: dict[tuple[str, tuple[tuple[int, int], ...]], list[Requirement]] = {}
+    for requirement in requirements:
+        same.setdefault((requirement.section, tuple(requirement.ranges)), []).append(
+            requirement
+        )
+    for (section, ranges), duplicates in same.items():
+        after = ranges[-1][1]
+        for requirement in duplicates[1:]:
+            found = _next_sentence(contents, list(ranges), after, ends[section])
+            if found is None:
+                break
+            requirement.ranges = found
+            after = found[-1][1]
+
+
+def _next_sentence(
+    contents: bytes, ranges: list[tuple[int, int]], after: int, end: int
+) -> list[tuple[int, int]] | None:
+    """Return the ranges of the next place a quoted sentence appears, with any line breaks.
+
+    The parts of the sentence are separated by blanks only.
+    """
+    words = b" ".join(contents[a:b] for a, b in ranges).split()
+    pattern = re.compile(rb"\s+".join(re.escape(word) for word in words))
+    match = pattern.search(contents, after, end)
+    if match is None:
+        return None
+    lines = []
+    for line in re.finditer(rb"[^\n]+", contents[match.start() : match.end()]):
+        start = match.start() + line.start()
+        stripped = line.group().strip()
+        offset = line.group().index(stripped)
+        lines.append((start + offset, start + offset + len(stripped)))
+    return lines
 
 
 def _name(specifications: list[Specification]) -> None:

@@ -10,8 +10,11 @@ from sphinx_duvet.report import Cite
 from sphinx_duvet.report import DuvetError
 from sphinx_duvet.report import DuvetNotFound
 from sphinx_duvet.report import Report
+from sphinx_duvet.report import Requirement
+from sphinx_duvet.report import _separate_duplicates
 from sphinx_duvet.report import ietf_title
 from sphinx_duvet.report import parse_report
+from sphinx_duvet.report import read_report
 from sphinx_duvet.report import run_duvet
 
 V2 = "https://awslabs.github.io/duvet/v2/"
@@ -211,3 +214,38 @@ def test_requirement_ids(basic_report: Report) -> None:
         if name.endswith("#section"):
             del report["annotations"][name]
     assert parse_report(report)["spec/rfc9999.txt"].requirements[0].id == "rfc9999#0-1"
+
+
+def test_same_sentence_twice() -> None:
+    """Requirements with the same sentence are at each place of the sentence, and share their cites."""
+    report = read_report(Path(__file__).parent / "projects" / "layout" / "report.json")
+    [spec] = parse_report(report).values()
+    first, second = [r for r in spec.requirements if r.text == "The client MUST retry."]
+    assert first.ranges != second.ranges
+    assert spec.contents[second.ranges[0][0] : second.ranges[-1][1]] == (
+        b"The client\n   MUST retry."
+    )
+    assert [r.id for r in spec.requirements if r.section == "section-1.1.1"] == [
+        "rfc9997#1.1.1-1",
+        "rfc9997#1.1.1-2",
+        "rfc9997#1.1.1-3",
+    ]
+    assert len(first.cites) == len(second.cites) == 1
+
+
+def test_same_sentence_not_found() -> None:
+    """Without another place for the sentence, the requirements stay together."""
+    contents = b"The client MUST retry. Page 2. The client\fMUST retry."
+    requirements = [
+        Requirement(
+            spec="spec.txt",
+            section="section-1",
+            level="MUST",
+            text="The client MUST retry.",
+            ranges=[(0, 22)],
+            contents=contents,
+        )
+        for _ in range(2)
+    ]
+    _separate_duplicates(requirements, contents, {"section-1": 30})
+    assert [r.ranges for r in requirements] == [[(0, 22)], [(0, 22)]]

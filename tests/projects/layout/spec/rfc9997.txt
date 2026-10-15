@@ -54,6 +54,11 @@ Table of Contents
 
    This section is too deep for the table of contents.
 
+   The client MUST retry.
+
+   The server MAY wait.  The client
+   MUST retry.
+
 2.  Lists and Tables
 
    The client sends these parameters:
