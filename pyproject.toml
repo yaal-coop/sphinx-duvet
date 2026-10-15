@@ -63,7 +63,7 @@ source = [
     "sphinx_duvet",
     "tests",
 ]
-omit = [".tox/*"]
+omit = [".tox/*", "tests/projects/*"]
 branch = true
 
 [tool.coverage.report]
@@ -105,6 +105,8 @@ docstring-code-format = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The test projects are data for the tests, not tests.
+addopts = "--ignore=tests/projects"
 
 [tool.mypy]
 files = ["src"]
