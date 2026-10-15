@@ -16,6 +16,7 @@ from .targets import Selector
 _V2 = "https://awslabs.github.io/duvet/v2/"
 _INLINE = _V2 + "sources.json#inline"
 _LINKED = _V2 + "sources.json#linked"
+_MARKER = re.compile(rb"([o*+-]|\d+\.|[a-z]\.|\(\d+\)|\([a-zA-Z]\))[ \t]+")
 _SPECIFICATION = _V2 + "annotations.json#specification"
 _SECTION = _V2 + "annotations.json#section"
 _REQUIREMENT = _V2 + "annotations.json#requirement"
@@ -215,7 +216,9 @@ def parse_report(report: Report) -> dict[str, Specification]:
     requirements: dict[str, list[Requirement]] = {}
     for item in annotations.get(_REQUIREMENT, {}).values():
         src = item["origin"]["src"]
-        ranges = [(r["start"], r["end"]) for r in item["origin"]["ranges"]]
+        ranges = _without_marker(
+            [(r["start"], r["end"]) for r in item["origin"]["ranges"]], contents[src]
+        )
         text = " ".join(contents[src][a:b].decode() for a, b in ranges)
         requirements.setdefault(src, []).append(
             Requirement(
@@ -276,6 +279,19 @@ def parse_report(report: Report) -> dict[str, Specification]:
     specifications.sort(key=lambda s: s.path)
     _name(specifications)
     return {spec.path: spec for spec in specifications}
+
+
+def _without_marker(
+    ranges: list[tuple[int, int]], contents: bytes
+) -> list[tuple[int, int]]:
+    """Return the ranges of a requirement without the marker of its list item, such as "o"."""
+    # Workaround for Duvet: a requirement at the start of a list item starts
+    # with the marker of the item. Remove when Duvet leaves it out (draft ticket T18).
+    start, end = ranges[0]
+    marker = _MARKER.match(contents, start, end)
+    if marker is None:
+        return ranges
+    return [(marker.end(), end), *ranges[1:]]
 
 
 def _separate_duplicates(

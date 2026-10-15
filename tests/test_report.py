@@ -249,3 +249,13 @@ def test_same_sentence_not_found() -> None:
     ]
     _separate_duplicates(requirements, contents, {"section-1": 30})
     assert [r.ranges for r in requirements] == [[(0, 22)], [(0, 22)]]
+
+
+def test_requirement_in_a_list_item() -> None:
+    """A requirement at the start of a list item leaves out the marker of the item."""
+    report = read_report(Path(__file__).parent / "projects" / "layout" / "report.json")
+    [spec] = parse_report(report).values()
+    requirement = next(r for r in spec.requirements if r.id == "rfc9997#2-1")
+    assert requirement.text == "The client MUST send a token."
+    start = requirement.ranges[0][0]
+    assert spec.contents[start : start + 10] == b"The client"
