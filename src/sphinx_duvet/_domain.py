@@ -21,8 +21,17 @@ TEXT = "text"
 REPORT = "report"
 """A requirement in a compliance report, with its states."""
 
-# The places each role prefers, in order.
-_PREFERENCES = {"rule": (TEXT, REPORT), "status": (REPORT,)}
+SECTION = "section"
+"""A section in the text of its specification, such as rfc7643#section-3.1."""
+
+# The places each kind of link prefers, in order. The rule and status roles
+# are public. The text and section links are made by the reports.
+_PREFERENCES = {
+    "rule": (TEXT, REPORT),
+    "status": (REPORT,),
+    "text": (TEXT,),
+    "section": (SECTION,),
+}
 
 
 class RuleLocation(NamedTuple):
@@ -74,7 +83,7 @@ class DuvetDomain(Domain):
 
     @property
     def rules(self) -> dict[str, list[RuleLocation]]:
-        """The places where each requirement is shown."""
+        """The places where each requirement, or each section of a text, is shown."""
         rules: dict[str, list[RuleLocation]] = self.data["rules"]
         return rules
 
@@ -90,7 +99,9 @@ class DuvetDomain(Domain):
         """Return the place a role links to.
 
         The rule role prefers the text of the specification, then a report.
-        The status role links to a report. Among several pages, the first one wins.
+        The status role links to a report. A text link only goes to the text,
+        and a section link to a section of the text.
+        Among several pages, the first one wins.
         """
         locations = self.rules.get(rule_id, [])
         for kind in _PREFERENCES[role]:
@@ -159,7 +170,7 @@ class DuvetDomain(Domain):
     def get_objects(self) -> Iterator[tuple[str, str, str, str, str, int]]:
         """Return the requirements, for the inventory of the documentation."""
         for rule_id in sorted(self.rules):
-            for role in _PREFERENCES:
+            for role in self.object_types:
                 location = self.location(rule_id, role)
                 if location is not None:
                     yield (rule_id, rule_id, role, location.docname, location.anchor, 1)

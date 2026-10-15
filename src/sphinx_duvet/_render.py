@@ -4,6 +4,7 @@ import re
 from collections.abc import Sequence
 
 from docutils import nodes
+from sphinx import addnodes
 from sphinx.transforms.post_transforms import SphinxPostTransform
 from sphinx.writers.html5 import HTML5Translator
 
@@ -187,30 +188,50 @@ def state_legend() -> nodes.paragraph:
     return node
 
 
-class duvet_rule_link(nodes.inline):
-    """The icon of a link from a requirement in the text to its report.
+class duvet_optional_link(nodes.inline):
+    """The content of a link between the text of a specification and its reports.
 
-    Formats other than HTML leave it out, as the permalinks.
+    The link is left out when it leads nowhere, and in formats other than HTML,
+    as the permalinks.
     """
 
 
-def visit_rule_link_html(translator: HTML5Translator, node: duvet_rule_link) -> None:
-    """Open the icon, as any inline text."""
+def visit_optional_link_html(
+    translator: HTML5Translator, node: duvet_optional_link
+) -> None:
+    """Open the content of the link, as any inline text."""
     translator.visit_inline(node)
 
 
-def depart_rule_link_html(translator: HTML5Translator, node: duvet_rule_link) -> None:
-    """Close the icon, as any inline text."""
+def depart_optional_link_html(
+    translator: HTML5Translator, node: duvet_optional_link
+) -> None:
+    """Close the content of the link, as any inline text."""
     translator.depart_inline(node)
 
 
-class RuleLinks(SphinxPostTransform):
-    """Remove the links from the text of a specification to a report, when no report shows the requirement."""
+class OptionalLinks(SphinxPostTransform):
+    """Remove the links between the text of a specification and its reports, when they lead nowhere."""
 
     default_priority = 20
 
     def run(self, **kwargs: object) -> None:
-        """Remove the icons that are not in a link."""
-        for icon in list(self.document.findall(duvet_rule_link)):
-            if not isinstance(icon.parent, nodes.reference):
-                icon.parent.remove(icon)
+        """Remove the contents that are not in a link."""
+        for content in list(self.document.findall(duvet_optional_link)):
+            if not isinstance(content.parent, nodes.reference):
+                content.parent.remove(content)
+
+
+def optional_link(
+    text: str, kind: str, target: str, classes: Sequence[str] = ()
+) -> nodes.Node:
+    """Return a link to a requirement or a section, left out if it leads nowhere."""
+    return addnodes.pending_xref(
+        "",
+        duvet_optional_link(text, text, classes=list(classes)),
+        refdomain="duvet",
+        reftype=kind,
+        reftarget=target,
+        refexplicit=True,
+        refwarn=False,
+    )

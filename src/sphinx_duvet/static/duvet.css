@@ -219,8 +219,29 @@ table.duvet-table a.headerlink {
   display: inline;
 }
 
-table.duvet-table tr:hover a.headerlink {
+table.duvet-table tr:hover a.headerlink,
+table.duvet-table tr:hover .duvet-rule-link {
   visibility: visible;
+}
+
+/* The level of a requirement and its permalink stay on one line. */
+.duvet-level-cell {
+  white-space: nowrap;
+}
+
+/* Permalinks and links between the text and the reports share one muted color,
+   so they have the same weight whatever the theme. */
+table.duvet-table a.headerlink,
+a:has(> .duvet-rule-link),
+a > .duvet-rule-link {
+  color: var(--duvet-muted);
+  opacity: 1;
+  text-decoration: none;
+  border-bottom: 0;
+}
+
+.duvet-section-link > a + a {
+  margin-left: 0.8em;
 }
 
 @media (hover: none) {

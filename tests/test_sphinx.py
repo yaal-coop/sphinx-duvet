@@ -37,10 +37,12 @@ def tables(app: SphinxTestApp, docname: str) -> list[nodes.table]:
 
 
 def cell_text(entry: nodes.entry) -> str:
-    """Return the text of a cell, without its permalink."""
+    """Return the text of a cell, without its permalink and its links to the text."""
     entry = entry.deepcopy()
     for permalink in list(entry.findall(render.duvet_permalink)):
         permalink.parent.remove(permalink)
+    for link in list(entry.findall(render.duvet_optional_link)):
+        link.parent.remove(link)
     return " ".join(entry.astext().split())
 
 
@@ -965,3 +967,66 @@ def test_spec_highlight_config(app: SphinxTestApp) -> None:
     assert "unknown Pygments lexer 'nope'" in output.split("plain.rst:4")[1]
     html = (Path(app.outdir) / "index.html").read_text()
     assert "highlight-http" in html
+
+
+@pytest.mark.sphinx(
+    "html", testroot="spec", srcdir="spec-links", confoverrides=CONF, freshenv=True
+)
+def test_report_links_to_text(app: SphinxTestApp) -> None:
+    """A report links each section and each requirement to the text of the specification."""
+    app.build()
+    doctree = app.env.get_doctree("report")
+    html = (Path(app.outdir) / "report.html").read_text()
+    section = re.search(
+        r'id="duvet-section-rfc9999-2".*?<span class="duvet-section-link">(.*?)</span></p>',
+        html,
+        re.DOTALL,
+    )
+    assert section is not None
+    assert re.findall(r'href="([^"]+)"', section.group(1)) == [
+        "text.html#section-2",
+        "https://www.rfc-editor.org/rfc/rfc9999#section-2",
+    ]
+    assert re.search(
+        r'send the token\.<a [^>]*href="text\.html#duvet-text-rfc9999-2-1"[^>]*>'
+        r'<span class="duvet-rule-link">§</span></a>',
+        html,
+    )
+    level = next(
+        p
+        for p in doctree.findall(nodes.paragraph)
+        if "duvet-level-cell" in p["classes"]
+    )
+    assert [child.tagname for child in level.children] == ["inline", "duvet_permalink"]
+    inventory = zlib.decompress(
+        (Path(app.outdir) / "objects.inv").read_bytes().split(b"\n", 4)[4]
+    )
+    assert b"rfc9999#section-2" not in inventory
+
+
+@pytest.mark.sphinx("html", testroot="report", confoverrides=CONF, freshenv=True)
+def test_report_without_text(app: SphinxTestApp) -> None:
+    """Without a page for the text, a report has no link to it."""
+    app.build()
+    html = (Path(app.outdir) / "report.html").read_text()
+    assert "duvet-rule-link" not in html
+    assert "<span>Text</span>" not in html
+    assert 'href="https://www.rfc-editor.org/rfc/rfc9999#section-2">RFC ↗</a>' in html
+
+
+@pytest.mark.sphinx(
+    "html",
+    testroot="autoreport",
+    srcdir="autoreport-without-recap",
+    confoverrides={
+        **CONF,
+        "duvet_autoreport": {},
+        "duvet_autoreport_recap": False,
+        "suppress_warnings": ["duvet.unused"],
+    },
+)
+def test_autoreport_without_recap(app: SphinxTestApp) -> None:
+    """The pages of the specifications can leave out their counts. The index keeps them."""
+    folder = Path(app.srcdir) / "compliance"
+    assert "duvet-recap" not in (folder / "rfc9999.rst").read_text()
+    assert ".. duvet-recap::\n" in (folder / "index.rst").read_text()

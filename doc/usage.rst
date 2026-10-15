@@ -92,6 +92,12 @@ Configuration
    The folder of the generated pages, relative to the source folder.
    The default is ``compliance``. Add ``compliance/index`` to a toctree.
 
+.. confval:: duvet_autoreport_recap
+
+   Whether the page of each specification starts with the counts of its requirements,
+   from :rst:dir:`duvet-recap`. The default is ``True``.
+   The index page always shows the counts of every specification.
+
 .. confval:: duvet_labels
 
    The labels of the states in the reports.
@@ -113,13 +119,15 @@ Directives
    A table with a row per requirement of a specification, and a column per target.
    The path is the path of the specification in :file:`.duvet/config.toml`.
 
-   The requirements are grouped by section, under a row with the title of the section
-   and a link to it in the RFC. Each row shows the level of the requirement, its text,
-   the annotations that cite it and its notes.
+   The requirements are grouped by section, under a row with the title of the section.
+   Its links lead to the section in the text of the specification, if a page shows it
+   with :rst:dir:`duvet-spec`, and in the RFC. Each row shows the level of the requirement,
+   its text, the annotations that cite it and its notes.
    Each cell shows the implementation state and the test state.
 
-   On hover, a permalink follows the text of each requirement and the title of each section,
+   On hover, a permalink follows the level of each requirement and the title of each section,
    as for headings. ``html_permalinks`` and ``html_permalinks_icon`` apply.
+   A § after the text of a requirement leads to it in the text of the specification.
 
    .. rst:directive:option:: targets: selectors
       :type: text

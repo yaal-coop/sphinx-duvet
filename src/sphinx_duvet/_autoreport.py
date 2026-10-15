@@ -48,7 +48,8 @@ def generate_pages(app: Sphinx) -> None:
             content += f".. toctree::\n   :hidden:\n\n   {name}-text\n\n"
             text = _title(spec.title) + f".. duvet-spec:: {spec.path}\n"
             _write_if_changed(folder / f"{name}-text.rst", text)
-        content += f".. duvet-recap:: {spec.path}\n{recap_options}\n"
+        if app.config.duvet_autoreport_recap:
+            content += f".. duvet-recap:: {spec.path}\n{recap_options}\n"
         content += f".. duvet-report:: {spec.path}\n{report_options}"
         _write_if_changed(folder / f"{name}.rst", content)
 

@@ -11,7 +11,6 @@ from pygments.lexers import get_lexer_by_name
 from pygments.token import Error
 from pygments.token import is_token_subtype
 from pygments.util import ClassNotFound
-from sphinx import addnodes
 from sphinx.util import logging
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import OptionSpec
@@ -19,6 +18,7 @@ from sphinx.util.typing import OptionSpec
 from . import _render as render
 from . import layout
 from ._domain import REPORT
+from ._domain import SECTION
 from ._domain import TEXT
 from ._domain import DuvetDomain
 from ._domain import rule_anchor
@@ -172,9 +172,10 @@ class DuvetReport(_DuvetDirective):
         return [labels.legend(), render.table(headers, rows, widths), *messages]
 
     def section_row(self, spec: Specification, section: str, columns: int) -> nodes.row:
-        """Return a row with the number and the title of a section, and a link to it.
+        """Return a row with the number and the title of a section, and links to it.
 
-        A permalink after the title points to the row.
+        A permalink after the title points to the row. The links lead to the section
+        in the text of the specification, if a page shows it, and on rfc-editor.org.
         """
         title = spec.sections.get(section, "")
         number = section_number(section)
@@ -183,15 +184,22 @@ class DuvetReport(_DuvetDirective):
         anchor = self.unique_anchor(section_anchor(spec.name, number or "0"))
         heading = nodes.inline(text=title or number, classes=["duvet-section-title"])
         heading += self.permalink(anchor, f"{spec.name} {title or number}")
-        children: list[nodes.Node] = [heading]
+        links = nodes.inline(
+            "",
+            "",
+            render.optional_link("Text", "section", f"{spec.name}#{section}"),
+            classes=["duvet-section-link"],
+        )
         url = spec.section_url(section)
         if url is not None:
-            link = nodes.inline(
-                "", "", render.link("RFC ↗", url), classes=["duvet-section-link"]
-            )
-            children += [nodes.Text(" "), link]
+            links += render.link("RFC ↗", url)
         return render.spanning_row(
-            columns, *children, classes=["duvet-section"], ids=[anchor]
+            columns,
+            heading,
+            nodes.Text(" "),
+            links,
+            classes=["duvet-section"],
+            ids=[anchor],
         )
 
     def anchor(self, requirement: Requirement) -> str:
@@ -214,11 +222,15 @@ class DuvetReport(_DuvetDirective):
     ) -> nodes.row:
         """Return the row of a requirement: level, text, statuses.
 
-        A permalink after the text shows the identifier of the requirement.
+        A permalink after the level shows the identifier of the requirement.
+        A link after the text leads to the requirement in the text of the specification,
+        if a page shows it.
         """
         anchor = self.anchor(requirement)
         sentence = render.requirement_text(requirement.text)
-        sentence += self.permalink(anchor, requirement.id)
+        sentence += render.optional_link(
+            "§", "text", requirement.id, classes=["duvet-rule-link"]
+        )
         text: list[nodes.Node] = [sentence]
         if requirement.cites:
             items = nodes.bullet_list(classes=["duvet-cites"])
@@ -239,10 +251,11 @@ class DuvetReport(_DuvetDirective):
                 container,
             )
             text.append(container)
-        cells: list[nodes.Node | list[nodes.Node]] = [
-            render.paragraph(render.level_badge(requirement.level)),
-            text,
-        ]
+        level = render.paragraph(
+            render.level_badge(requirement.level), classes=["duvet-level-cell"]
+        )
+        level.extend(self.permalink(anchor, requirement.id))
+        cells: list[nodes.Node | list[nodes.Node]] = [level, text]
         cells += [labels.status_cell(status) for status in statuses]
         return render.row(cells, ids=[anchor])
 
@@ -379,6 +392,15 @@ class DuvetSpec(_DuvetDirective):
         self.section_ids = {
             text.section: self.unique_anchor(text.section) for text in self.texts
         }
+        domain = cast(DuvetDomain, self.env.get_domain("duvet"))
+        for text in self.texts:
+            domain.note_rule(
+                f"{spec.name}#{text.section}",
+                self.env.docname,
+                self.section_ids[text.section],
+                text.heading,
+                SECTION,
+            )
         self.note_references()
         self.anchored = set()
         self.last_runs = {}
@@ -684,14 +706,8 @@ class DuvetSpec(_DuvetDirective):
         """Add a link to the report after the last run of each requirement."""
         icon = self.config.html_permalinks_icon
         for rule_id, highlight in self.last_runs.items():
-            link = addnodes.pending_xref(
-                "",
-                render.duvet_rule_link(icon, icon, classes=["duvet-rule-link"]),
-                refdomain="duvet",
-                reftype="status",
-                reftarget=rule_id,
-                refexplicit=True,
-                refwarn=False,
+            link = render.optional_link(
+                icon, "status", rule_id, classes=["duvet-rule-link"]
             )
             parent = highlight.parent
             parent.insert(parent.index(highlight) + 1, link)
