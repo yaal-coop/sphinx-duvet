@@ -43,9 +43,6 @@ changelog = "https://sphinx-duvet.readthedocs.io/en/latest/changelog.html"
 [tool.uv]
 exclude-newer = "14 days"
 
-[tool.uv.build-backend]
-module-root = ""
-
 [dependency-groups]
 dev = [
     "defusedxml>=0.7.1",
@@ -110,7 +107,7 @@ docstring-code-format = true
 testpaths = ["tests"]
 
 [tool.mypy]
-files = ["sphinx_duvet"]
+files = ["src"]
 strict = true
 
 [tool.tox]
@@ -129,6 +126,7 @@ env_list = [
 
 [tool.tox.env_run_base]
 runner = "uv-venv-lock-runner"
+package = "wheel"
 dependency_groups = ["dev"]
 commands = [
     ["pytest", "--showlocals", "--full-trace", "{posargs}"],
