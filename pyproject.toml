@@ -42,6 +42,8 @@ changelog = "https://sphinx-duvet.readthedocs.io/en/latest/changelog.html"
 
 [tool.uv]
 exclude-newer = "14 days"
+# Rebuild the package when its sources change, for the tests on the installed package.
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*" }]
 
 [dependency-groups]
 dev = [
