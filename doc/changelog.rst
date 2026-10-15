@@ -32,5 +32,7 @@ Added
   They show their reason, and are not counted.
 - A requirement cited in full with a todo annotation is partly done.
 - ``group-by: all`` shows every target in one column.
+- ``duvet_autoreport`` writes a "Specifications" index of the texts, next to the "Compliance" index.
+  The navigation shows short titles, such as "RFC 7643: Core Schema". ``duvet_short_titles`` sets others.
 - The documentation explains how to install Duvet on Read the Docs and in the CI.
 - ``duvet_labels`` shows the states as symbols, as text, or with any inline markup such as icons.

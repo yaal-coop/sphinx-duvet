@@ -44,6 +44,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
     app.add_config_value("duvet_autoreport", None, "env", types=[dict])
     app.add_config_value("duvet_autoreport_dir", "compliance", "env", types=[str])
     app.add_config_value("duvet_autoreport_recap", True, "env", types=[bool])
+    app.add_config_value("duvet_short_titles", {}, "env", types=[dict])
     app.add_config_value("duvet_labels", "symbols", "env", types=[str, dict])
     app.add_config_value("duvet_spec_highlight", "auto", "env", types=[str])
     app.add_config_value("duvet_figure_requirements", False, "env", types=[bool])

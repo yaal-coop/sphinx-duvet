@@ -84,13 +84,18 @@ Configuration
 .. confval:: duvet_autoreport
 
    Default options of the generated pages, as a dictionary.
-   If it is set, sphinx-duvet writes an index page and a page per specification.
+   If it is set, sphinx-duvet writes a page per specification, and two index pages:
+   :file:`compliance/index` lists the compliance pages with the counts of every specification,
+   and :file:`compliance/specifications` lists the texts of the IETF specifications.
+   The navigation gives the specifications a short title, such as "RFC 7643: Core Schema":
+   the part of the title after its last colon. :confval:`duvet_short_titles` sets others.
    For instance ``{"group-by": "role", "show": "missing"}``.
 
 .. confval:: duvet_autoreport_dir
 
    The folder of the generated pages, relative to the source folder.
-   The default is ``compliance``. Add ``compliance/index`` to a toctree.
+   The default is ``compliance``. Add ``compliance/index`` and ``compliance/specifications``
+   to a toctree.
 
 .. confval:: duvet_autoreport_recap
 
@@ -106,6 +111,12 @@ Configuration
    Duvet still finds key words in them, for instance in the descriptions of the attributes.
    These requirements are left out of the reports, the counts and the checks.
    Their identifiers are kept, so the other requirements keep theirs.
+
+.. confval:: duvet_short_titles
+
+   Short titles of the specifications in the navigation of the generated pages,
+   by specification path, such as
+   ``{"rfc/rfc9865.txt": "Cursor-Based Pagination"}``.
 
 .. confval:: duvet_labels
 

@@ -13,6 +13,7 @@ from sphinx.testing.util import SphinxTestApp
 
 import sphinx_duvet
 from sphinx_duvet import _render as render
+from sphinx_duvet._autoreport import _menu_title
 from sphinx_duvet._autoreport import _page_name
 from sphinx_duvet._domain import REPORT
 from sphinx_duvet._domain import TEXT
@@ -340,22 +341,20 @@ def test_missing_duvet(
     },
 )
 def test_autoreport(app: SphinxTestApp) -> None:
-    """A page is generated per specification, with an index."""
+    """A page is generated per specification, with an index of the compliance pages and one of the texts."""
     folder = Path(app.srcdir) / "compliance"
     assert sorted(path.name for path in folder.iterdir()) == [
         "extension.rst",
         "index.rst",
         "rfc9999-text.rst",
         "rfc9999.rst",
+        "specifications.rst",
     ]
     assert (folder / "rfc9999.rst").read_text() == (
         "RFC 9999 compliance\n"
         "===================\n\n"
         "Specification: https://www.rfc-editor.org/rfc/rfc9999\n\n"
         "Full text, with the requirements highlighted: :doc:`rfc9999-text`\n\n"
-        ".. toctree::\n"
-        "   :hidden:\n\n"
-        "   rfc9999-text\n\n"
         ".. duvet-recap:: spec/rfc9999.txt\n"
         "   :group-by: role\n\n"
         ".. duvet-report:: spec/rfc9999.txt\n"
@@ -374,14 +373,22 @@ def test_autoreport(app: SphinxTestApp) -> None:
         ".. duvet-spec:: spec/rfc9999.txt\n"
     )
     assert (folder / "index.rst").read_text() == (
-        "Specification compliance\n"
-        "========================\n\n"
+        "Compliance\n"
+        "==========\n\n"
         ".. duvet-recap::\n"
         "   :group-by: role\n\n"
         ".. toctree::\n"
         "   :maxdepth: 1\n\n"
-        "   extension\n"
-        "   rfc9999\n"
+        "   Example extension <extension>\n"
+        "   RFC 9999: Example Token Exchange Protocol <rfc9999>\n"
+    )
+    assert (folder / "specifications.rst").read_text() == (
+        "Specifications\n"
+        "==============\n\n"
+        "The texts of the specifications, with their requirements highlighted.\n\n"
+        ".. toctree::\n"
+        "   :maxdepth: 1\n\n"
+        "   RFC 9999: Example Token Exchange Protocol <rfc9999-text>\n"
     )
     app.build()
     assert warnings(app) == []
@@ -1071,3 +1078,15 @@ def test_outside(app: SphinxTestApp) -> None:
         "spec/rfc9997.txt#section-9: ''" in m
         for m in warnings(app)
     )
+
+
+def test_menu_title() -> None:
+    """The navigation shows the part of the title after its last colon, or a given short title."""
+    title = "RFC 7643: System for Cross-domain Identity Management: Core Schema"
+    assert _menu_title(title, None) == "RFC 7643: Core Schema"
+    long = "RFC 9865: Cursor-Based Pagination of SCIM Resources"
+    assert _menu_title(long, "Cursor-Based Pagination") == (
+        "RFC 9865: Cursor-Based Pagination"
+    )
+    assert _menu_title("Example extension", None) == "Example extension"
+    assert _menu_title("Example extension", "Extension") == "Extension"
