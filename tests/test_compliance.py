@@ -311,3 +311,13 @@ def test_citation_with_todo(project: Project) -> None:
     todo = Cite(type="TODO", path="src/a.py", line=1, ranges=[], reason="")
     req.cites.append(todo)
     assert project.group(req, targets).implementation == State.PARTIAL
+
+
+def test_requirement_in_a_table() -> None:
+    """A requirement in a table is the text of its cell, and keeps its cites."""
+    root = Path(__file__).parent / "projects" / "layout"
+    project = Project(root, read_report(root / "report.json"))
+    [spec] = project.specifications.values()
+    rule = next(r for r in spec.requirements if r.id == "rfc9997#2-2")
+    assert rule.text == "The server MUST check it."
+    assert spec.contents[rule.ranges[0][0] : rule.ranges[0][1]] == b"The server MUST"

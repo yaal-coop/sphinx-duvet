@@ -674,16 +674,8 @@ class DuvetSpec(_DuvetDirective):
 
         The run gets an anchor for each requirement that starts in it,
         so a requirement hidden by another one can still be referenced.
-        A requirement that starts out of the text, such as on a list marker,
-        gets its anchor on the first run it owns.
         """
         pending = [r for r in run.starts if r.id not in self.anchored]
-        if (
-            run.owner is not None
-            and run.owner.id not in self.anchored
-            and run.owner not in pending
-        ):
-            pending.append(run.owner)
         children: list[nodes.Node] = (
             self.linked(run.text) if links else [nodes.Text(run.text)]
         )

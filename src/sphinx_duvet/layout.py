@@ -29,6 +29,7 @@ _LIST_ITEM = re.compile(r"^(o|\*|-|\d+\.|[a-z]\.|\(\d+\)|\([a-z]\))\s+\S")
 _MARKER = re.compile(r"(?P<marker>[o*+-]|\d+\.|[a-z]\.|\(\d+\)|\([a-zA-Z]\)) +(?=\S)")
 _BULLETS = ("o", "*", "+", "-")
 _LABEL = re.compile(r"\[[^\]\s]+\]( +)(?=\S)")
+_KEY_WORD = re.compile(r"\b(MUST|SHALL|SHOULD|MAY|REQUIRED|RECOMMENDED|OPTIONAL)\b")
 _TERM_GAP = re.compile(r"\S( {2,})(?=\S)")
 _CAPTION = re.compile(r"(Figure|Table) \d+: \S")
 _GRID_BORDER = re.compile(r"\+(-+\+)+")
@@ -926,3 +927,85 @@ def _figure_ranges(elements: list[Element], ranges: list[tuple[int, int]]) -> No
         elif isinstance(element, DefinitionList):
             for definition in element.items:
                 _figure_ranges(definition.body, ranges)
+
+
+def cell_ranges(spec: Specification) -> dict[str, list[tuple[int, int]]]:
+    """Return the ranges of the requirements in tables, restricted to their cell.
+
+    Duvet reads a table line by line, so a requirement in a table mixes its columns.
+    The requirement is the sentence of the cell that holds its key word.
+    """
+    # Workaround for Duvet: requirements in tables mix the text of the columns.
+    # Remove when Duvet reads tables cell by cell (draft ticket T19).
+    if spec.format != "ietf":
+        return {}
+    cells: list[Block] = []
+    for text in sections(spec):
+        _table_cells(structure(text.blocks), cells)
+    result = {}
+    for requirement in spec.requirements:
+        start, end = requirement.ranges[0][0], requirement.ranges[-1][1]
+        for cell in cells:
+            ranges = _sentence(spec.contents, cell.pieces(), start, end)
+            if ranges:
+                result[requirement.id] = ranges
+                break
+    return result
+
+
+def _sentence(
+    contents: bytes, pieces: list[tuple[int, int]], start: int, end: int
+) -> list[tuple[int, int]] | None:
+    """Return the ranges of the sentence of a cell with a key word between start and end."""
+    # The text of the cell, with the byte range of each character.
+    # The space that joins two lines has no range.
+    text = ""
+    spans: list[tuple[int, int] | None] = []
+    for a, b in pieces:
+        if text:
+            text += " "
+            spans.append(None)
+        position = a
+        for char in contents[a:b].decode():
+            size = len(char.encode())
+            text += char
+            spans.append((position, position + size))
+            position += size
+    word = next(
+        (
+            m
+            for m in _KEY_WORD.finditer(text)
+            if (span := spans[m.start()]) is not None and start <= span[0] < end
+        ),
+        None,
+    )
+    if word is None:
+        return None
+    ends = [m.end() for m in re.finditer(r"[.!?](?=\s|$)", text)]
+    first = max((e for e in ends if e <= word.start()), default=0)
+    last = min((e for e in ends if e > word.start()), default=len(text))
+    ranges = []
+    for a, b in pieces:
+        inside = [
+            span
+            for span in spans[first:last]
+            if span is not None
+            and a <= span[0] < b
+            and not contents[span[0] : span[1]].isspace()
+        ]
+        if inside:
+            ranges.append((inside[0][0], inside[-1][1]))
+    return ranges
+
+
+def _table_cells(elements: list[Element], cells: list[Block]) -> None:
+    """Add the cells of the tables in elements, and in their lists and definitions."""
+    for element in elements:
+        if isinstance(element, Table):
+            cells += [cell for row in element.rows for cell in row if cell.lines]
+        elif isinstance(element, ItemList):
+            for item in element.items:
+                _table_cells(item.body, cells)
+        elif isinstance(element, DefinitionList):
+            for definition in element.items:
+                _table_cells(definition.body, cells)

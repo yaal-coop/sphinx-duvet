@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .dependencies import duvet_config
 from .dependencies import locate
+from .layout import cell_ranges
 from .layout import figure_requirements
 from .notes import Note
 from .notes import load_notes
@@ -112,16 +113,28 @@ class Project:
         """Load the targets and notes of a project, and the report of Duvet.
 
         Requirements in the figures of IETF specifications are left out,
-        unless figures is True.
+        unless figures is True. Requirements in tables are restricted to their cell.
         """
         self.root = Path(root)
         self.config = load_targets(self.root / ".duvet/targets.toml")
         self.installed = [locate(d) for d in self.config.dependencies]
         self.specifications = parse_report(report)
-        if not figures:
-            for spec in self.specifications.values():
+        for spec in self.specifications.values():
+            if not figures:
                 examples = figure_requirements(spec)
                 spec.requirements = [r for r in spec.requirements if r not in examples]
+            cells = cell_ranges(spec)
+            for requirement in spec.requirements:
+                if requirement.id not in cells:
+                    continue
+                # The cites quote the whole lines of the table.
+                requirement.quoted_ranges = (
+                    requirement.quoted_ranges or requirement.ranges
+                )
+                requirement.ranges = cells[requirement.id]
+                requirement.text = normalize(
+                    " ".join(spec.contents[a:b].decode() for a, b in requirement.ranges)
+                )
         self.notes = [
             note
             for folder, prefix in self.config.notes

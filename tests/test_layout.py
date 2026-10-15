@@ -8,6 +8,7 @@ from sphinx_duvet.layout import Figure
 from sphinx_duvet.layout import Paragraph
 from sphinx_duvet.layout import Table
 from sphinx_duvet.layout import blocks
+from sphinx_duvet.layout import cell_ranges
 from sphinx_duvet.layout import figure_language
 from sphinx_duvet.layout import figure_requirements
 from sphinx_duvet.layout import front_matter
@@ -505,3 +506,44 @@ def test_labels_on_their_own_line() -> None:
         "Relevant Ancillary Documentation:",
         "Scope:",
     ]
+
+
+def test_cell_ranges() -> None:
+    """A requirement in a table is the sentence of its cell, without the other columns."""
+    text = (
+        "1.  Table\n\n"
+        "   +------+---------------------+\n"
+        "   | Name | Use                 |\n"
+        "   +------+---------------------+\n"
+        "   | a    | It is short.        |\n"
+        "   |      | The server MUST     |\n"
+        "   |      | check it. Then go.  |\n"
+        "   +------+---------------------+\n"
+    )
+    contents = text.encode()
+    start = contents.index(b"| a ")
+    end = contents.index(b"check it.") + len(b"check it.")
+    spec = Specification(
+        path="spec.txt",
+        title="Table",
+        format="ietf",
+        sections={"section-1": "Table"},
+        requirements=[
+            Requirement(
+                spec="spec.txt",
+                section="section-1",
+                level="MUST",
+                text="mixed columns",
+                ranges=[(start, end)],
+                contents=contents,
+                id="spec#1-1",
+            )
+        ],
+        name="spec",
+        contents=contents,
+        section_ranges={"section-1": (contents.index(b"Table"), len(contents))},
+    )
+    ranges = cell_ranges(spec)["spec#1-1"]
+    assert [contents[a:b] for a, b in ranges] == [b"The server MUST", b"check it."]
+    spec.format = "markdown"
+    assert cell_ranges(spec) == {}
