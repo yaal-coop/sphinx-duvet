@@ -1,6 +1,5 @@
 """The duvet-report and duvet-recap directives."""
 
-from dataclasses import dataclass
 from typing import ClassVar
 
 from docutils import nodes
@@ -16,46 +15,19 @@ from ._labels import label_sources
 from ._project import LoadedProject
 from ._project import get_project
 from .compliance import Counts
-from .compliance import State
 from .compliance import Status
-from .compliance import in_sections
 from .report import Requirement
 from .report import Specification
 from .targets import ConfigError
-from .targets import Selector
-from .targets import parse_selectors
+from .views import SHOW
+from .views import View
 
 logger = logging.getLogger(__name__)
 
 
 def _show(value: str) -> str:
     """Check the value of the show option."""
-    return directives.choice(value, ("all", "missing", "unannotated"))
-
-
-@dataclass
-class _Options:
-    """The options shared by the directives."""
-
-    selectors: list[Selector] | None
-    group_by: str | None
-    sections: list[str]
-    levels: set[str] | None
-    show: str
-
-    def keep(self, requirement: Requirement) -> bool:
-        """Return True if the requirement is in the selected sections and levels."""
-        if not in_sections(requirement, self.sections):
-            return False
-        return self.levels is None or requirement.level in self.levels
-
-    def shows(self, statuses: list[Status]) -> bool:
-        """Return True if a row with these statuses matches the show option."""
-        if self.show == "missing":
-            return any(s.gap for s in statuses)
-        if self.show == "unannotated":
-            return any(s.implementation == State.UNANNOTATED for s in statuses)
-        return True
+    return directives.choice(value, SHOW)
 
 
 class _DuvetDirective(SphinxDirective):
@@ -69,21 +41,14 @@ class _DuvetDirective(SphinxDirective):
         "show": _show,
     }
 
-    def report_options(self) -> _Options:
+    def view(self) -> View:
         """Read the options of the directive."""
-        targets = self.options.get("targets")
-        sections = self.options.get("sections")
-        levels = self.options.get("levels")
-        return _Options(
-            selectors=parse_selectors(targets) if targets else None,
-            group_by=self.options.get("group-by") or None,
-            sections=[s.strip() for s in sections.split(",") if s.strip()]
-            if sections
-            else [],
-            levels={level.strip().upper() for level in levels.split(",")}
-            if levels
-            else None,
-            show=self.options.get("show", "all"),
+        return View.parse(
+            targets=self.options.get("targets"),
+            group_by=self.options.get("group-by"),
+            sections=self.options.get("sections"),
+            levels=self.options.get("levels"),
+            show=self.options.get("show"),
         )
 
     def specification(self, loaded: LoadedProject, path: str) -> Specification | None:
@@ -120,27 +85,21 @@ class DuvetReport(_DuvetDirective):
         if spec is None:
             return []
         try:
-            options = self.report_options()
+            view = self.view()
         except ConfigError as exc:
             logger.warning(str(exc), type="duvet", location=self.get_location())
             return []
-        columns = project.columns(options.selectors, options.group_by)
+        columns = view.columns(project)
 
         messages: list[nodes.Node] = []
         labels = Labels(
             label_sources(self.config.duvet_labels)[0],
             lambda markup: self.parse_label(markup, messages),
         )
-        rows = []
-        for requirement in spec.requirements:
-            if not options.keep(requirement):
-                continue
-            statuses = [project.group(requirement, targets) for _, targets in columns]
-            if all(s.implementation == State.NOT_APPLICABLE for s in statuses):
-                continue
-            if not options.shows(statuses):
-                continue
-            rows.append(self.row(spec, requirement, statuses, labels))
+        rows = [
+            self.row(spec, row.requirement, row.statuses, labels)
+            for row in view.rows(project, spec)
+        ]
 
         if not rows:
             return [
@@ -223,14 +182,14 @@ class DuvetRecap(_DuvetDirective):
                 if (s := self.specification(loaded, path)) is not None
             ]
         try:
-            options = self.report_options()
+            view = self.view()
         except ConfigError as exc:
             logger.warning(str(exc), type="duvet", location=self.get_location())
             return []
-        requirements = [r for s in specs for r in s.requirements if options.keep(r)]
+        requirements = view.requirements(specs)
 
         rows = []
-        for label, targets in project.columns(options.selectors, options.group_by):
+        for label, targets in view.columns(project):
             for level, count in project.recap(requirements, targets).items():
                 if count.requirements:
                     rows.append(self.row(level, label, count))

@@ -12,54 +12,11 @@ from sphinx.writers.html5 import HTML5Translator
 
 from .compliance import State
 from .compliance import Status
+from .labels import DESCRIPTIONS
+from .labels import KEYS
+from .labels import PRESETS
 
 logger = logging.getLogger(__name__)
-
-# The keys of the duvet_labels option.
-_KEYS = {
-    "ok": State.OK,
-    "missing": State.MISSING,
-    "unannotated": State.UNANNOTATED,
-    "todo": State.TODO,
-    "partial": State.PARTIAL,
-    "exception": State.EXCEPTION,
-    "not_expected": State.NOT_EXPECTED,
-    "not_applicable": State.NOT_APPLICABLE,
-}
-
-_DESCRIPTIONS = {
-    State.OK: "done",
-    State.MISSING: "missing",
-    State.UNANNOTATED: "not annotated yet",
-    State.TODO: "planned",
-    State.PARTIAL: "partly done",
-    State.EXCEPTION: "deliberate deviation",
-    State.NOT_EXPECTED: "no test expected",
-    State.NOT_APPLICABLE: "not applicable",
-}
-
-_PRESETS = {
-    "symbols": {
-        State.OK: "✔",
-        State.MISSING: "✘",
-        State.UNANNOTATED: "?",
-        State.TODO: "…",
-        State.PARTIAL: "½",
-        State.EXCEPTION: "≠",
-        State.NOT_EXPECTED: "—",
-        State.NOT_APPLICABLE: "∅",
-    },
-    "text": {
-        State.OK: "done",
-        State.MISSING: "missing",
-        State.UNANNOTATED: "not annotated",
-        State.TODO: "todo",
-        State.PARTIAL: "partial",
-        State.EXCEPTION: "exception",
-        State.NOT_EXPECTED: "not expected",
-        State.NOT_APPLICABLE: "n/a",
-    },
-}
 
 _CLASSES = {
     State.OK: "duvet-ok",
@@ -99,18 +56,18 @@ def label_sources(value: Any) -> tuple[dict[State, str], list[str]]:
     The option is the name of a preset, or a dictionary that overrides the symbols.
     """
     if isinstance(value, str):
-        if value in _PRESETS:
-            return dict(_PRESETS[value]), []
-        return dict(_PRESETS["symbols"]), [
+        if value in PRESETS:
+            return dict(PRESETS[value]), []
+        return dict(PRESETS["symbols"]), [
             f"unknown duvet_labels preset {value!r}, expected 'symbols' or 'text'"
         ]
-    sources = dict(_PRESETS["symbols"])
+    sources = dict(PRESETS["symbols"])
     problems = []
     for key, markup in value.items():
-        if key not in _KEYS:
+        if key not in KEYS:
             problems.append(f"unknown duvet_labels key {key!r}")
             continue
-        sources[_KEYS[key]] = markup
+        sources[KEYS[key]] = markup
     return sources, problems
 
 
@@ -132,7 +89,7 @@ class Labels:
     def state(self, value: State) -> duvet_label:
         """Return the label of a state. Its description shows on hover."""
         node = duvet_label(
-            explanation=_DESCRIPTIONS[value],
+            explanation=DESCRIPTIONS[value],
             classes=["duvet-status", _CLASSES[value]],
         )
         node.extend(copy.deepcopy(child) for child in self._nodes[value])
@@ -153,13 +110,13 @@ class Labels:
         A description is left out when the label already says the same.
         """
         node = nodes.paragraph(classes=["duvet-legend"])
-        for index, value in enumerate(_DESCRIPTIONS):
+        for index, value in enumerate(DESCRIPTIONS):
             if index:
                 node += nodes.Text(" · ")
             label = self.state(value)
             node += label
-            if label.astext() != _DESCRIPTIONS[value]:
-                node += nodes.Text(f" {_DESCRIPTIONS[value]}")
+            if label.astext() != DESCRIPTIONS[value]:
+                node += nodes.Text(f" {DESCRIPTIONS[value]}")
         return node
 
 
