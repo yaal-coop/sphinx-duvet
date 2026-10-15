@@ -188,10 +188,22 @@ class Project:
         return [path for path in dict.fromkeys(files) if path.exists()]
 
     def applicable(self, requirement: Requirement) -> list[Target]:
-        """Return the targets a requirement applies to."""
+        """Return the targets a requirement applies to.
+
+        A requirement applies to a checker if it applies to a target that the checker checks.
+        """
         if requirement.applies is None:
             return list(self.targets)
-        return [t for t in self.targets if matches_any(requirement.applies, t)]
+        applies = requirement.applies
+        direct = [
+            t for t in self.targets if t.checks is None and matches_any(applies, t)
+        ]
+        return [
+            t
+            for t in self.targets
+            if t in direct
+            or (t.checks is not None and any(matches_any(t.checks, d) for d in direct))
+        ]
 
     def status(self, requirement: Requirement, target: Target) -> Status:
         """Return the implementation and test states of a requirement for a target.
@@ -288,13 +300,16 @@ class Project:
     def columns(
         self, selectors: list[Selector] | None = None, group_by: str | None = None
     ) -> list[tuple[str, list[Target]]]:
-        """Return (label, targets) pairs, one per column."""
+        """Return (label, targets) pairs, one per column.
+
+        A target without the attribute of the groups gets a column of its own.
+        """
         targets = self.config.select(selectors)
         if not group_by:
             return [(t.id, [t]) for t in targets]
         groups: dict[str, list[Target]] = {}
         for target in targets:
-            groups.setdefault(target.attrs.get(group_by, "?"), []).append(target)
+            groups.setdefault(target.attrs.get(group_by, target.id), []).append(target)
         return list(groups.items())
 
 

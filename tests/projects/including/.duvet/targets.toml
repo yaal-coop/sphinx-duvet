@@ -5,6 +5,19 @@ id = "server-local"
 role = "server"
 local = "true"
 
+[[target]]
+id = "checker"
+kind = "checker"
+checks = "role=server"
+
+[[default]]
+pattern = "src/checks.py"
+covers = "kind=checker"
+
 [[default]]
 pattern = "src/**"
+covers = "role=server"
+
+[[default]]
+pattern = "tests/**"
 covers = "role=server"

@@ -11,6 +11,9 @@
       "lnk-2014467d2cf195db": {
         "file_name": ".duvet/requirements/rfc/spec/requests.toml"
       },
+      "lnk-42844aebffd5a84c": {
+        "file_name": "src/checks.py"
+      },
       "lnk-7e153b1def5b95f5": {
         "file_name": "rfc/.duvet/spec/spec.toml"
       },
@@ -106,6 +109,12 @@
               "start": 32,
               "end": 54
             }
+          ],
+          "cite-f08f1910890e5f6c": [
+            {
+              "start": 32,
+              "end": 54
+            }
           ]
         }
       },
@@ -172,6 +181,23 @@
             {
               "start": 78,
               "end": 133
+            }
+          ]
+        },
+        "type": "CITATION",
+        "level": "AUTO"
+      },
+      "cite-f08f1910890e5f6c": {
+        "source": {
+          "src": "lnk-42844aebffd5a84c",
+          "line": 2
+        },
+        "target": {
+          "src": "src-2f0b704726e8bb97",
+          "ranges": [
+            {
+              "start": 32,
+              "end": 54
             }
           ]
         },

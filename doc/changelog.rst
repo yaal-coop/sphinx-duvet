@@ -17,5 +17,6 @@ Added
   with its targets, applicability, requirements and notes.
 - The annotations of installed dependencies count for a project.
   ``sphinx-duvet export`` writes a report that includes them.
+- Checker targets, such as a conformance test suite, show the requirements they check.
 - The documentation explains how to install Duvet on Read the Docs and in the CI.
 - ``duvet_labels`` shows the states as symbols, as text, or with any inline markup such as icons.

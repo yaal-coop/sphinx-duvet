@@ -200,10 +200,19 @@ INCLUDING = Path(__file__).parent / "projects" / "including"
 def test_include() -> None:
     """An included project brings its targets, applicability, granularity and notes."""
     config = load_targets(INCLUDING / ".duvet/targets.toml")
-    assert [t.id for t in config.targets] == ["server", "client", "server-local"]
+    assert [t.id for t in config.targets] == [
+        "server",
+        "client",
+        "server-local",
+        "checker",
+    ]
     assert config.test_granularity == {"role"}
     assert [a.target for a in config.applies] == ["rfc/spec.md#requests"] * 3
-    assert [d.pattern for d in config.defaults] == ["src/**"]
+    assert [d.pattern for d in config.defaults] == [
+        "src/checks.py",
+        "src/**",
+        "tests/**",
+    ]
     assert config.notes == [
         (INCLUDING / "rfc/.duvet/notes", "rfc/"),
         (INCLUDING / ".duvet/notes", ""),
@@ -252,3 +261,15 @@ def test_invalid_include(tmp_path: Path, content: str, message: str) -> None:
     path = make_project(tmp_path / "main", content)
     with pytest.raises(ConfigError, match=message):
         load_targets(path)
+
+
+def test_checker(tmp_path: Path) -> None:
+    """A target with checks is a checker. Its checks are selectors, not attributes."""
+    path = tmp_path / "targets.toml"
+    path.write_text(
+        '[[target]]\nid = "t"\nkind = "checker"\nchecks = "role=server; role=client"\n'
+    )
+    [target] = load_targets(path).targets
+    assert target.attrs == {"kind": "checker"}
+    assert target.checks == parse_selectors("role=server; role=client")
+    assert Selector.parse("kind=checker").matches(target)

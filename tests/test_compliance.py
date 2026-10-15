@@ -15,6 +15,7 @@ from sphinx_duvet.compliance import in_sections
 from sphinx_duvet.report import Report
 from sphinx_duvet.report import Requirement
 from sphinx_duvet.report import read_report
+from sphinx_duvet.targets import Target
 from sphinx_duvet.targets import parse_selectors
 
 
@@ -135,7 +136,10 @@ def test_recap_other_level(project: Project) -> None:
 
 
 def test_columns(project: Project) -> None:
-    """Columns are single targets, or groups of targets that share an attribute."""
+    """Columns are single targets, or groups of targets that share an attribute.
+
+    A target without the attribute gets a column of its own.
+    """
     assert [label for label, _ in project.columns()] == [
         "server-flask",
         "server-django",
@@ -149,7 +153,7 @@ def test_columns(project: Project) -> None:
     assert [label for label, _ in project.columns(group_by="framework")] == [
         "flask",
         "django",
-        "?",
+        "client",
     ]
     selected = project.columns(parse_selectors("role=client"))
     assert [label for label, _ in selected] == ["client"]
@@ -230,12 +234,39 @@ def test_included_project() -> None:
     assert project.unused_applies == []
     assert project.unused_notes == []
     spec = project.specifications["rfc/spec.md"]
+    assert [t.id for t in project.targets] == [
+        "server",
+        "client",
+        "server-local",
+        "checker",
+    ]
     assert [statuses(project, r.text) for r in spec.requirements] == [
-        ["ok/ok", "n/a/n/a", "ok/ok"],
-        ["n/a/n/a", "unannotated/-", "n/a/n/a"],
-        ["ok/missing", "n/a/n/a", "ok/missing"],
+        ["ok/ok", "n/a/n/a", "ok/ok", "ok/missing"],
+        ["n/a/n/a", "unannotated/-", "n/a/n/a", "n/a/n/a"],
+        ["ok/missing", "n/a/n/a", "ok/missing", "missing/-"],
     ]
     assert spec.requirements[0].notes[0].body == ["A shared note about replies."]
     files = project.dependencies(spec)
     assert root / "rfc/.duvet/targets.toml" in files
     assert root / "rfc/.duvet/notes/spec.rst" in files
+
+
+def applicable_ids(project: Project, text: str) -> list[str]:
+    """Return the identifiers of the targets a requirement applies to."""
+    return [t.id for t in project.applicable(requirement(project, text))]
+
+
+def test_checker(project: Project) -> None:
+    """A checker applies to the requirements of the targets it checks."""
+    checker = Target(
+        "checker", {"kind": "checker"}, checks=parse_selectors("framework=django")
+    )
+    project.config.targets.append(checker)
+    assert applicable_ids(project, "The server MUST reject invalid tokens.") == [
+        "server-flask",
+        "server-django",
+        "checker",
+    ]
+    assert applicable_ids(project, "The client MUST send the token.") == ["client"]
+    assert "checker" in applicable_ids(project, "Servers SHOULD rotate their keys.")
+    assert [label for label, _ in project.columns(group_by="role")][-1] == "checker"

@@ -233,6 +233,27 @@ and which annotations and requirements apply to them.
    quote = "The client MUST send the token."
    applies-to = "role=client"
 
+Checkers
+~~~~~~~~
+
+Some projects do not implement the requirements: they check that other projects implement them,
+like a conformance test suite. Such a target is a checker. Give it the targets it checks:
+
+.. code-block:: toml
+
+   [[target]]
+   id = "tester"
+   kind = "checker"
+   checks = "role=server"
+
+A requirement applies to a checker if it applies to one of the targets it checks.
+The annotations of the checker cite the requirements that it checks,
+and its column shows them as for any target.
+``checks`` takes :ref:`selectors`. ``kind`` is a plain attribute,
+which annotations can select with ``covers = "kind=checker"``.
+
+With ``group-by``, a target without the attribute gets a column of its own.
+
 .. _selectors:
 
 Selectors

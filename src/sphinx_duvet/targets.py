@@ -15,10 +15,15 @@ class ConfigError(ValueError):
 
 @dataclass(frozen=True)
 class Target:
-    """A variant of the project, such as a role or a framework, described by attributes."""
+    """A variant of the project, such as a role or a framework, described by attributes.
+
+    A target with ``checks`` is a checker: it does not implement the requirements,
+    it checks that the targets that match ``checks`` implement them.
+    """
 
     id: str
     attrs: dict[str, str] = field(default_factory=dict, hash=False)
+    checks: "list[Selector] | None" = field(default=None, hash=False)
 
 
 @dataclass(frozen=True)
@@ -286,10 +291,11 @@ def _dependency(entry: dict[str, Any]) -> Dependency:
 
 
 def _target(entry: dict[str, Any]) -> Target:
-    """Read a [[target]] entry. Every attribute must be a string."""
+    """Read a [[target]] entry. Every attribute must be a string, and checks are selectors."""
     target_id = _get(entry, "id", "target")
-    attrs = {key: value for key, value in entry.items() if key != "id"}
+    attrs = {key: value for key, value in entry.items() if key not in ("id", "checks")}
     for key, value in attrs.items():
         if not isinstance(value, str):
             raise ConfigError(f"Target {target_id!r}: {key!r} must be a string")
-    return Target(target_id, attrs)
+    checks = _selectors(entry, "checks", "target") if "checks" in entry else None
+    return Target(target_id, attrs, checks)
