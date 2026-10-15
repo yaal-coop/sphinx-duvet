@@ -28,6 +28,10 @@ class DuvetError(RuntimeError):
     """Duvet failed to produce a report."""
 
 
+class DuvetNotFound(DuvetError):
+    """The Duvet executable is not installed."""
+
+
 @dataclass
 class Cite:
     """An annotation that quotes a part of a specification."""
@@ -129,8 +133,9 @@ def run_duvet(root: Path, executable: str = "duvet") -> Report:
                 text=True,
             )
         except FileNotFoundError as exc:
-            raise DuvetError(
-                f"Duvet is not installed: {executable!r} not found"
+            raise DuvetNotFound(
+                f"Duvet is not installed: {executable!r} not found. "
+                "Install it with: cargo install duvet --locked"
             ) from exc
         except subprocess.CalledProcessError as exc:
             raise DuvetError(f"Duvet failed:\n{exc.stderr}") from exc

@@ -12,6 +12,7 @@ from sphinx.util import logging
 from .compliance import Project
 from .compliance import find_root
 from .report import DuvetError
+from .report import DuvetNotFound
 from .report import read_report
 from .targets import ConfigError
 
@@ -46,6 +47,11 @@ def load_project(app: Sphinx) -> None:
             project = Project.from_duvet(root, app.config.duvet_executable)
         else:
             project = Project(root, read_report(report_path))
+    except DuvetNotFound as exc:
+        raise ExtensionError(
+            f"Cannot load the Duvet report: {exc}. "
+            "Or set duvet_report_json to a report produced elsewhere."
+        ) from exc
     except (DuvetError, ConfigError, OSError, KeyError, ValueError) as exc:
         raise ExtensionError(f"Cannot load the Duvet report: {exc}") from exc
 

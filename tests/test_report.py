@@ -8,6 +8,7 @@ import pytest
 
 from sphinx_duvet.report import Cite
 from sphinx_duvet.report import DuvetError
+from sphinx_duvet.report import DuvetNotFound
 from sphinx_duvet.report import Report
 from sphinx_duvet.report import ietf_title
 from sphinx_duvet.report import parse_report
@@ -160,5 +161,5 @@ def test_run_duvet_failure(tmp_path: Path) -> None:
 
 def test_run_duvet_not_installed(tmp_path: Path) -> None:
     """A missing executable is reported."""
-    with pytest.raises(DuvetError, match="Duvet is not installed"):
+    with pytest.raises(DuvetNotFound, match="Install it with: cargo install duvet"):
         run_duvet(tmp_path, os.fspath(tmp_path / "missing"))

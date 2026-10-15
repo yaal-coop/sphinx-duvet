@@ -184,7 +184,10 @@ def test_check_success(capsys: pytest.CaptureFixture[str]) -> None:
             "unknown specification spec/unknown.txt",
         ),
         (["report", *REPORT, "--targets", "role"], "Invalid selector 'role'"),
-        (["report", "--duvet", "/missing/duvet"], "Duvet is not installed"),
+        (
+            ["report", "--duvet", "/missing/duvet"],
+            "Install it with: cargo install duvet --locked. Or use --report-json",
+        ),
         (["report", "--report-json", "missing.json"], "No such file or directory"),
     ],
 )

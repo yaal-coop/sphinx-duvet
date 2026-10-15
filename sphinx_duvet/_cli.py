@@ -16,6 +16,7 @@ from .compliance import find_root
 from .labels import DESCRIPTIONS
 from .labels import PRESETS
 from .report import DuvetError
+from .report import DuvetNotFound
 from .report import Requirement
 from .report import Specification
 from .report import read_report
@@ -376,6 +377,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         specs = _specifications(project, args.specs)
         if command is check:
             args.failures = _fail_on(args.fail_on)
+    except DuvetNotFound as exc:
+        print(
+            f"sphinx-duvet: error: {exc}. "
+            "Or use --report-json with a report produced elsewhere.",
+            file=sys.stderr,
+        )
+        return 2
     except (_UsageError, DuvetError, OSError, KeyError, ValueError) as exc:
         print(f"sphinx-duvet: error: {exc}", file=sys.stderr)
         return 2

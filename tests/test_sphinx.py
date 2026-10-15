@@ -247,7 +247,9 @@ def test_missing_duvet(
 ) -> None:
     """Without a report file, Duvet runs during the build. If it is missing, the build stops."""
     args, kwargs = app_params
-    with pytest.raises(ExtensionError, match="Duvet is not installed"):
+    with pytest.raises(
+        ExtensionError, match="cargo install duvet --locked. Or set duvet_report_json"
+    ):
         make_app(*args, **kwargs)
 
 

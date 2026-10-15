@@ -13,4 +13,5 @@ Added
 - Targets, and the targets of annotations and requirements, are set in :file:`.duvet/targets.toml`.
 - Notes in :file:`.duvet/notes/` add text to requirements.
 - The ``sphinx-duvet`` command shows the reports in a terminal, and checks them in the CI.
+- The documentation explains how to install Duvet on Read the Docs and in the CI.
 - ``duvet_labels`` shows the states as symbols, as text, or with any inline markup such as icons.

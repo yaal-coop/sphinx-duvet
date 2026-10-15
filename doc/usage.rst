@@ -9,9 +9,13 @@ Getting the report
 
 By default, sphinx-duvet runs ``duvet report --json-v2`` when the build starts.
 Duvet must then be installed where the documentation is built.
+Duvet has no prebuilt binary, so install it with cargo:
 
-If Duvet is not available, for instance on Read the Docs,
-produce the report elsewhere and give its path:
+.. code-block:: shell
+
+   cargo install duvet --locked
+
+If Duvet is not available, produce the report elsewhere and give its path:
 
 .. code-block:: shell
 
@@ -22,6 +26,43 @@ produce the report elsewhere and give its path:
    duvet_report_json = "../compliance.json"
 
 The build stops if the report cannot be read or if Duvet fails.
+
+Read the Docs
+~~~~~~~~~~~~~
+
+Read the Docs provides Rust, so the build can install Duvet.
+Pin its version, so that a new release does not change the reports.
+Installing Duvet adds a few minutes to each build.
+
+.. code-block:: yaml
+
+   version: 2
+   build:
+     os: "ubuntu-24.04"
+     tools:
+       python: "3.14"
+       rust: "latest"
+     jobs:
+       post_install:
+         - cargo install duvet --locked --version 0.4.3
+
+Continuous integration
+~~~~~~~~~~~~~~~~~~~~~~
+
+In the CI, :ref:`sphinx-duvet check <command-line>` fails when requirements are not done.
+Cache the Duvet binary, so it is only built when its version changes.
+With GitHub Actions, the hosted runners provide cargo:
+
+.. code-block:: yaml
+
+   - uses: actions/cache@v6
+     id: duvet
+     with:
+       path: ~/.cargo/bin/duvet
+       key: duvet-0.4.3-${{ runner.os }}
+   - if: steps.duvet.outputs.cache-hit != 'true'
+     run: cargo install duvet --locked --version 0.4.3
+   - run: uv run sphinx-duvet check --levels MUST
 
 Configuration
 -------------
@@ -217,6 +258,8 @@ Write them in reStructuredText files in :file:`.duvet/notes/`:
       Logging uses the standard *logging* module.
 
 The note is shown in the row of the requirement.
+
+.. _command-line:
 
 Command line
 ------------
