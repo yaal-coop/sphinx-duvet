@@ -3,8 +3,11 @@
 from pathlib import Path
 
 from sphinx.application import Sphinx
+from sphinx.util import logging
 
 from ._project import get_project
+
+logger = logging.getLogger(__name__)
 
 _RECAP_OPTIONS = ("targets", "group-by", "sections", "levels")
 
@@ -12,8 +15,15 @@ _RECAP_OPTIONS = ("targets", "group-by", "sections", "levels")
 def generate_pages(app: Sphinx) -> None:
     """Write an index page and a page per specification in the source folder."""
     defaults: dict[str, str] | None = app.config.duvet_autoreport
+    if defaults is None:
+        return
     loaded = get_project(app.srcdir)
-    if defaults is None or loaded is None:
+    if loaded is None:
+        logger.warning(
+            "duvet_autoreport is set, but no .duvet/config.toml found above the "
+            "documentation, use duvet_root",
+            type="duvet",
+        )
         return
     project = loaded.project
     folder = Path(app.srcdir, app.config.duvet_autoreport_dir)

@@ -177,3 +177,37 @@ def test_run_duvet_config(tmp_path: Path) -> None:
     )
     assert run_duvet(tmp_path, executable, "generated") == {"config": "generated"}
     assert list((tmp_path / ".duvet").iterdir()) == []
+
+
+def test_specification_names() -> None:
+    """Specifications are named after their file, or their path if two files share a name."""
+    report = {
+        "sources": {
+            INLINE: {
+                "a": {"file_name": "one/spec.txt", "contents": "Text"},
+                "b": {"file_name": "two/spec.txt", "contents": "Text"},
+                "c": {"file_name": "rfc1.txt", "contents": "Text"},
+            }
+        },
+        "annotations": {
+            SPECIFICATION: {key: {"source": {"src": key}} for key in "abc"}
+        },
+    }
+    names = [spec.name for spec in parse_report(report).values()]
+    assert names == ["one-spec", "rfc1", "two-spec"]
+
+
+def test_requirement_ids(basic_report: Report) -> None:
+    """Requirements are numbered in each section. Requirements outside a section are in section 0."""
+    rfc = parse_report(basic_report)["spec/rfc9999.txt"]
+    assert [r.id for r in rfc.requirements[:4]] == [
+        "rfc9999#2-1",
+        "rfc9999#2-2",
+        "rfc9999#2-3",
+        "rfc9999#2.1-1",
+    ]
+    report = json.loads(json.dumps(basic_report))
+    for name in list(report["annotations"]):
+        if name.endswith("#section"):
+            del report["annotations"][name]
+    assert parse_report(report)["spec/rfc9999.txt"].requirements[0].id == "rfc9999#0-1"

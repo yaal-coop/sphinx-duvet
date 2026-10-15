@@ -9,6 +9,7 @@ body[data-theme="light"] {
   --duvet-muted: #6e7781;
   --duvet-strong: #24292f;
   --duvet-on-strong: #ffffff;
+  --duvet-section: rgba(110, 119, 129, 0.08);
 }
 
 /* Furo in auto mode follows the system preference. */
@@ -20,6 +21,7 @@ body[data-theme="light"] {
     --duvet-muted: #8b949e;
     --duvet-strong: #e6edf3;
     --duvet-on-strong: #0d1117;
+    --duvet-section: rgba(139, 148, 158, 0.12);
   }
 }
 
@@ -32,6 +34,7 @@ body[data-theme="dark"] {
   --duvet-muted: #8b949e;
   --duvet-strong: #e6edf3;
   --duvet-on-strong: #0d1117;
+  --duvet-section: rgba(139, 148, 158, 0.12);
 }
 
 .duvet-status {
@@ -39,12 +42,12 @@ body[data-theme="dark"] {
   white-space: nowrap;
 }
 
-/* Labels are <abbr> elements, so their description shows on hover.
-   Themes often underline them, which would clutter the tables. */
 .duvet-state {
   white-space: nowrap;
 }
 
+/* Labels are <abbr> elements, so their description shows on hover.
+   Themes often underline them, which would clutter the tables. */
 abbr.duvet-status {
   text-decoration: none;
   border-bottom: 0;
@@ -169,4 +172,48 @@ table.duvet-table.duvet-recap td {
 table.duvet-table.duvet-recap td:nth-child(n + 3),
 table.duvet-table.duvet-recap th:nth-child(n + 3) {
   text-align: right;
+}
+
+/* A section of the specification, above its requirements. */
+table.duvet-table tr.duvet-section td {
+  background: var(--duvet-section);
+}
+
+/* The title on the left, the link to the specification on the right. */
+table.duvet-table tr.duvet-section td > p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25em 1em;
+}
+
+.duvet-section-title {
+  font-weight: 600;
+}
+
+.duvet-section-link {
+  font-size: 0.85em;
+}
+
+.duvet-section-link a {
+  color: var(--duvet-muted);
+}
+
+/* Permalinks of requirements show on hover, as the permalinks of headings.
+   Without hover, on touch screens, they stay visible but faint.
+   They stay inline, so a hidden permalink never wraps to a line of its own. */
+table.duvet-table a.headerlink {
+  display: inline;
+}
+
+table.duvet-table tr:hover a.headerlink {
+  visibility: visible;
+}
+
+@media (hover: none) {
+  table.duvet-table a.headerlink {
+    visibility: visible;
+    opacity: 0.4;
+  }
 }

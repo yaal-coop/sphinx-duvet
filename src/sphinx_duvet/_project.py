@@ -33,13 +33,14 @@ _PROJECTS: dict[str, LoadedProject] = {}
 
 
 def load_project(app: Sphinx) -> None:
-    """Load the project once per build, and warn about entries that match nothing."""
+    """Load the project once per build, and warn about entries that match nothing.
+
+    A documentation without a Duvet project can still refer to the requirements
+    of other documentations, so it is not an error.
+    """
     _PROJECTS.pop(str(app.srcdir), None)
     root = _root(app)
     if root is None:
-        logger.warning(
-            "no .duvet/config.toml found above %s", app.confdir, type="duvet"
-        )
         return
     report_path = _report_file(app)
     try:
@@ -108,10 +109,10 @@ def _line_of(path: Path, text: str) -> int | None:
 
 
 def _location(path: Path, line: int | None) -> nodes.Element:
-    """Return a node that points to a file, for the location of a warning.
-
-    Sphinx reads a string location as a document name, and would add .rst to it.
-    """
+    """Return a node that points to a file, for the location of a warning."""
+    # Workaround for Sphinx: a string location is read as a document name, and gets
+    # a .rst suffix. A node with a source is shown as is. Remove when Sphinx accepts
+    # file paths as locations.
     node = nodes.Element()
     node.source = str(path)
     node.line = line

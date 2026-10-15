@@ -7,6 +7,7 @@ import tempfile
 from dataclasses import dataclass
 from dataclasses import field
 from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Any
 
 from .notes import Note
@@ -74,6 +75,9 @@ class Requirement:
     cites: list[Cite] = field(default_factory=list)
     applies: list[Selector] | None = None
     notes: list[Note] = field(default_factory=list)
+    id: str = ""
+    """A stable identifier, such as ``rfc7643#3.1-9``: the name of the specification,
+    the number of the section, and the rank of the requirement in the section."""
 
     def covered_by(self, cites: list[Cite], within: list[Cite] | None = None) -> bool:
         """Return :data:`True` if the cites quote every non-blank byte of the requirement.
@@ -82,6 +86,9 @@ class Requirement:
         """
         quoted = [r for cite in cites for r in cite.ranges]
         scope = None if within is None else [r for cite in within for r in cite.ranges]
+        # Workaround for Duvet: two adjacent quotes leave the blank between them
+        # unquoted, so Duvet finds the requirement incomplete. Blanks are not checked.
+        # Remove when Duvet joins adjacent quotes.
         return all(
             self.contents[offset : offset + 1].isspace()
             or any(start <= offset < end for start, end in quoted)
@@ -104,6 +111,8 @@ class Specification:
     format: str
     sections: dict[str, str]
     requirements: list[Requirement]
+    name: str = ""
+    """A short name, unique in the project: the file name without its extension."""
 
     @property
     def url(self) -> str | None:
@@ -141,8 +150,10 @@ def run_duvet(
         command = [executable, "report", "--json-v2", str(path)]
         if config is None:
             return _run(command, root, executable, path)
-        # Duvet reads the extracted requirements next to its configuration,
-        # so the generated configuration must be in the .duvet folder.
+        # Workaround for Duvet: with --config-path, the extracted requirements are
+        # written next to the configuration, but read from .duvet/requirements.
+        # So the generated configuration goes in the .duvet folder.
+        # Remove when Duvet reads the requirements from where it writes them.
         with tempfile.NamedTemporaryFile(
             "w", suffix=".toml", prefix=".sphinx-duvet-", dir=root / ".duvet"
         ) as config_file:
@@ -163,6 +174,8 @@ def _run(command: list[str], root: Path, executable: str, path: Path) -> Report:
             text=True,
         )
     except FileNotFoundError as exc:
+        # Workaround for Duvet: it has no prebuilt binary, so it is installed with cargo.
+        # Update the message when Duvet publishes binaries or Python wheels.
         raise DuvetNotFound(
             f"Duvet is not installed: {executable!r} not found. "
             "Install it with: cargo install duvet --locked"
@@ -203,6 +216,8 @@ def parse_report(report: Report) -> dict[str, Specification]:
         requirements.setdefault(src, []).append(
             Requirement(
                 spec=inline[src]["file_name"],
+                # Workaround for Duvet: requirements do not refer to their section,
+                # so the section is found from the offsets. Remove when they do.
                 section=_section_at(sections.get(src, []), ranges[0][0]),
                 level=item["level"],
                 text=normalize(text),
@@ -222,6 +237,8 @@ def parse_report(report: Report) -> dict[str, Specification]:
             reason=item.get("comment") or "",
             blob_link=blob_links.get(source.get("repository")),
         )
+        # Workaround for Duvet: cites do not refer to the requirements they quote,
+        # so they are matched by offsets. Remove when they do.
         for requirement in requirements.get(target["src"], []):
             if requirement._overlaps(cite.ranges):
                 requirement.cites.append(cite)
@@ -233,6 +250,8 @@ def parse_report(report: Report) -> dict[str, Specification]:
         specifications.append(
             Specification(
                 path=path,
+                # Workaround for Duvet: the report has no title for IETF specifications,
+                # so it is read from the text. Remove when Duvet fills the title.
                 title=item.get("title") or ietf_title(contents[src].decode()) or path,
                 format=item.get("format", ""),
                 sections={short: long for _, _, short, long in sections.get(src, [])},
@@ -241,7 +260,32 @@ def parse_report(report: Report) -> dict[str, Specification]:
                 ),
             )
         )
-    return {spec.path: spec for spec in sorted(specifications, key=lambda s: s.path)}
+    specifications.sort(key=lambda s: s.path)
+    _name(specifications)
+    return {spec.path: spec for spec in specifications}
+
+
+def _name(specifications: list[Specification]) -> None:
+    """Give a short name to each specification, and an identifier to each requirement.
+
+    The name is the file name without its extension, or the whole path if two files
+    share a name.
+    """
+    stems = [PurePosixPath(spec.path).stem for spec in specifications]
+    for spec, stem in zip(specifications, stems, strict=True):
+        spec.name = stem
+        if stems.count(stem) > 1:
+            spec.name = str(PurePosixPath(spec.path).with_suffix("")).replace("/", "-")
+        ranks: dict[str, int] = {}
+        for requirement in spec.requirements:
+            ranks[requirement.section] = ranks.get(requirement.section, 0) + 1
+            number = section_number(requirement.section) or "0"
+            requirement.id = f"{spec.name}#{number}-{ranks[requirement.section]}"
+
+
+def section_number(section: str) -> str:
+    """Return the number of a section, without the ``section-`` or ``appendix-`` prefix."""
+    return section.removeprefix("section-").removeprefix("appendix-")
 
 
 def _section_at(sections: list[tuple[int, int, str, str]], offset: int) -> str:

@@ -19,7 +19,6 @@ from .labels import DESCRIPTIONS
 from .labels import PRESETS
 from .report import DuvetError
 from .report import DuvetNotFound
-from .report import Requirement
 from .report import Specification
 from .report import read_report
 from .report import run_duvet
@@ -163,11 +162,6 @@ def _plain(text: str) -> tuple[str, str]:
     return text, text
 
 
-def _section(requirement: Requirement) -> str:
-    """Return the number of the section of a requirement."""
-    return requirement.section.removeprefix("section-").removeprefix("appendix-")
-
-
 def report(
     project: Project,
     view: View,
@@ -183,7 +177,7 @@ def report(
         out.write(f"{spec.path}: {spec.title}")
         rows = [
             [
-                _plain(_section(row.requirement)),
+                _plain(row.requirement.id.partition("#")[2]),
                 _plain(row.requirement.level),
                 *(cell for status in row.statuses for cell in out.status(status)),
                 _plain(row.requirement.text),
@@ -198,7 +192,7 @@ def report(
             rows,
             last=20,
             groups=[
-                ("section", 1),
+                ("rule", 1),
                 ("level", 1),
                 *((label, 2) for label in columns),
                 ("requirement", 1),
@@ -259,7 +253,7 @@ def check(
                     continue
                 failures += 1
                 out.write(
-                    f"{spec.path}#{requirement.section} {requirement.level} "
+                    f"{requirement.id} {requirement.level} "
                     f"{label}: {', '.join(reasons)}"
                 )
                 out.write(f"    {requirement.text}")

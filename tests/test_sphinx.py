@@ -2,6 +2,7 @@ import re
 import shutil
 import stat
 import sys
+import zlib
 from collections.abc import Callable
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from sphinx.testing.util import SphinxTestApp
 import sphinx_duvet
 from sphinx_duvet import _render as render
 from sphinx_duvet._autoreport import _page_name
+from sphinx_duvet._domain import RuleLocation
 from sphinx_duvet._labels import duvet_label
 
 PROJECT = Path(__file__).parent / "projects" / "basic"
@@ -27,12 +29,29 @@ def tables(app: SphinxTestApp, docname: str) -> list[nodes.table]:
     return list(app.env.get_doctree(docname).findall(nodes.table))
 
 
+def cell_text(entry: nodes.entry) -> str:
+    """Return the text of a cell, without its permalink."""
+    entry = entry.deepcopy()
+    for permalink in list(entry.findall(render.duvet_permalink)):
+        permalink.parent.remove(permalink)
+    return " ".join(entry.astext().split())
+
+
 def rows(table: nodes.table) -> list[list[str]]:
-    """Return the text of the cells of a table body."""
+    """Return the text of the cells of the requirement rows of a table body."""
     return [
-        [" ".join(entry.astext().split()) for entry in row.findall(nodes.entry)]
+        [cell_text(entry) for entry in row.findall(nodes.entry)]
         for row in table.findall(nodes.row)
-        if isinstance(row.parent, nodes.tbody)
+        if isinstance(row.parent, nodes.tbody) and "duvet-section" not in row["classes"]
+    ]
+
+
+def sections(table: nodes.table) -> list[str]:
+    """Return the text of the section rows of a table."""
+    return [
+        cell_text(next(row.findall(nodes.entry)))
+        for row in table.findall(nodes.row)
+        if "duvet-section" in row["classes"]
     ]
 
 
@@ -64,7 +83,7 @@ def test_report(app: SphinxTestApp) -> None:
     app.build()
     [table] = tables(app, "report")
     assert headers(table) == [
-        "Section",
+        "Level",
         "Requirement",
         "server-flask",
         "server-django",
@@ -72,7 +91,12 @@ def test_report(app: SphinxTestApp) -> None:
     ]
     body = rows(table)
     assert len(body) == 11
-    assert body[0][0] == "2 MUST"
+    assert body[0][0] == "MUST"
+    assert sections(table) == [
+        "2. Requests RFC ↗",
+        "2.1. Parameters RFC ↗",
+        "3. Security RFC ↗",
+    ]
     assert (
         body[0][1] == "The client MUST send the token. src/client.py:2 (implementation)"
     )
@@ -85,7 +109,9 @@ def test_report_links(app: SphinxTestApp) -> None:
     """Sections link to the RFC, and cites link to the code."""
     app.build()
     doctree = app.env.get_doctree("report")
-    uris = [ref["refuri"] for ref in doctree.findall(nodes.reference)]
+    uris = [
+        ref["refuri"] for ref in doctree.findall(nodes.reference) if "refuri" in ref
+    ]
     assert "https://www.rfc-editor.org/rfc/rfc9999#section-2" in uris
     assert "https://github.com/example/project/blob/main/src/client.py#L2" in uris
 
@@ -122,7 +148,7 @@ def test_report_options(app: SphinxTestApp) -> None:
         if section.parent is not None and isinstance(section.parent, nodes.section)
     )
     [table] = missing.findall(nodes.table)
-    assert headers(table) == ["Section", "Requirement", "server"]
+    assert headers(table) == ["Level", "Requirement", "server"]
     assert [re.split(" (?:src|\\.duvet)/", row[1])[0] for row in rows(table)] == [
         "The server SHOULD log the request.",
         "The server MUST validate the café parameter and the response MUST be encoded as JSON.",
@@ -136,7 +162,8 @@ def test_report_options(app: SphinxTestApp) -> None:
         "reject revoked tokens.",
     ]
     [table] = may.findall(nodes.table)
-    assert [row[0] for row in rows(table)] == ["2.1 MAY"]
+    assert [row[0] for row in rows(table)] == ["MAY"]
+    assert sections(table) == ["2.1. Parameters RFC ↗"]
     assert not list(nothing.findall(nodes.table))
     assert "No requirement matches this view." in nothing.astext()
 
@@ -216,11 +243,50 @@ def test_stylesheet(app: SphinxTestApp) -> None:
 
 @pytest.mark.sphinx("html", testroot="missing-config", freshenv=True)
 def test_missing_config(app: SphinxTestApp) -> None:
-    """Without a Duvet project, a warning is shown and the directives render nothing."""
+    """Without a Duvet project, the directives warn and render nothing."""
     app.build()
-    [message] = warnings(app)
-    assert "no .duvet/config.toml found above" in message
+    messages = warnings(app)
+    assert len(messages) == 2
+    assert "index.rst:4: WARNING: no .duvet/config.toml found above" in messages[0]
+    assert "index.rst:6: WARNING: no .duvet/config.toml found above" in messages[1]
     assert not tables(app, "index")
+
+
+@pytest.mark.sphinx(
+    "html",
+    testroot="missing-config",
+    freshenv=True,
+    confoverrides={"duvet_autoreport": {}},
+)
+def test_autoreport_without_project(app: SphinxTestApp) -> None:
+    """Generated pages need a Duvet project."""
+    assert (
+        "duvet_autoreport is set, but no .duvet/config.toml found" in warnings(app)[0]
+    )
+
+
+def test_intersphinx(
+    make_app: Callable[..., SphinxTestApp], rootdir: Path, tmp_path: Path
+) -> None:
+    """A documentation without a Duvet project refers to the requirements of another one."""
+    shutil.copytree(rootdir / "test-rules", tmp_path / "provider")
+    provider = make_app("html", srcdir=tmp_path / "provider", confoverrides=CONF)
+    provider.build()
+    shutil.copytree(rootdir / "test-consumer", tmp_path / "consumer")
+    consumer = make_app(
+        "html",
+        srcdir=tmp_path / "consumer",
+        confoverrides={
+            "intersphinx_mapping": {"provider": (str(provider.outdir), None)}
+        },
+    )
+    consumer.build()
+    # A second application in the same process registers the nodes of Sphinx again,
+    # which gives unrelated warnings.
+    assert [m for m in warnings(consumer) if "is already registered" not in m] == []
+    html = (Path(consumer.outdir) / "index.html").read_text()
+    assert f'href="{provider.outdir}/report.html#duvet-rfc9999-2-1"' in html
+    assert f'href="{provider.outdir}/report.html#duvet-rfc9999-2-2"' in html
 
 
 @pytest.mark.sphinx(
@@ -296,7 +362,8 @@ def test_autoreport(app: SphinxTestApp) -> None:
     assert warnings(app) == []
     recap, report = tables(app, "compliance/extension")
     assert rows(recap)[0][:3] == ["SHOULD", "server", "1"]
-    assert rows(report)[0][0] == "discovery SHOULD"
+    assert rows(report)[0][0] == "SHOULD"
+    assert sections(report) == ["Discovery"]
     assert rows(report)[0][1] == 'The server SHOULD publish its "metadata".'
 
     every = tables(app, "compliance/index")[0]
@@ -501,6 +568,7 @@ def test_text_builder(app: SphinxTestApp) -> None:
     text = (Path(app.outdir) / "report.txt").read_text()
     assert "✔ done · ✘ missing" in text
     assert "(done)" not in text
+    assert "¶" not in text
 
 
 @pytest.mark.sphinx("html", testroot="depending", freshenv=True)
@@ -517,8 +585,110 @@ def test_dependency_cites(
     app.build()
     doctree = app.env.get_doctree("index")
     assert "fakelib/__init__.py:2 (implementation, fakelib 1.2.3)" in doctree.astext()
-    uris = [ref["refuri"] for ref in doctree.findall(nodes.reference)]
+    uris = [
+        ref["refuri"] for ref in doctree.findall(nodes.reference) if "refuri" in ref
+    ]
     assert (
         "https://github.com/example/fakelib/blob/v1.2.3/src/fakelib/__init__.py#L2"
         in uris
     )
+
+
+@pytest.mark.sphinx("html", testroot="rules", confoverrides=CONF, freshenv=True)
+def test_rule_references(app: SphinxTestApp) -> None:
+    """Requirements can be referenced with the duvet:rule and any roles."""
+    app.build()
+    html = (Path(app.outdir) / "index.html").read_text()
+    assert (
+        '<a class="reference internal" href="report.html#duvet-rfc9999-2-1" '
+        'title="The client MUST send the token.">'
+    ) in html
+    assert 'href="report.html#duvet-rfc9999-2-2"' in html
+    assert '<span class="xref duvet duvet-rule">the second rule</span></a>' in html
+    assert 'href="report.html#duvet-rfc9999-2-3"' in html
+    assert [m for m in warnings(app) if "rfc9999#99-1" in m] == [
+        m for m in warnings(app) if "index.rst:9: WARNING: unknown requirement" in m
+    ]
+    assert len([m for m in warnings(app) if "rfc9999#99-1" in m]) == 1
+
+
+@pytest.mark.sphinx("html", testroot="rules", confoverrides=CONF, freshenv=True)
+def test_rule_anchors(app: SphinxTestApp) -> None:
+    """Rows and sections have anchors, numbered when shown twice in a document."""
+    app.build()
+    html = (Path(app.outdir) / "twice.html").read_text()
+    ids = re.findall(r'<tr[^>]* id="([^"]+)"', html)
+    assert len(ids) == len(set(ids))
+    assert {
+        "duvet-rfc9999-2-1",
+        "duvet-rfc9999-2-1~2",
+        "duvet-rfc9999-2.1-2",
+        "duvet-rfc9999-2.1-2~2",
+        "duvet-section-rfc9999-2",
+        "duvet-section-rfc9999-2.1~2",
+    } <= set(ids)
+    assert (
+        '<a class="headerlink reference internal" href="#duvet-rfc9999-2-1" '
+        'title="rfc9999#2-1">¶</a>'
+    ) in html
+    assert (
+        '<a class="headerlink reference internal" href="#duvet-section-rfc9999-2" '
+        'title="rfc9999 2. Requests">¶</a>'
+    ) in html
+
+
+@pytest.mark.sphinx("html", testroot="rules", confoverrides=CONF, freshenv=True)
+def test_rule_inventory(app: SphinxTestApp) -> None:
+    """Requirements are in the inventory, so other projects can refer to them."""
+    app.build()
+    domain = app.env.get_domain("duvet")
+    objects = {
+        name: (docname, anchor)
+        for name, _, _, docname, anchor, _ in domain.get_objects()
+    }
+    assert objects["rfc9999#2-1"] == ("report", "duvet-rfc9999-2-1")
+    assert objects["rfc9999#3-5"] == ("report", "duvet-rfc9999-3-5")
+    assert b"rfc9999#2-1" in zlib.decompress(
+        (Path(app.outdir) / "objects.inv").read_bytes().split(b"\n", 4)[4]
+    )
+
+
+@pytest.mark.sphinx("html", testroot="rules", confoverrides=CONF, freshenv=True)
+def test_rule_locations(app: SphinxTestApp) -> None:
+    """The main place of a requirement follows the documents that are read again."""
+    app.build()
+    domain = app.env.get_domain("duvet")
+    assert domain.location("rfc9999#2-1").docname == "report"
+    domain.clear_doc("report")
+    assert domain.location("rfc9999#2-1").docname == "twice"
+    assert domain.location("rfc9999#3-5") is None
+    domain.merge_domaindata(
+        ["report"],
+        {
+            "rules": {
+                "rfc9999#2-1": [RuleLocation("report", "a", 1, "t")],
+                "other#1-1": [RuleLocation("ignored", "b", 1, "t")],
+            }
+        },
+    )
+    assert domain.location("rfc9999#2-1").docname == "report"
+    assert domain.location("other#1-1") is None
+
+
+@pytest.mark.sphinx(
+    "html",
+    testroot="report",
+    confoverrides={**CONF, "html_permalinks": False},
+    freshenv=True,
+)
+def test_without_permalinks(app: SphinxTestApp) -> None:
+    """Rows keep their anchor, but show no permalink when permalinks are disabled."""
+    app.build()
+    html = (Path(app.outdir) / "report.html").read_text()
+    assert 'id="duvet-rfc9999-2-1"' in html
+    assert "headerlink" not in html
+
+
+def test_link_without_uri() -> None:
+    """Without an address, a link is plain text, such as a cite without a repository link."""
+    assert isinstance(render.link("src/a.py:1", None), nodes.Text)

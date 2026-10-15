@@ -106,9 +106,13 @@ Directives
    A table with a row per requirement of a specification, and a column per target.
    The path is the path of the specification in :file:`.duvet/config.toml`.
 
-   Each row shows the section and the level of the requirement, its text,
+   The requirements are grouped by section, under a row with the title of the section
+   and a link to it in the RFC. Each row shows the level of the requirement, its text,
    the annotations that cite it and its notes.
    Each cell shows the implementation state and the test state.
+
+   On hover, a permalink follows the text of each requirement and the title of each section,
+   as for headings. ``html_permalinks`` and ``html_permalinks_icon`` apply.
 
    .. rst:directive:option:: targets: selectors
       :type: text
@@ -148,6 +152,36 @@ Directives
    There is no global percentage: a MUST and a MAY do not weigh the same.
    Deliberate deviations are counted apart from missing requirements.
    Requirements without any annotation are counted as "not annotated".
+
+References
+----------
+
+Each requirement has an identifier: the name of the specification file without its extension,
+the number of its section, and its rank in the section. For instance, ``rfc7643#3.1-9``
+is the ninth requirement of section 3.1 of :file:`rfc7643.txt`.
+Requirements outside of any section are in section ``0``.
+If two specification files share a name, the identifier uses their whole path.
+
+.. rst:role:: duvet:rule
+
+   A link to a requirement, in the report that shows it:
+
+   .. code-block:: rst
+
+      The id is issued by the server (:duvet:rule:`rfc7643#3.1-9`).
+      See :duvet:rule:`this requirement <rfc7643#3.1-9>`.
+
+   The ``any`` role finds requirements too.
+
+Requirements are in the inventory of the documentation,
+so other documentations can refer to them with intersphinx:
+``:duvet:rule:`specs:rfc7643#3.1-9```.
+A documentation without a Duvet project can enable sphinx-duvet only for this role.
+
+Rows have anchors, such as ``#duvet-rfc7643-3.1-9`` for a requirement
+and ``#duvet-section-rfc7643-3.1`` for a section.
+If a page shows a requirement several times, the link goes to the first one.
+If several pages show it, the link goes to the first page, in alphabetical order.
 
 States
 ------
@@ -372,7 +406,7 @@ Like the documentation, it runs Duvet, or reads a report given with ``--report-j
    The counts per level and per column, as :rst:dir:`duvet-recap`.
 
 ``check``
-   The requirements that fail, with their column and the reason.
+   The requirements that fail, with their identifier, their column and the reason.
    The command fails if there are some.
 
 ``export``

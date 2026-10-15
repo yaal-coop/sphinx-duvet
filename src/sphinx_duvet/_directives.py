@@ -1,6 +1,7 @@
 """The duvet-report and duvet-recap directives."""
 
 from typing import ClassVar
+from typing import cast
 
 from docutils import nodes
 from docutils.parsers.rst import directives
@@ -10,6 +11,10 @@ from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import OptionSpec
 
 from . import _render as render
+from ._domain import RULE_PRIORITY
+from ._domain import DuvetDomain
+from ._domain import rule_anchor
+from ._domain import section_anchor
 from ._labels import Labels
 from ._labels import label_sources
 from ._project import LoadedProject
@@ -18,6 +23,7 @@ from .compliance import Counts
 from .compliance import Status
 from .report import Requirement
 from .report import Specification
+from .report import section_number
 from .targets import ConfigError
 from .views import SHOW
 from .views import View
@@ -51,6 +57,17 @@ class _DuvetDirective(SphinxDirective):
             show=self.options.get("show"),
         )
 
+    def loaded_project(self) -> LoadedProject | None:
+        """Return the Duvet project of the documentation, or warn that there is none."""
+        loaded = get_project(self.env.srcdir)
+        if loaded is None:
+            logger.warning(
+                "no .duvet/config.toml found above the documentation, use duvet_root",
+                type="duvet",
+                location=self.get_location(),
+            )
+        return loaded
+
     def specification(self, loaded: LoadedProject, path: str) -> Specification | None:
         """Return a specification of the project, and track the files it depends on."""
         project = loaded.project
@@ -77,7 +94,7 @@ class DuvetReport(_DuvetDirective):
 
     def run(self) -> list[nodes.Node]:
         """Return the legend and the table."""
-        loaded = get_project(self.env.srcdir)
+        loaded = self.loaded_project()
         if loaded is None:
             return []
         project = loaded.project
@@ -96,19 +113,83 @@ class DuvetReport(_DuvetDirective):
             label_sources(self.config.duvet_labels)[0],
             lambda markup: self.parse_label(markup, messages),
         )
-        rows = [
-            self.row(spec, row.requirement, row.statuses, labels)
-            for row in view.rows(project, spec)
-        ]
-
-        if not rows:
+        shown = view.rows(project, spec)
+        if not shown:
             return [
                 render.paragraph(nodes.Text("No requirement matches this view.")),
                 *messages,
             ]
-        headers = ["Section", "Requirement", *(label for label, _ in columns)]
+        headers = ["Level", "Requirement", *(label for label, _ in columns)]
+        rows: list[nodes.row] = []
+        section = None
+        for item in shown:
+            if item.requirement.section != section:
+                section = item.requirement.section
+                rows.append(self.section_row(spec, section, len(headers)))
+            rows.append(self.row(item.requirement, item.statuses, labels))
         widths = [8, 60] + [10] * len(columns)
         return [labels.legend(), render.table(headers, rows, widths), *messages]
+
+    def section_row(self, spec: Specification, section: str, columns: int) -> nodes.row:
+        """Return a row with the number and the title of a section, and a link to it.
+
+        A permalink after the title points to the row.
+        """
+        title = spec.sections.get(section, "")
+        number = section_number(section)
+        if section.startswith(("section-", "appendix-")):
+            title = f"{number}. {title}".strip()
+        anchor = self.unique_anchor(section_anchor(spec.name, number or "0"))
+        heading = nodes.inline(text=title or number, classes=["duvet-section-title"])
+        heading += self.permalink(anchor, f"{spec.name} {title or number}")
+        children: list[nodes.Node] = [heading]
+        url = spec.section_url(section)
+        if url is not None:
+            link = nodes.inline(
+                "", "", render.link("RFC ↗", url), classes=["duvet-section-link"]
+            )
+            children += [nodes.Text(" "), link]
+        return render.spanning_row(
+            columns, *children, classes=["duvet-section"], ids=[anchor]
+        )
+
+    def anchor(self, requirement: Requirement) -> str:
+        """Return a unique anchor for a requirement in the document, and record it in the domain."""
+        anchor = self.unique_anchor(rule_anchor(requirement.id))
+        domain = cast(DuvetDomain, self.env.get_domain("duvet"))
+        domain.note_rule(
+            requirement.id, self.env.docname, anchor, requirement.text, RULE_PRIORITY
+        )
+        return anchor
+
+    def unique_anchor(self, base: str) -> str:
+        """Return an anchor that is not used yet in the document.
+
+        An element shown twice in a document gets a numbered anchor the second time,
+        such as duvet-rfc7643-3.1-9~2. Identifiers never contain a tilde.
+        """
+        used = cast(set[str], self.env.temp_data.setdefault("duvet_anchors", set()))
+        anchor = base
+        number = 1
+        while anchor in used:
+            number += 1
+            anchor = f"{base}~{number}"
+        used.add(anchor)
+        return anchor
+
+    def permalink(self, anchor: str, title: str) -> list[nodes.Node]:
+        """Return a permalink to an anchor, or nothing if permalinks are disabled."""
+        if not self.config.html_permalinks:
+            return []
+        return [
+            render.duvet_permalink(
+                "",
+                self.config.html_permalinks_icon,
+                refid=anchor,
+                reftitle=title,
+                classes=["headerlink"],
+            )
+        ]
 
     def parse_label(self, markup: str, messages: list[nodes.Node]) -> list[nodes.Node]:
         """Parse the inline markup of a label, and keep its error messages."""
@@ -117,16 +198,16 @@ class DuvetReport(_DuvetDirective):
         return list(children)
 
     def row(
-        self,
-        spec: Specification,
-        requirement: Requirement,
-        statuses: list[Status],
-        labels: Labels,
-    ) -> list[nodes.Node | list[nodes.Node]]:
-        """Return the cells of a requirement: section and level, text, statuses."""
-        number = requirement.section.removeprefix("section-").removeprefix("appendix-")
-        section = render.link(number, spec.section_url(requirement.section))
-        text: list[nodes.Node] = [render.requirement_text(requirement.text)]
+        self, requirement: Requirement, statuses: list[Status], labels: Labels
+    ) -> nodes.row:
+        """Return the row of a requirement: level, text, statuses.
+
+        A permalink after the text shows the identifier of the requirement.
+        """
+        anchor = self.anchor(requirement)
+        sentence = render.requirement_text(requirement.text)
+        sentence += self.permalink(anchor, requirement.id)
+        text: list[nodes.Node] = [sentence]
         if requirement.cites:
             items = nodes.bullet_list(classes=["duvet-cites"])
             for cite in sorted(requirement.cites, key=lambda c: (c.path, c.line)):
@@ -147,14 +228,11 @@ class DuvetReport(_DuvetDirective):
             )
             text.append(container)
         cells: list[nodes.Node | list[nodes.Node]] = [
-            [
-                render.paragraph(section),
-                render.paragraph(render.level_badge(requirement.level)),
-            ],
+            render.paragraph(render.level_badge(requirement.level)),
             text,
         ]
         cells += [labels.status_cell(status) for status in statuses]
-        return cells
+        return render.row(cells, ids=[anchor])
 
 
 class DuvetRecap(_DuvetDirective):
@@ -164,7 +242,7 @@ class DuvetRecap(_DuvetDirective):
 
     def run(self) -> list[nodes.Node]:
         """Return the table of counts."""
-        loaded = get_project(self.env.srcdir)
+        loaded = self.loaded_project()
         if loaded is None:
             return []
         project = loaded.project

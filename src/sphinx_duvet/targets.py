@@ -70,6 +70,8 @@ def matches_any(selectors: Iterable[Selector], target: Target) -> bool:
     return any(selector.matches(target) for selector in selectors)
 
 
+# Workaround for Python 3.11 and 3.12: PurePath.full_match is new in Python 3.13.
+# Remove when Python 3.13 is the oldest supported version.
 def _glob_match(path: str, pattern: str) -> bool:
     """Match a whole relative path against a glob pattern.
 

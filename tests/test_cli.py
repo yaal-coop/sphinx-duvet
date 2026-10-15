@@ -43,11 +43,11 @@ def test_report(capsys: pytest.CaptureFixture[str]) -> None:
     assert lines[0] == "spec/extension.md: Example extension"
     assert "spec/rfc9999.txt: RFC 9999: Example Token Exchange Protocol" in lines
     index = lines.index(
-        "section  level   server-flask  server-django  client      requirement"
+        "rule   level   server-flask  server-django  client      requirement"
     )
     assert lines[index + 1 : index + 3] == [
-        "                 impl  test    impl  test     impl  test",
-        "2        MUST    ∅             ∅              ✔     ✘     The client MUST send the token.",
+        "               impl  test    impl  test     impl  test",
+        "2-1    MUST    ∅             ∅              ✔     ✘     The client MUST send the token.",
     ]
     assert lines[-1].startswith("✔ done · ✘ missing · ? not annotated yet")
     assert "\033[" not in out
@@ -79,9 +79,9 @@ def test_report_options(capsys: pytest.CaptureFixture[str]) -> None:
     )
     assert code == 0
     assert out.splitlines()[1:5] == [
-        "section  level  server         requirement",
-        "                impl     test",
-        "2.1      MUST   partial  done  The server MUST validate the café parameter and the response MUST be encoded as JSON.",
+        "rule   level  server         requirement",
+        "              impl     test",
+        "2.1-1  MUST   partial  done  The server MUST validate the café parameter and the response MUST be encoded as JSON.",
         "",
     ]
     assert out.splitlines()[-1].startswith(
@@ -106,8 +106,8 @@ def test_terminal(
     assert main(["report", "spec/rfc9999.txt", *REPORT]) == 0
     lines = terminal.getvalue().splitlines()
     assert "\033[32m✔\033[0m     \033[31m✘\033[0m" in lines[3]
-    validate = next(line for line in lines if line.startswith("2.1      MUST"))
-    assert validate.endswith("The server MUST valid…")
+    validate = next(line for line in lines if line.startswith("2.1-1  MUST"))
+    assert validate.endswith("The server MUST validat…")
     assert len(re.sub("\033\\[[0-9]+m", "", validate)) <= 80
 
 
@@ -143,10 +143,10 @@ def test_check(capsys: pytest.CaptureFixture[str]) -> None:
     assert code == 1
     lines = out.splitlines()
     assert lines[:2] == [
-        "spec/rfc9999.txt#section-2 MUST client: untested",
+        "rfc9999#2-1 MUST client: untested",
         "    The client MUST send the token.",
     ]
-    assert "spec/rfc9999.txt#section-2.1 MUST client: partial, untested" in lines
+    assert "rfc9999#2.1-1 MUST client: partial, untested" in lines
     assert lines[-1] == "5 failures."
 
 
@@ -157,10 +157,9 @@ def test_check_fail_on(capsys: pytest.CaptureFixture[str]) -> None:
     )
     assert code == 1
     assert (
-        out.splitlines()[0]
-        == "spec/extension.md#discovery SHOULD server-flask: unannotated"
+        out.splitlines()[0] == "extension#discovery-1 SHOULD server-flask: unannotated"
     )
-    assert "spec/rfc9999.txt#section-2 SHOULD server-django: todo" in out
+    assert "rfc9999#2-3 SHOULD server-django: todo" in out
 
 
 def test_check_success(capsys: pytest.CaptureFixture[str]) -> None:

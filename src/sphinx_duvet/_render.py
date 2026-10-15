@@ -4,6 +4,7 @@ import re
 from collections.abc import Sequence
 
 from docutils import nodes
+from sphinx.writers.html5 import HTML5Translator
 
 from .report import Cite
 
@@ -30,6 +31,28 @@ CITE_TYPES = {
     "TODO": "todo",
     "TEST": "test",
 }
+
+
+class duvet_permalink(nodes.reference):
+    """A link to a row of a report, shown on hover like the permalinks of headings.
+
+    Formats other than HTML leave it out.
+    """
+
+
+def visit_permalink_html(translator: HTML5Translator, node: duvet_permalink) -> None:
+    """Open the link, as any reference."""
+    translator.visit_reference(node)
+
+
+def depart_permalink_html(translator: HTML5Translator, node: duvet_permalink) -> None:
+    """Close the link, as any reference."""
+    translator.depart_reference(node)
+
+
+def skip_permalink(translator: nodes.NodeVisitor, node: duvet_permalink) -> None:
+    """Leave the link out of formats other than HTML."""
+    raise nodes.SkipNode
 
 
 def cite_kind(cite: Cite) -> str:
@@ -92,13 +115,38 @@ def level_badge(level: str) -> nodes.inline:
     return nodes.inline(text=level, classes=["duvet-level", f"duvet-level-{strength}"])
 
 
+Cells = Sequence[nodes.Node | list[nodes.Node]]
+
+
+def row(cells: Cells, ids: Sequence[str] = ()) -> nodes.row:
+    """Return a table row. Each cell is a node or a list of nodes."""
+    node = nodes.row(ids=list(ids))
+    for cell in cells:
+        entry = nodes.entry()
+        entry.extend(cell if isinstance(cell, list) else [cell])
+        node += entry
+    return node
+
+
+def spanning_row(
+    columns: int,
+    *children: nodes.Node,
+    classes: Sequence[str] = (),
+    ids: Sequence[str] = (),
+) -> nodes.row:
+    """Return a table row with a single cell over every column."""
+    entry = nodes.entry(morecols=columns - 1)
+    entry += paragraph(*children)
+    return nodes.row("", entry, classes=list(classes), ids=list(ids))
+
+
 def table(
     headers: Sequence[str],
-    rows: Sequence[Sequence[nodes.Node | list[nodes.Node]]],
+    rows: Sequence[Cells | nodes.row],
     widths: Sequence[int],
     classes: Sequence[str] = (),
 ) -> nodes.table:
-    """Return a table. Each cell is a node or a list of nodes."""
+    """Return a table. Each row is a row node, or a list of cells."""
     node = nodes.table(classes=["duvet-table", *classes])
     group = nodes.tgroup(cols=len(headers))
     node += group
@@ -106,17 +154,12 @@ def table(
         group += nodes.colspec(colwidth=width)
     head = nodes.thead()
     group += head
-    row = nodes.row()
+    header_row = nodes.row()
     for header in headers:
-        row += nodes.entry("", paragraph(nodes.Text(header)))
-    head += row
+        header_row += nodes.entry("", paragraph(nodes.Text(header)))
+    head += header_row
     body = nodes.tbody()
     group += body
-    for cells in rows:
-        row = nodes.row()
-        for cell in cells:
-            entry = nodes.entry()
-            entry.extend(cell if isinstance(cell, list) else [cell])
-            row += entry
-        body += row
+    for item in rows:
+        body += item if isinstance(item, nodes.row) else row(item)
     return node
