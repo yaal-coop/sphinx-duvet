@@ -79,6 +79,8 @@ class Requirement:
     id: str = ""
     """A stable identifier, such as ``rfc7643#3.1-9``: the name of the specification,
     the number of the section, and the rank of the requirement in the section."""
+    quoted_ranges: list[tuple[int, int]] | None = field(default=None, repr=False)
+    """The byte ranges that the cites quote, when they differ from the ranges."""
 
     def covered_by(self, cites: list[Cite], within: list[Cite] | None = None) -> bool:
         """Return :data:`True` if the cites quote every non-blank byte of the requirement.
@@ -93,7 +95,7 @@ class Requirement:
         return all(
             self.contents[offset : offset + 1].isspace()
             or any(start <= offset < end for start, end in quoted)
-            for start, end in self.ranges
+            for start, end in self.quoted_ranges or self.ranges
             for offset in range(start, end)
             if scope is None or any(a <= offset < b for a, b in scope)
         )
@@ -315,6 +317,7 @@ def _separate_duplicates(
             found = _next_sentence(contents, list(ranges), after, ends[section])
             if found is None:
                 break
+            requirement.quoted_ranges = requirement.ranges
             requirement.ranges = found
             after = found[-1][1]
 

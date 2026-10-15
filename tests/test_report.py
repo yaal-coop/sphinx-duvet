@@ -231,6 +231,7 @@ def test_same_sentence_twice() -> None:
         "rfc9997#1.1.1-3",
     ]
     assert len(first.cites) == len(second.cites) == 1
+    assert second.covered_by(second.cites)
 
 
 def test_same_sentence_not_found() -> None:
