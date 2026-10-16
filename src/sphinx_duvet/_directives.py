@@ -369,7 +369,10 @@ class DuvetSpec(_DuvetDirective):
     """
 
     required_arguments = 1
-    option_spec: ClassVar[OptionSpec] = {"highlight": _highlight}
+    option_spec: ClassVar[OptionSpec] = {
+        "highlight": _highlight,
+        "targets": directives.unchanged,
+    }
 
     spec: Specification
     states: dict[str, State]
@@ -399,9 +402,15 @@ class DuvetSpec(_DuvetDirective):
                 location=self.get_location(),
             )
             return []
+        try:
+            view = self.view()
+        except ConfigError as exc:
+            logger.warning(str(exc), type="duvet", location=self.get_location())
+            return []
+        targets = [t for _, column in view.columns(project) for t in column]
         self.spec = spec
         self.states = {
-            requirement.id: project.group(requirement, project.targets).implementation
+            requirement.id: project.group(requirement, targets).implementation
             for requirement in spec.requirements
         }
         self.highlight = self.options.get("highlight") or self.configured_highlight()
@@ -695,6 +704,8 @@ class DuvetSpec(_DuvetDirective):
             return _keywords(children)
         anchors = [self.anchor(requirement) for requirement in pending]
         state = self.states[run.owner.id]
+        if state == State.NOT_APPLICABLE:
+            return [nodes.inline("", "", *_keywords(children), ids=anchors)]
         parts = [
             addnodes.pending_xref(
                 "",

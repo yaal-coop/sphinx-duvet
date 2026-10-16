@@ -52,6 +52,8 @@ def generate_pages(app: Sphinx) -> None:
                 f"Full text, with the requirements highlighted: :doc:`{name}-text`\n\n"
             )
             text = _title(spec.title) + f".. duvet-spec:: {spec.path}\n"
+            if "targets" in defaults:
+                text += f"   :targets: {defaults['targets']}\n"
             _write_if_changed(folder / f"{name}-text.rst", text)
             texts.append((label, f"{name}-text"))
         if app.config.duvet_autoreport_recap:

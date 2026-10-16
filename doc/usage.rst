@@ -218,8 +218,15 @@ Directives
       .. duvet-spec:: rfc/rfc7643.txt
          :highlight: none
 
+   .. rst:directive:option:: targets: selectors
+      :type: text
+
+      Only highlight the requirements that apply to some targets. See :ref:`selectors`.
+      The other requirements are plain text, without a link to a report.
+
    With :confval:`duvet_autoreport`, each IETF specification gets a page with its text,
    titled as the specification, next to its compliance page, such as "RFC 7643 compliance".
+   It highlights the requirements for the ``targets`` of :confval:`duvet_autoreport`.
 
    The IETF Trust allows to copy and distribute RFCs in full and without modification
    (`Trust Legal Provisions <https://trustee.ietf.org/documents/trust-legal-provisions/>`_,

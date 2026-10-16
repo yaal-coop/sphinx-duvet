@@ -405,6 +405,26 @@ def test_autoreport(app: SphinxTestApp) -> None:
 @pytest.mark.sphinx(
     "html",
     testroot="autoreport",
+    srcdir="autoreport-targets",
+    confoverrides={
+        **CONF,
+        "duvet_autoreport": {"targets": "role=client"},
+        "suppress_warnings": ["duvet.unused"],
+    },
+)
+def test_autoreport_targets(app: SphinxTestApp) -> None:
+    """The texts of the specifications show the targets of the reports."""
+    assert (Path(app.srcdir) / "compliance" / "rfc9999-text.rst").read_text() == (
+        "RFC 9999: Example Token Exchange Protocol\n"
+        "=========================================\n\n"
+        ".. duvet-spec:: spec/rfc9999.txt\n"
+        "   :targets: role=client\n"
+    )
+
+
+@pytest.mark.sphinx(
+    "html",
+    testroot="autoreport",
     srcdir="autoreport-unchanged",
     confoverrides={
         **CONF,
@@ -807,6 +827,27 @@ def test_spec_without_report(app: SphinxTestApp) -> None:
     assert 'id="duvet-text-rfc9999-2-1"' in html
     assert "report.html#duvet-rfc9999" not in html
     assert "duvet-rule-link" not in html
+
+
+@pytest.mark.sphinx("html", testroot="spec", confoverrides=CONF, freshenv=True)
+def test_spec_targets(app: SphinxTestApp) -> None:
+    """With targets, a requirement that applies to none of them is plain text, without a link."""
+    (Path(app.srcdir) / "text.rst").write_text(
+        "Text\n====\n\n"
+        ".. duvet-spec:: spec/rfc9999.txt\n   :targets: role=client\n\n"
+        ".. duvet-spec:: spec/rfc9999.txt\n   :targets: role\n"
+    )
+    app.build()
+    html = (Path(app.outdir) / "text.html").read_text()
+    assert (
+        '<span id="duvet-text-rfc9999-2-2">The server '
+        '<span class="duvet-bcp14 duvet-bcp14-must">MUST</span> reject'
+    ) in html
+    assert 'href="report.html#duvet-rfc9999-2-2"' not in html
+    assert 'class="duvet-rule duvet-rule-ok" id="duvet-text-rfc9999-2-1"' in html
+    assert any(
+        "text.rst:7: WARNING: Invalid selector 'role'" in m for m in warnings(app)
+    )
 
 
 @pytest.mark.sphinx("text", testroot="spec", confoverrides=CONF, freshenv=True)
