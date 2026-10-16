@@ -33,6 +33,7 @@ _KEY_WORD = re.compile(r"\b(MUST|SHALL|SHOULD|MAY|REQUIRED|RECOMMENDED|OPTIONAL)
 _TERM_GAP = re.compile(r"\S( {2,})(?=\S)")
 _CAPTION = re.compile(r"(Figure|Table) \d+: \S")
 _GRID_BORDER = re.compile(r"\+(-+\+)+|\+(=+\+)+")
+_COMPOUND_END = re.compile(rb"\w-$")
 _DASH_RULE = re.compile(r"-{2,}( +-{2,})+")
 _TOC_NUMBER = re.compile(r"(?:Appendix +)?([0-9A-Z]+(?:\.\d+)*)\.? ")
 _LINK = re.compile(
@@ -257,20 +258,24 @@ class Run:
 def runs(block: Block, contents: bytes, requirements: list[Requirement]) -> list[Run]:
     """Return the text of a block as runs, each one in a requirement or in none.
 
-    The lines of a paragraph are joined with spaces, the lines of a preformatted
-    block with new lines. Blanks between two parts of the same requirement belong to it.
+    The lines of a paragraph are joined with spaces, except after a hyphen.
+    The lines of a preformatted block are joined with new lines.
+    Blanks between two parts of the same requirement belong to it.
     When requirements overlap, the first one owns the text.
     """
     separator = " " if block.kind == PARAGRAPH else "\n"
     tokens: list[Run] = []
+    previous = b""
     for index, (start, end) in enumerate(block.pieces()):
         cuts = {start, end}
         for requirement in requirements:
             for a, b in requirement.ranges:
                 cuts.update(x for x in (a, b) if start < x < end)
         points = sorted(cuts)
-        if index:
+        # RFCs never split words: a hyphen at the end of a line belongs to a compound word.
+        if index and not (separator == " " and _COMPOUND_END.search(previous)):
             tokens.append(Run(separator, None))
+        previous = contents[start:end]
         tokens += [
             Run(
                 contents[a:b].decode(),

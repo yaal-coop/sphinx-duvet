@@ -13,7 +13,9 @@ from sphinx_duvet.report import Report
 from sphinx_duvet.report import Requirement
 from sphinx_duvet.report import _separate_duplicates
 from sphinx_duvet.report import ietf_title
+from sphinx_duvet.report import join_lines
 from sphinx_duvet.report import parse_report
+from sphinx_duvet.report import quote_key
 from sphinx_duvet.report import read_report
 from sphinx_duvet.report import run_duvet
 
@@ -275,3 +277,16 @@ def test_ietf_title_with_a_long_line() -> None:
         "RFC 9865: Cursor-Based Pagination of System of Cross-domain Identity "
         "Management (SCIM) Resources"
     )
+
+
+def test_join_lines() -> None:
+    """Lines are joined with spaces, except after a hyphen that ends a line."""
+    assert join_lines(["in multi-", "domain  cases --", "for example"]) == (
+        "in multi-domain cases -- for example"
+    )
+
+
+def test_quote_key() -> None:
+    """Quotes match requirements with or without a space after a hyphen."""
+    assert quote_key("in multi- domain\n cases") == quote_key("in multi-domain cases")
+    assert quote_key("cases -- for") == "cases -- for"

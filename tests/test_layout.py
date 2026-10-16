@@ -172,6 +172,15 @@ def test_front_matter() -> None:
     ]
 
 
+def test_hyphen_at_the_end_of_a_line() -> None:
+    """A hyphen at the end of a line joins a compound word, without a space."""
+    contents = b"   in multi-\n   domain scenarios --\n   for example.\n"
+    [block] = blocks(contents, 0, len(contents), title=False)
+    assert "".join(run.text for run in runs(block, contents, [])) == (
+        "in multi-domain scenarios -- for example."
+    )
+
+
 def test_utf8_offsets() -> None:
     """Offsets are in bytes, so non-ASCII characters keep the requirements in place."""
     abstract = sections(specification())[0]

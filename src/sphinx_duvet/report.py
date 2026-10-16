@@ -21,6 +21,8 @@ _SPECIFICATION = _V2 + "annotations.json#specification"
 _SECTION = _V2 + "annotations.json#section"
 _REQUIREMENT = _V2 + "annotations.json#requirement"
 _CITE = _V2 + "annotations.json#cite"
+_COMPOUND_END = re.compile(r"(?<=\w-)\n\s*")
+_COMPOUND_SPACE = re.compile(r"(?<=\w-) (?=\w)")
 
 Report = dict[str, Any]
 """A v2 JSON report of Duvet, as decoded by :func:`json.loads`."""
@@ -223,7 +225,7 @@ def parse_report(report: Report) -> dict[str, Specification]:
         ranges = _without_marker(
             [(r["start"], r["end"]) for r in item["origin"]["ranges"]], contents[src]
         )
-        text = " ".join(contents[src][a:b].decode() for a, b in ranges)
+        text = join_lines([contents[src][a:b].decode() for a, b in ranges])
         requirements.setdefault(src, []).append(
             Requirement(
                 spec=inline[src]["file_name"],
@@ -231,7 +233,7 @@ def parse_report(report: Report) -> dict[str, Specification]:
                 # so the section is found from the offsets. Remove when they do.
                 section=_section_at(sections.get(src, []), ranges[0][0]),
                 level=item["level"],
-                text=normalize(text),
+                text=text,
                 ranges=ranges,
                 contents=contents[src],
             )
@@ -379,6 +381,19 @@ def _section_at(sections: list[tuple[int, int, str, str]], offset: int) -> str:
 def normalize(text: str) -> str:
     """Replace each sequence of whitespace by a single space."""
     return " ".join(text.split())
+
+
+def join_lines(lines: list[str]) -> str:
+    """Join the lines of a requirement with spaces, except after a hyphen.
+
+    RFCs never split words, so a hyphen at the end of a line belongs to a compound word.
+    """
+    return normalize(_COMPOUND_END.sub("", "\n".join(lines)))
+
+
+def quote_key(text: str) -> str:
+    """Return a text to compare quotes with requirements, whatever the spaces after hyphens."""
+    return _COMPOUND_SPACE.sub("", normalize(text))
 
 
 def ietf_title(text: str) -> str | None:

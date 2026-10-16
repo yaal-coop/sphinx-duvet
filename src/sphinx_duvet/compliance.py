@@ -14,8 +14,9 @@ from .report import Cite
 from .report import Report
 from .report import Requirement
 from .report import Specification
-from .report import normalize
+from .report import join_lines
 from .report import parse_report
+from .report import quote_key
 from .report import run_duvet
 from .targets import Applies
 from .targets import Outside
@@ -134,8 +135,8 @@ class Project:
                     requirement.quoted_ranges or requirement.ranges
                 )
                 requirement.ranges = cells[requirement.id]
-                requirement.text = normalize(
-                    " ".join(spec.contents[a:b].decode() for a, b in requirement.ranges)
+                requirement.text = join_lines(
+                    [spec.contents[a:b].decode() for a, b in requirement.ranges]
                 )
         self.notes = [
             note
@@ -423,13 +424,13 @@ def _find(
 ) -> list[Requirement]:
     """Return the requirements of a section that match a quote."""
     spec, _, section = target.partition("#")
-    quote = normalize(quote)
+    quote = quote_key(quote)
     return [
         r
         for r in requirements
         if r.spec == spec
         and r.section == section
-        and (quote in r.text or r.text in quote)
+        and (quote in quote_key(r.text) or quote_key(r.text) in quote)
     ]
 
 
