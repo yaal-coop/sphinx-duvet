@@ -304,8 +304,7 @@ table.duvet-table a.headerlink {
   display: inline;
 }
 
-table.duvet-table tr:hover a.headerlink,
-table.duvet-table tr:hover .duvet-rule-link {
+table.duvet-table tr:hover a.headerlink {
   visibility: visible;
 }
 
@@ -382,11 +381,8 @@ table.duvet-report > thead th:first-child > p {
   white-space: nowrap;
 }
 
-/* Permalinks and links between the text and the reports share one muted color,
-   so they have the same weight whatever the theme. */
-table.duvet-table a.headerlink,
-a:has(> .duvet-rule-link),
-a > .duvet-rule-link {
+/* Permalinks share one muted color, so they have the same weight whatever the theme. */
+table.duvet-table a.headerlink {
   color: var(--duvet-muted);
   opacity: 1;
   text-decoration: none;
@@ -445,23 +441,20 @@ a.reference:has(> .duvet-rule-text):hover {
   text-decoration: underline;
 }
 
-/* In a report, the link to the text after a requirement shows on hover,
-   as the permalinks of headings. Without hover, on touch screens, it stays visible but faint. */
-.duvet-rule-link {
-  margin-left: 0.2em;
-  visibility: hidden;
+/* In a report, the text of a requirement and the title of a section link to the text
+   of the specification. They look like text, and are underlined on hover. */
+a.reference:has(> .duvet-text-link) {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+  border-bottom: 0;
 }
 
-:is(p, dd, li, td, th):hover .duvet-rule-link,
-a:focus > .duvet-rule-link {
-  visibility: visible;
-}
-
-@media (hover: none) {
-  .duvet-rule-link {
-    visibility: visible;
-    opacity: 0.4;
-  }
+a.reference:has(> .duvet-text-link):hover,
+a.reference:has(> .duvet-text-link):focus-visible {
+  text-decoration: underline;
+  text-decoration-color: var(--duvet-muted);
+  text-underline-offset: 0.2em;
 }
 
 /* The text of a specification keeps its layout in figures and lists.

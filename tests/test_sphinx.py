@@ -39,12 +39,10 @@ def tables(app: SphinxTestApp, docname: str) -> list[nodes.table]:
 
 
 def cell_text(entry: nodes.entry) -> str:
-    """Return the text of a cell, without its permalink and its links to the text."""
+    """Return the text of a cell, without its permalink."""
     entry = entry.deepcopy()
     for permalink in list(entry.findall(render.duvet_permalink)):
         permalink.parent.remove(permalink)
-    for link in list(entry.findall(render.duvet_optional_link)):
-        link.parent.remove(link)
     return " ".join(entry.astext().split())
 
 
@@ -870,7 +868,6 @@ def test_spec_without_report(app: SphinxTestApp) -> None:
     html = (Path(app.outdir) / "text.html").read_text()
     assert 'id="duvet-text-rfc9999-2-1"' in html
     assert "report.html#duvet-rfc9999" not in html
-    assert "duvet-rule-link" not in html
 
 
 @pytest.mark.sphinx("html", testroot="spec", confoverrides=CONF, freshenv=True)
@@ -993,7 +990,6 @@ def test_spec_layout(app: SphinxTestApp) -> None:
     assert [child.tagname for child in wrapper.children] == ["literal_block", "caption"]
     assert '<span class="caption-text">Figure 1: A token</span>' in html
     assert html.count("highlight-json") == 2
-    assert 'class="duvet-rule-link"' not in html
     assert (
         'answer as in </span><a class="reference internal" href="#section-2">Section 2</a>'
         in html
@@ -1088,17 +1084,20 @@ def test_report_links_to_text(app: SphinxTestApp) -> None:
     app.build()
     doctree = app.env.get_doctree("report")
     html = (Path(app.outdir) / "report.html").read_text()
-    section = re.search(
-        r'id="duvet-section-rfc9999-2".*?<span class="duvet-section-link">(.*?)</span></p>',
-        html,
-        re.DOTALL,
-    )
+    section = re.search(r'id="duvet-section-rfc9999-2".*?</tr>', html, re.DOTALL)
     assert section is not None
-    # The text of the specification in the documentation replaces the RFC.
-    assert re.findall(r'href="([^"]+)"', section.group(1)) == ["text.html#section-2"]
+    # The title links to the text, which replaces the link to the RFC.
+    assert re.findall(r'href="([^"]+)"', section.group(0)) == [
+        "text.html#section-2",
+        "#duvet-section-rfc9999-2",
+    ]
     assert re.search(
-        r'send the token\.<a [^>]*href="text\.html#duvet-text-rfc9999-2-1"[^>]*>'
-        r'<span class="duvet-rule-link">§</span></a>',
+        r'<a [^>]*href="text\.html#section-2"[^>]*><span class="duvet-text-link">2\. Requests',
+        section.group(0),
+    )
+    assert re.search(
+        r'<a [^>]*href="text\.html#duvet-text-rfc9999-2-1"[^>]*>'
+        r'<span class="duvet-text-link">The client ',
         html,
     )
     level = next(
@@ -1120,8 +1119,8 @@ def test_report_without_text(app: SphinxTestApp) -> None:
     """Without a page for the text, a report has no link to it."""
     app.build()
     html = (Path(app.outdir) / "report.html").read_text()
-    assert "duvet-rule-link" not in html
-    assert "<span>Text</span>" not in html
+    assert 'href="text.html' not in html
+    assert '<span class="duvet-text-link">The client ' in html
     assert 'href="https://www.rfc-editor.org/rfc/rfc9999#section-2">RFC ↗</a>' in html
 
 

@@ -185,22 +185,25 @@ class DuvetReport(_DuvetDirective):
     def section_row(self, spec: Specification, section: str, columns: int) -> nodes.row:
         """Return a row with the number and the title of a section, and links to it.
 
-        A permalink after the title points to the row. The links lead to the section
-        in the text of the specification, if a page shows it, and on rfc-editor.org.
+        A permalink after the title points to the row. The title links to the section
+        in the text of the specification, if a page shows it. Otherwise, a link leads
+        to the section on rfc-editor.org.
         """
         title = spec.sections.get(section, "")
         number = section_number(section)
         if section.startswith(("section-", "appendix-")):
             title = f"{number}. {title}".strip()
         anchor = self.unique_anchor(section_anchor(spec.name, number or "0"))
-        heading = nodes.inline(text=title or number, classes=["duvet-section-title"])
-        heading += self.permalink(anchor, f"{spec.name} {title or number}")
-        links = nodes.inline(
+        heading = nodes.inline(
             "",
             "",
-            render.optional_link("Text", "section", f"{spec.name}#{section}"),
-            classes=["duvet-section-link"],
+            render.text_link(
+                [nodes.Text(title or number)], "section", f"{spec.name}#{section}"
+            ),
+            classes=["duvet-section-title"],
         )
+        heading += self.permalink(anchor, f"{spec.name} {title or number}")
+        links = nodes.inline(classes=["duvet-section-link"])
         url = spec.section_url(section)
         if url is not None:
             # The text of the specification in the documentation replaces it.
@@ -242,14 +245,14 @@ class DuvetReport(_DuvetDirective):
         """Return the row of a requirement: level, text, statuses.
 
         A permalink after the level shows the identifier of the requirement.
-        A link after the text leads to the requirement in the text of the specification,
+        The text links to the requirement in the text of the specification,
         if a page shows it. The annotations of each column are chips below its states.
         """
         anchor = self.anchor(requirement)
         sentence = render.requirement_text(requirement.text)
-        sentence += render.optional_link(
-            "§", "text", requirement.id, classes=["duvet-rule-link"]
-        )
+        words = list(sentence.children)
+        sentence.clear()
+        sentence += render.text_link(words, "text", requirement.id)
         text: list[nodes.Node] = [sentence]
         reasons = dict.fromkeys(c.reason for c in requirement.cites if c.reason)
         text += [

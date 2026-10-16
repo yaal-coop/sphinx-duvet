@@ -267,69 +267,40 @@ def state_legend() -> nodes.paragraph:
     return node
 
 
-class duvet_optional_link(nodes.inline):
-    """The content of a link between the text of a specification and its reports.
-
-    The link is left out when it leads nowhere, and in formats other than HTML,
-    as the permalinks.
-    """
-
-
-def visit_optional_link_html(
-    translator: HTML5Translator, node: duvet_optional_link
-) -> None:
-    """Open the content of the link, as any inline text."""
-    translator.visit_inline(node)
-
-
-def depart_optional_link_html(
-    translator: HTML5Translator, node: duvet_optional_link
-) -> None:
-    """Close the content of the link, as any inline text."""
-    translator.depart_inline(node)
-
-
 class FallbackLinks(SphinxPostTransform):
-    """Remove a fallback link, such as the link to the RFC, when an optional link next to it leads somewhere.
+    """Remove a fallback link, such as the link to the RFC, when a text link next to it leads somewhere.
 
-    Other formats than HTML keep the fallback, as they leave out the optional links.
+    Other formats than HTML keep the fallback, as they have no link to the text.
     """
 
     default_priority = 19
     formats = ("html",)
 
     def run(self, **kwargs: object) -> None:
-        """Remove the fallbacks next to the optional links that are links."""
-        for content in self.document.findall(duvet_optional_link):
-            link = content.parent
-            if not isinstance(link, nodes.reference) or link.parent is None:
-                continue
-            for sibling in list(link.parent.children):
-                if isinstance(sibling, nodes.Element) and (
-                    "duvet-fallback" in sibling["classes"]
-                ):
-                    link.parent.remove(sibling)
+        """Remove the fallbacks in the paragraphs of the text links that are links."""
+        for paragraph in self.document.findall(nodes.paragraph):
+            fallbacks = [
+                node
+                for node in paragraph.findall(nodes.Element)
+                if "duvet-fallback" in node["classes"]
+            ]
+            if fallbacks and any(
+                "duvet-text-link" in node["classes"]
+                and isinstance(node.parent, nodes.reference)
+                for node in paragraph.findall(nodes.inline)
+            ):
+                for fallback in fallbacks:
+                    fallback.parent.remove(fallback)
 
 
-class OptionalLinks(SphinxPostTransform):
-    """Remove the links between the text of a specification and its reports, when they lead nowhere."""
+def text_link(children: Sequence[nodes.Node], kind: str, target: str) -> nodes.Node:
+    """Return a text that links to a requirement or a section in the text of the specification.
 
-    default_priority = 20
-
-    def run(self, **kwargs: object) -> None:
-        """Remove the contents that are not in a link."""
-        for content in list(self.document.findall(duvet_optional_link)):
-            if not isinstance(content.parent, nodes.reference):
-                content.parent.remove(content)
-
-
-def optional_link(
-    text: str, kind: str, target: str, classes: Sequence[str] = ()
-) -> nodes.Node:
-    """Return a link to a requirement or a section, left out if it leads nowhere."""
+    Without a page that shows the text, it stays plain text.
+    """
     return addnodes.pending_xref(
         "",
-        duvet_optional_link(text, text, classes=list(classes)),
+        nodes.inline("", "", *children, classes=["duvet-text-link"]),
         refdomain="duvet",
         reftype=kind,
         reftarget=target,
