@@ -232,6 +232,20 @@ def test_preformatted_runs() -> None:
     )
 
 
+def test_page_break_with_another_header() -> None:
+    """The header of a new page is removed, even when it does not start with "RFC"."""
+    contents = (
+        b"1.  Title\n\n   A paragraph does not end\n\n"
+        b"Sakimura, et al.                                               [Page 2]\n"
+        b"\f\n"
+        b"                         OpenID Connect Core 1.0           December 2023\n\n"
+        b"   here.\n"
+    )
+    result = blocks(contents, contents.index(b"Title"), len(contents))
+    pieces = [contents[a:b].decode() for a, b in result[-1].pieces()]
+    assert pieces == ["A paragraph does not end", "here."]
+
+
 def test_page_break_at_the_end() -> None:
     """A page break at the end of a section is not a paragraph of its own."""
     contents = (

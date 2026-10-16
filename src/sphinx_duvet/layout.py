@@ -199,11 +199,17 @@ def _without_page_breaks(lines: list[Line]) -> list[Line | None]:
             index += 1
             continue
         index += 1
-        while index < len(lines) and (
-            not lines[index].text.strip("\f \t")
-            or _HEADER.match(lines[index].text.encode())
+        new_page = False
+        while index < len(lines) and not lines[index].text.strip("\f \t"):
+            new_page = new_page or "\f" in lines[index].text
+            index += 1
+        # The first line of a new page is its header, whatever its format.
+        if index < len(lines) and (
+            new_page or _HEADER.match(lines[index].text.encode())
         ):
             index += 1
+            while index < len(lines) and not lines[index].text.strip():
+                index += 1
         while result and result[-1] is not None and not result[-1].text.strip():
             result.pop()
         previous = result[-1] if result else None
