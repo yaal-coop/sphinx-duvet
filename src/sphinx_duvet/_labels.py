@@ -148,7 +148,7 @@ class Labels:
     def highlight_legend(self) -> nodes.paragraph:
         """Return a line that explains the highlight colors of the requirements in a text.
 
-        It shows the labels as the legend of the reports does, each one on its color.
+        It shows the labels as the summaries of the reports do, each one on its color.
         """
         node = nodes.paragraph(classes=["duvet-legend"])
         node += nodes.Text("Requirements: ")
@@ -163,23 +163,6 @@ class Labels:
             if not any(char.isalpha() for char in label.astext()):
                 sample += nodes.Text(f" {DESCRIPTIONS[value]}")
             node += sample
-        return node
-
-    def legend(self, tests: bool = True) -> nodes.paragraph:
-        """Return a line that explains the labels.
-
-        The description of a label shows on hover, and after the label when it is a symbol.
-        Without tests, the state of a test that is not expected is left out.
-        """
-        node = nodes.paragraph(classes=["duvet-legend"])
-        values = [v for v in DESCRIPTIONS if tests or v != State.NOT_EXPECTED]
-        for index, value in enumerate(values):
-            if index:
-                node += nodes.Text(" · ")
-            label = self.state(value)
-            node += label
-            if not any(char.isalpha() for char in label.astext()):
-                node += nodes.Text(f" {DESCRIPTIONS[value]}")
         return node
 
 

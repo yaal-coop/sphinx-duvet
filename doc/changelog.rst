@@ -9,7 +9,7 @@ Added
 - ``duvet-report`` shows the requirements of a specification,
   with the implementation and test state of each target.
   Below each state, chips link to the annotations behind it.
-  A report with one column counts its requirements per state.
+  A report counts the requirements of each column per state.
   The sections of a report are in the table of contents of its page.
 - ``duvet-recap`` counts the requirements per level and per target.
 - ``duvet_autoreport`` writes a page per specification.

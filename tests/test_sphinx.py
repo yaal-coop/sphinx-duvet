@@ -156,15 +156,11 @@ def test_report_text(app: SphinxTestApp) -> None:
         n for n in doctree.findall(nodes.container) if "duvet-note" in n["classes"]
     ]
     assert next(note.findall(nodes.emphasis)).astext() == "logging"
-    legend = next(
-        p for p in doctree.findall(nodes.paragraph) if "duvet-legend" in p["classes"]
-    )
-    assert "deliberate deviation" in legend.astext()
 
 
 @pytest.mark.sphinx("html", testroot="report", confoverrides=CONF, freshenv=True)
 def test_report_summary(app: SphinxTestApp) -> None:
-    """A report with one column counts its requirements per state. With several, it has a legend.
+    """A report counts the requirements of each column per state.
 
     The counts explain the symbols. The tested requirements follow, if some are expected.
     """
@@ -177,13 +173,18 @@ def test_report_summary(app: SphinxTestApp) -> None:
     assert summaries == [
         "2 ½ partly done 1 … planned 1 ✘ missing 2/4 tested",
         "3 ? not annotated yet",
+        "1 ≠ deliberate deviation",
     ]
-    legend = next(
-        p
-        for p in app.env.get_doctree("report").findall(nodes.paragraph)
-        if "duvet-legend" in p["classes"]
-    )
-    assert legend.astext().startswith("✔ done · ✘ missing")
+    # With several columns, each column has a line, after its label.
+    # A column where no requirement applies has none.
+    [summaries] = [
+        node
+        for node in app.env.get_doctree("report").findall(nodes.container)
+        if "duvet-summaries" in node["classes"]
+    ]
+    lines = [p.astext() for p in summaries.children]
+    assert lines[::2] == ["server-flask", "server-django", "client"]
+    assert lines[1] == "5 ✔ done 1 ½ partly done 3 ? not annotated yet 3/5 tested"
     html = (Path(app.outdir) / "grouped.html").read_text()
     assert (
         '<span class="duvet-summary-count duvet-partial">2</span> '
@@ -200,7 +201,7 @@ def test_report_summary(app: SphinxTestApp) -> None:
 def test_report_summary_text_labels(app: SphinxTestApp) -> None:
     """With text labels, the descriptions only show on hover."""
     app.build()
-    [first, _] = [
+    first, *_ = [
         p.astext()
         for p in app.env.get_doctree("grouped").findall(nodes.paragraph)
         if "duvet-summary" in p["classes"]
@@ -610,16 +611,16 @@ def test_label_descriptions(app: SphinxTestApp) -> None:
     freshenv=True,
 )
 def test_text_labels(app: SphinxTestApp) -> None:
-    """With the text preset, the legend shows the labels, and their descriptions on hover."""
+    """With the text preset, the summaries show the labels, and their descriptions on hover."""
     app.build()
     [table] = tables(app, "report")
     assert rows(table)[0][2:] == ["n/a", "n/a", "impl. done client.py 2 test missing"]
     doctree = app.env.get_doctree("report")
-    legend = next(
-        p for p in doctree.findall(nodes.paragraph) if "duvet-legend" in p["classes"]
+    summary = next(
+        p for p in doctree.findall(nodes.paragraph) if "duvet-summary" in p["classes"]
     )
-    assert legend.astext().startswith("done · missing · not annotated · todo · partial")
-    explanations = [node["explanation"] for node in legend.findall(duvet_label)]
+    assert summary.astext() == "5 done 1 partial 3 not annotated 3/5 tested"
+    explanations = [node["explanation"] for node in summary.findall(duvet_label)]
     assert "not annotated yet" in explanations
 
 
@@ -682,7 +683,7 @@ def test_text_builder(app: SphinxTestApp) -> None:
     """Formats other than HTML show the labels without their description."""
     app.build()
     text = (Path(app.outdir) / "report.txt").read_text()
-    assert "✔ done · ✘ missing" in text
+    assert "5 ✔ done" in text
     assert "(done)" not in text
     assert "¶" not in text
 

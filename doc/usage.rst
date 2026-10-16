@@ -147,10 +147,9 @@ Directives
    Otherwise, a link leads to the section in the RFC. Each row shows the level of the requirement,
    its text, and a cell per column.
    Each cell shows the implementation state and the test state.
-   Above the table, a report with one column counts its requirements per state,
-   and the tested requirements. The counts explain the labels:
-   their description shows on hover, and next to the symbols.
-   A report with several columns has a legend: :rst:dir:`duvet-recap` counts them.
+   Above the table, the report counts the requirements of each column per state,
+   and the tested requirements. With several columns, each column has its own line.
+   The counts explain the labels: their description shows on hover, and next to the symbols.
    The sections of the report are in the table of contents of the page.
    Below each state, a chip per file links to the annotations behind it, one link per line.
    Long file names are shortened, and shown in full on hover.

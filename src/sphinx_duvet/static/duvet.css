@@ -572,6 +572,24 @@ p.duvet-summary {
   background: var(--duvet-muted-bg);
 }
 
+/* A report with several columns has a line of chips per column, after its label. */
+div.duvet-summaries {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4em 0.8em;
+  align-items: baseline;
+  margin: 0.5em 0 1em;
+}
+
+div.duvet-summaries > p {
+  margin: 0;
+}
+
+p.duvet-summary-target {
+  color: var(--duvet-muted);
+  font-size: 0.85em;
+}
+
 .duvet-summary-count {
   font-weight: 700;
 }

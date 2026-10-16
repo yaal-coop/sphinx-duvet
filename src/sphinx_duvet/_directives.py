@@ -189,25 +189,35 @@ class DuvetReport(_DuvetDirective):
                 self.row(project, item.requirement, columns, item.statuses, labels)
             )
         widths = [3, 65] + [10] * len(columns)
-        legend = (
-            self.summary(project, shown, labels)
-            if len(columns) == 1
-            else labels.legend(project.config.tests)
-        )
+        if len(columns) == 1:
+            summary: nodes.Element = self.summary(project, shown, 0, labels)
+        else:
+            summary = nodes.container(classes=["duvet-summaries"])
+            # A column where no requirement applies has no line.
+            for index, (label, _) in enumerate(columns):
+                line = self.summary(project, shown, index, labels)
+                if not line.children:
+                    continue
+                summary += render.paragraph(
+                    nodes.Text(label), classes=["duvet-summary-target"]
+                )
+                summary += line
         table = render.table(headers, rows, widths, classes=["duvet-report"])
         table[SECTIONS] = sections
-        return [legend, table, *messages]
+        return [summary, table, *messages]
 
     @staticmethod
-    def summary(project: Project, shown: list[Row], labels: Labels) -> nodes.paragraph:
-        """Return the number of requirements in each state, for a report with one column.
+    def summary(
+        project: Project, shown: list[Row], column: int, labels: Labels
+    ) -> nodes.paragraph:
+        """Return the number of requirements in each state of a column.
 
         With tests, the tested requirements follow.
         """
-        counts = Counter(row.statuses[0].implementation for row in shown)
+        counts = Counter(row.statuses[column].implementation for row in shown)
         tested = None
         if project.config.tests:
-            tests = [row.statuses[0].test for row in shown]
+            tests = [row.statuses[column].test for row in shown]
             expected = [
                 t for t in tests if t not in (State.NOT_EXPECTED, State.NOT_APPLICABLE)
             ]
