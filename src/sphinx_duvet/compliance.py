@@ -296,7 +296,7 @@ class Project:
             implementation = State.MISSING
 
         citations = [c for c in implementations if c.type == "CITATION"]
-        if not citations:
+        if not citations or not self.config.tests:
             return Status(implementation, State.NOT_EXPECTED)
 
         # Tests only need to cover the implemented part of the requirement.

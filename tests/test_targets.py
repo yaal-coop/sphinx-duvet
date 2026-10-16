@@ -157,6 +157,7 @@ def test_selectors_as_list(tmp_path: Path) -> None:
             '[[outside]]\ntarget = "a#b"\nquote = 1\nreason = "r"\n',
             "Each \\[\\[outside\\]\\] entry needs a 'quote'",
         ),
+        ('tests = "no"\n', "'tests' must be true or false"),
     ],
 )
 def test_invalid_targets_file(tmp_path: Path, content: str, message: str) -> None:
@@ -281,3 +282,16 @@ def test_checker(tmp_path: Path) -> None:
     assert target.attrs == {"kind": "checker"}
     assert target.checks == parse_selectors("role=server; role=client")
     assert Selector.parse("kind=checker").matches(target)
+
+
+def test_tests(tmp_path: Path) -> None:
+    """A project can follow its implementation only. An included project does not decide it."""
+    shared = tmp_path / "shared/.duvet"
+    shared.mkdir(parents=True)
+    (shared / "targets.toml").write_text("tests = false\n")
+    path = tmp_path / ".duvet/targets.toml"
+    path.parent.mkdir()
+    path.write_text('include = "shared"\n')
+    assert load_targets(path).tests
+    path.write_text('include = "shared"\ntests = false\n')
+    assert not load_targets(path).tests

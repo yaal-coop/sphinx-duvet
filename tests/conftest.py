@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,16 @@ def basic_root() -> Path:
 def basic_report(basic_root: Path) -> Report:
     """Return the Duvet report of the basic test project."""
     return read_report(basic_root / "report.json")
+
+
+@pytest.fixture
+def untested_root(basic_root: Path, tmp_path: Path) -> Path:
+    """Return a copy of the basic test project, that follows the implementation only."""
+    root = tmp_path / "untested"
+    shutil.copytree(basic_root, root)
+    targets = root / ".duvet/targets.toml"
+    targets.write_text("tests = false\n" + targets.read_text())
+    return root
 
 
 @pytest.fixture

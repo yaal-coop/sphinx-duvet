@@ -135,6 +135,26 @@ def test_recap(capsys: pytest.CaptureFixture[str]) -> None:
     ]
 
 
+def test_without_tests(capsys: pytest.CaptureFixture[str], untested_root: Path) -> None:
+    """A project that follows its implementation only has no test column."""
+    root = ["--root", str(untested_root)]
+    code, out, _ = run(capsys, "report", *REPORT, *root)
+    assert code == 0
+    lines = out.splitlines()
+    index = lines.index(
+        "rule   level   server-flask  server-django  client  requirement"
+    )
+    assert lines[index + 1 : index + 3] == [
+        "               impl          impl           impl",
+        "2-1    MUST    ∅             ∅              ✔       The client MUST send the token.",
+    ]
+    assert "no test expected" not in lines[-1]
+    code, out, _ = run(capsys, "recap", *REPORT, *root, "--group-by", "role")
+    assert out.splitlines()[0].endswith("not annotated")
+    code, out, _ = run(capsys, "check", *REPORT, *root, "--levels", "MUST")
+    assert "untested" not in out
+
+
 def test_check(capsys: pytest.CaptureFixture[str]) -> None:
     """The check lists the failing requirements per column, and fails."""
     code, out, _ = run(

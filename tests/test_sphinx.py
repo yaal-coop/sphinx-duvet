@@ -624,6 +624,27 @@ def test_text_builder(app: SphinxTestApp) -> None:
     assert "¶" not in text
 
 
+@pytest.mark.sphinx("html", testroot="report", freshenv=True)
+def test_without_tests(
+    make_app: Callable[..., SphinxTestApp], app_params: tuple, untested_root: Path
+) -> None:
+    """A project that follows its implementation only shows no test state."""
+    args, kwargs = app_params
+    kwargs["confoverrides"] = {
+        "duvet_root": str(untested_root),
+        "duvet_report_json": str(untested_root / "report.json"),
+    }
+    app = make_app(*args, **kwargs)
+    app.build()
+    [table] = tables(app, "report")
+    assert rows(table)[0][2:] == ["∅", "∅", "✔ client.py 2"]
+    legend = (Path(app.outdir) / "report.html").read_text()
+    assert "no test expected" not in legend
+    every, _ = tables(app, "recap")
+    assert headers(every)[-1] == "Not annotated"
+    assert rows(every)[0] == ["MUST", "server", "7", "2", "0", "2", "1", "2"]
+
+
 @pytest.mark.sphinx("html", testroot="depending", freshenv=True)
 def test_dependency_cites(
     make_app: Callable[..., SphinxTestApp], app_params: tuple, depending_root: Path

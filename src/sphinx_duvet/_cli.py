@@ -88,12 +88,14 @@ class _Output:
             return label, label
         return label, f"\033[{_COLORS[value]}m{label}\033[0m"
 
-    def status(self, status: Status) -> list[tuple[str, str]]:
+    def status(self, status: Status, tests: bool = True) -> list[tuple[str, str]]:
         """Return the implementation and test cells of a status.
 
         A requirement that is unannotated, does not apply or is out of scope only has
-        an implementation cell.
+        an implementation cell. Without tests, there is no test cell.
         """
+        if not tests:
+            return [self.state(status.implementation)]
         if status.implementation in (
             State.NOT_APPLICABLE,
             State.UNANNOTATED,
@@ -152,10 +154,15 @@ class _Output:
             start += span
         self.write("  ".join(texts).rstrip())
 
-    def legend(self) -> None:
-        """Write a line that explains the labels."""
+    def legend(self, tests: bool = True) -> None:
+        """Write a line that explains the labels.
+
+        Without tests, the state of a test that is not expected is left out.
+        """
         items = []
         for value, description in DESCRIPTIONS.items():
+            if not tests and value == State.NOT_EXPECTED:
+                continue
             plain, colored = self.state(value)
             items.append(
                 colored if plain == description else f"{colored} {description}"
@@ -177,6 +184,7 @@ def report(
 ) -> int:
     """Write a table per specification, with a row per requirement."""
     columns = [label for label, _ in view.columns(project)]
+    states = ["impl", "test"] if project.config.tests else ["impl"]
     for index, spec in enumerate(specs):
         if index:
             out.write()
@@ -185,7 +193,11 @@ def report(
             [
                 _plain(row.requirement.id.partition("#")[2]),
                 _plain(row.requirement.level),
-                *(cell for status in row.statuses for cell in out.status(status)),
+                *(
+                    cell
+                    for status in row.statuses
+                    for cell in out.status(status, project.config.tests)
+                ),
                 _plain(row.requirement.text),
             ]
             for row in view.rows(project, spec)
@@ -194,18 +206,18 @@ def report(
             out.write("No requirement matches this view.")
             continue
         out.table(
-            ["", "", *(["impl", "test"] * len(columns)), ""],
+            ["", "", *(states * len(columns)), ""],
             rows,
             last=20,
             groups=[
                 ("rule", 1),
                 ("level", 1),
-                *((label, 2) for label in columns),
+                *((label, len(states)) for label in columns),
                 ("requirement", 1),
             ],
         )
     out.write()
-    out.legend()
+    out.legend(project.config.tests)
     return 0
 
 
@@ -233,9 +245,9 @@ def recap(
                 count.missing,
                 count.unannotated,
                 f"{count.tested}/{count.needs_test}",
-            ]
+            ][: None if project.config.tests else -1]
             rows.append([_plain(str(value)) for value in values])
-    out.table(_RECAP_HEADERS, rows)
+    out.table(_RECAP_HEADERS[: None if project.config.tests else -1], rows)
     return 0
 
 

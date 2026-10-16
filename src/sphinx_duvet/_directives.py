@@ -25,6 +25,7 @@ from ._domain import DuvetDomain
 from ._domain import rule_anchor
 from ._domain import section_anchor
 from ._domain import text_anchor
+from ._labels import SINGLE
 from ._labels import Labels
 from ._labels import label_sources
 from ._project import LoadedProject
@@ -174,7 +175,8 @@ class DuvetReport(_DuvetDirective):
                 self.row(project, item.requirement, columns, item.statuses, labels)
             )
         widths = [8, 60] + [10] * len(columns)
-        return [labels.legend(), render.table(headers, rows, widths), *messages]
+        legend = labels.legend(project.config.tests)
+        return [legend, render.table(headers, rows, widths), *messages]
 
     def section_row(self, spec: Specification, section: str, columns: int) -> nodes.row:
         """Return a row with the number and the title of a section, and links to it.
@@ -284,10 +286,12 @@ class DuvetReport(_DuvetDirective):
         labels: Labels,
     ) -> list[nodes.Node]:
         """Return the states of a column, each one followed by the annotations behind it."""
-        cell = labels.status_cell(status)
-        if len(cell) == 1:
+        cell = labels.status_cell(status, project.config.tests)
+        if status.implementation in SINGLE:
             return cell
         implementations, tests = project.evidence(requirement, targets)
+        if not project.config.tests:
+            return [*cell, *render.chips(implementations, "CITATION")]
         return [
             cell[0],
             *render.chips(implementations, "CITATION"),
@@ -329,7 +333,7 @@ class DuvetRecap(_DuvetDirective):
         for label, targets in view.columns(project):
             for level, count in project.recap(requirements, targets).items():
                 if count.requirements:
-                    rows.append(self.row(level, label, count))
+                    rows.append(self.row(level, label, count, project.config.tests))
         headers = [
             "Level",
             "Targets",
@@ -340,14 +344,18 @@ class DuvetRecap(_DuvetDirective):
             "Missing",
             "Not annotated",
             "Tested",
-        ]
-        return [render.table(headers, rows, [8, 8] + [7] * 7, classes=["duvet-recap"])]
+        ][: None if project.config.tests else -1]
+        widths = [8, 8] + [7] * (len(headers) - 2)
+        return [render.table(headers, rows, widths, classes=["duvet-recap"])]
 
     @staticmethod
-    def row(level: str, label: str, count: Counts) -> list[nodes.Node]:
-        """Return the cells of a level for a group of targets. Gaps are highlighted."""
+    def row(level: str, label: str, count: Counts, tests: bool) -> list[nodes.Node]:
+        """Return the cells of a level for a group of targets. Gaps are highlighted.
+
+        Without tests, the count of tested requirements is left out.
+        """
         todo = count.todo + count.partial
-        return [
+        cells: list[nodes.Node] = [
             render.paragraph(render.level_badge(level)),
             render.paragraph(nodes.Text(label)),
             render.paragraph(nodes.Text(str(count.requirements))),
@@ -361,8 +369,12 @@ class DuvetRecap(_DuvetDirective):
                 classes=["duvet-missing"] if count.missing else [],
             ),
             render.paragraph(nodes.Text(str(count.unannotated))),
-            render.paragraph(nodes.Text(f"{count.tested}/{count.needs_test}")),
         ]
+        if tests:
+            cells.append(
+                render.paragraph(nodes.Text(f"{count.tested}/{count.needs_test}"))
+            )
+        return cells
 
 
 def _highlight(value: str) -> str:

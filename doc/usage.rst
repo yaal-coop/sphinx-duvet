@@ -381,6 +381,16 @@ They are not counted, and are not gaps.
 A requirement that the project cites is in scope, even in a section out of scope.
 ``[[outside]]`` entries are not shared with the projects that include the project.
 
+A project can follow its implementation only, and its tests later:
+
+.. code-block:: toml
+
+   tests = false
+
+Then no test is expected. The reports, the recaps and the ``sphinx-duvet`` command
+show no test state, and the check never fails on a missing test.
+This setting is not shared with the projects that include the project.
+
 Checkers
 ~~~~~~~~
 

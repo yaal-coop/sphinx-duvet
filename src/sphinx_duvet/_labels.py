@@ -31,7 +31,7 @@ _CLASSES = {
 }
 
 # States without a test state.
-_SINGLE = (State.NOT_APPLICABLE, State.UNANNOTATED, State.OUTSIDE)
+SINGLE = (State.NOT_APPLICABLE, State.UNANNOTATED, State.OUTSIDE)
 
 
 class duvet_label(nodes.inline):
@@ -99,22 +99,27 @@ class Labels:
         node.extend(copy.deepcopy(child) for child in self._nodes[value])
         return node
 
-    def status_cell(self, status: Status) -> list[nodes.Node]:
-        """Return the implementation and test states, one per line."""
-        if status.implementation in _SINGLE:
+    def status_cell(self, status: Status, tests: bool = True) -> list[nodes.Node]:
+        """Return the implementation and test states, one per line.
+
+        Without tests, only the implementation state.
+        """
+        if status.implementation in SINGLE or not tests:
             return [_line(self.state(status.implementation))]
         return [
             _line(_caption("impl. "), self.state(status.implementation)),
             _line(_caption("test "), self.state(status.test)),
         ]
 
-    def legend(self) -> nodes.paragraph:
+    def legend(self, tests: bool = True) -> nodes.paragraph:
         """Return a line that explains the labels.
 
         A description is left out when the label already says the same.
+        Without tests, the state of a test that is not expected is left out.
         """
         node = nodes.paragraph(classes=["duvet-legend"])
-        for index, value in enumerate(DESCRIPTIONS):
+        values = [v for v in DESCRIPTIONS if tests or v != State.NOT_EXPECTED]
+        for index, value in enumerate(values):
             if index:
                 node += nodes.Text(" · ")
             label = self.state(value)

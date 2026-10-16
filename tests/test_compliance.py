@@ -69,6 +69,17 @@ def test_status(project: Project, text: str, expected: list[str]) -> None:
     assert statuses(project, text) == expected
 
 
+def test_without_tests(untested_root: Path, basic_report: Report) -> None:
+    """A project that follows its implementation only expects no test."""
+    project = Project(untested_root, basic_report)
+    assert statuses(project, "The server SHOULD log the request.") == [
+        "ok/-",
+        "todo/-",
+        "n/a/n/a",
+    ]
+    assert statuses(project, "The client MUST send the token.")[2] == "ok/-"
+
+
 def test_test_granularity(basic_root: Path, basic_report: Report) -> None:
     """Without test granularity, a test only covers the targets of its file."""
     project = Project(basic_root, basic_report)

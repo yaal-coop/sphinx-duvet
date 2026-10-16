@@ -141,6 +141,8 @@ class TargetConfig:
     """The targets of a project, read from :file:`.duvet/targets.toml`."""
 
     targets: list[Target]
+    tests: bool = True
+    """False to follow the implementation only: no test is expected."""
     test_granularity: set[str] = field(default_factory=set)
     defaults: list[Default] = field(default_factory=list)
     applies: list[Applies] = field(default_factory=list)
@@ -201,6 +203,7 @@ def load_targets(path: Path) -> TargetConfig:
         raise ConfigError(f"Target {duplicates[0]!r} is defined twice")
     return TargetConfig(
         targets=targets or [Target("default")],
+        tests=_tests(config),
         test_granularity=granularity | own.test_granularity,
         defaults=own.defaults,
         applies=applies + own.applies,
@@ -209,6 +212,14 @@ def load_targets(path: Path) -> TargetConfig:
         notes=[*notes, (root / ".duvet/notes", "")],
         files=files,
     )
+
+
+def _tests(config: dict[str, Any]) -> bool:
+    """Return whether the project follows its tests. Included projects do not decide it."""
+    value = config.get("tests", True)
+    if not isinstance(value, bool):
+        raise ConfigError("'tests' must be true or false")
+    return value
 
 
 def _includes(config: dict[str, Any]) -> list[str]:
