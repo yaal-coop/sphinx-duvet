@@ -42,7 +42,7 @@ _COLORS = {
     State.MISSING: "31",
     State.TODO: "33",
     State.PARTIAL: "33",
-    State.EXCEPTION: "33",
+    State.EXCEPTION: "35",
     State.UNANNOTATED: "2",
     State.NOT_EXPECTED: "2",
     State.NOT_APPLICABLE: "2",

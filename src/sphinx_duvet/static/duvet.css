@@ -5,6 +5,7 @@
 body[data-theme="light"] {
   --duvet-ok: #1a7f37;
   --duvet-warn: #9a6700;
+  --duvet-exception: #8250df;
   --duvet-missing: #cf222e;
   --duvet-muted: #6e7781;
   --duvet-strong: #24292f;
@@ -24,6 +25,7 @@ body[data-theme="light"] {
   body[data-theme="auto"] {
     --duvet-ok: #3fb950;
     --duvet-warn: #d29922;
+    --duvet-exception: #bc8cff;
     --duvet-missing: #f85149;
     --duvet-muted: #8b949e;
     --duvet-strong: #e6edf3;
@@ -44,6 +46,7 @@ body[data-theme="light"] {
 body[data-theme="dark"] {
   --duvet-ok: #3fb950;
   --duvet-warn: #d29922;
+  --duvet-exception: #bc8cff;
   --duvet-missing: #f85149;
   --duvet-muted: #8b949e;
   --duvet-strong: #e6edf3;
@@ -79,10 +82,14 @@ abbr.duvet-status {
   color: var(--duvet-ok);
 }
 
-.duvet-exception,
 .duvet-todo,
 .duvet-partial {
   color: var(--duvet-warn);
+}
+
+/* A deliberate deviation is not a gap: it has the color of deviations in the text. */
+.duvet-exception {
+  color: var(--duvet-exception);
 }
 
 .duvet-missing {
