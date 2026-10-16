@@ -259,6 +259,32 @@ def test_term_with_a_colon() -> None:
     assert isinstance(figure, Figure)
 
 
+def test_note() -> None:
+    """A note, at the margin or indented, leaves out its prefix and keeps its requirement."""
+    text = "   NOTE: The client MUST send\n   the token.\n\n      Note: An aside.\n"
+    contents = text.encode()
+    start = contents.index(b"NOTE")
+    end = contents.index(b"token.") + len(b"token.")
+    send = Requirement(
+        spec="spec.txt",
+        section="section-1",
+        level="MUST",
+        text="NOTE: The client MUST send the token.",
+        ranges=[(start, end)],
+        contents=contents,
+    )
+    margin, aside = structure(blocks(contents, 0, len(contents), title=False))
+    assert isinstance(margin, Paragraph) and margin.note
+    assert isinstance(aside, Paragraph) and aside.note
+    [run] = runs(margin.block, contents, [send])
+    assert (run.text, run.owner, run.starts) == (
+        "The client MUST send the token.",
+        send,
+        [send],
+    )
+    assert [r.text for r in runs(aside.block, contents, [])] == ["An aside."]
+
+
 def test_page_break_at_the_end() -> None:
     """A page break at the end of a section is not a paragraph of its own."""
     contents = (

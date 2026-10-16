@@ -28,6 +28,7 @@ Added
   figures have their caption, and references to sections, RFCs and addresses are links.
   The BCP 14 key words are marked in the whole text, as in the HTML RFCs.
   JSON and HTTP examples are highlighted, see ``duvet_spec_highlight``.
+  Notes, such as "Note: ...", are admonitions.
   ``duvet_autoreport`` gives each specification a page with its text.
 - ``duvet_autoreport_recap`` removes the counts at the top of the generated pages.
 - Requirements that Duvet finds in the figures of IETF specifications are left out.

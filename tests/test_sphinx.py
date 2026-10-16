@@ -1012,6 +1012,8 @@ def test_spec_layout(app: SphinxTestApp) -> None:
         "[I-D.ietf-example-long-reference-label]",
         "Unlabeled",
     ]
+    [note] = doctree.findall(nodes.note)
+    assert note.astext() == "An aside is indented more than the text."
 
     lists = [
         [item.astext().removesuffix("¶") for item in node.children]

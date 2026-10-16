@@ -673,7 +673,9 @@ class DuvetSpec(_DuvetDirective):
         """
         result: list[nodes.Element] = []
         for element in elements:
-            if isinstance(element, layout.Paragraph):
+            if isinstance(element, layout.Paragraph) and element.note:
+                result.append(nodes.note("", self.paragraph_node(element.block, lines)))
+            elif isinstance(element, layout.Paragraph):
                 result.append(self.paragraph_node(element.block, lines))
             elif isinstance(element, layout.Figure):
                 result.append(self.figure_node(element))

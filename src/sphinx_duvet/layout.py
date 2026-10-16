@@ -30,6 +30,7 @@ _MARKER = re.compile(r"(?P<marker>[o*+-]|\d+\.|[a-z]\.|\(\d+\)|\([a-zA-Z]\)) +(?
 _BULLETS = ("o", "*", "+", "-")
 _LABEL = re.compile(r"\[[^\]\s]+\]( +)(?=\S)")
 _REFERENCE = re.compile(r"\[[^\]\s]+\]")
+_NOTE = re.compile(r"(Note|NOTE|Please note)( \d+)?: +(?=\S)")
 _KEY_WORD = re.compile(r"\b(MUST|SHALL|SHOULD|MAY|REQUIRED|RECOMMENDED|OPTIONAL)\b")
 _TERM_GAP = re.compile(r"\S( {2,})(?=\S)")
 _CAPTION = re.compile(r"(Figure|Table) \d+: \S")
@@ -291,6 +292,14 @@ def runs(block: Block, contents: bytes, requirements: list[Requirement]) -> list
             )
             for a, b in zip(points, points[1:], strict=False)
         ]
+    # A requirement that starts before the block, such as after a "Note:" prefix
+    # that is left out, starts in its first run of the block.
+    first = block.pieces()[0][0]
+    for run in tokens:
+        owner = run.owner
+        if owner is not None and owner.ranges[0][0] < first:
+            if not any(owner in t.starts for t in tokens):
+                run.starts.append(owner)
     tokens = _merge(tokens)
     for index in range(1, len(tokens) - 1):
         run = tokens[index]
@@ -330,6 +339,8 @@ class Paragraph:
     """A paragraph of prose."""
 
     block: Block
+    note: bool = False
+    """True for a note, such as "Note: ...". The block leaves out the "Note:" prefix."""
 
 
 @dataclass
@@ -475,6 +486,10 @@ def _parse(
     index = 0
     while index < len(spec_blocks):
         block = spec_blocks[index]
+        if prose and block.indent >= indent and _is_note(block):
+            result.append(_note(block))
+            index += 1
+            continue
         if block.indent > indent:
             end = _until(spec_blocks, index, lambda b: b.indent > indent)
             deeper = spec_blocks[index:end]
@@ -506,6 +521,27 @@ def _parse(
             result.append(Figure(figure, captions.get(id(block))))
         index += 1
     return _merge_figures(_group(result))
+
+
+def _is_note(block: Block) -> bool:
+    """Return True if a block is a note, such as "Note: ...", with one indentation.
+
+    The note can be indented more than the text, as the ``<aside>`` elements of RFCXML.
+    """
+    return all(line.indent == block.indent for line in block.lines) and bool(
+        _NOTE.match(block.lines[0].text.strip())
+    )
+
+
+def _note(block: Block) -> Paragraph:
+    """Return a note without its "Note:" prefix."""
+    first, *rest = block.lines
+    prefix = _NOTE.match(first.text.strip())
+    assert prefix is not None
+    start = first.indent + prefix.end()
+    return Paragraph(
+        Block(PARAGRAPH, [_cut(first, start, len(first.text)), *rest]), note=True
+    )
 
 
 def _looks_like_code(text: str) -> bool:
