@@ -829,6 +829,12 @@ def test_spec_layout(app: SphinxTestApp) -> None:
         ["Internet Engineering Task Force (IETF)", "A. Author"],
         ["Request for Comments: 9997", "Example Org"],
     ]
+    keyword = next(
+        node
+        for node in doctree.findall(nodes.inline)
+        if "duvet-bcp14" in node["classes"] and "BCP 14" in node.parent.astext()
+    )
+    assert keyword.astext() == "MUST"
     blocks = [block.astext() for block in doctree.findall(nodes.literal_block)]
     assert blocks[0] == "Updated Edition"
     assert not any("Example Layout Protocol" in block for block in blocks)

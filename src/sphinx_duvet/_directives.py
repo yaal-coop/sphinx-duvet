@@ -348,6 +348,19 @@ def _highlight(value: str) -> str:
     return value
 
 
+def _keywords(children: list[nodes.Node]) -> list[nodes.Node]:
+    """Return text nodes with their BCP 14 key words marked, as in the HTML RFCs."""
+    return [
+        node
+        for child in children
+        for node in (
+            render.bcp14_text(child.astext())
+            if isinstance(child, nodes.Text)
+            else [child]
+        )
+    ]
+
+
 class DuvetSpec(_DuvetDirective):
     """The text of an IETF specification, with its requirements highlighted.
 
@@ -679,7 +692,7 @@ class DuvetSpec(_DuvetDirective):
             self.linked(run.text) if links else [nodes.Text(run.text)]
         )
         if run.owner is None:
-            return children
+            return _keywords(children)
         anchors = [self.anchor(requirement) for requirement in pending]
         state = self.states[run.owner.id]
         parts = [

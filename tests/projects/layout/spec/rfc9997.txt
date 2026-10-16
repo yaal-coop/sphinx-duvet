@@ -148,6 +148,8 @@ Appendix A.  Notes
 
    Some notes, after Appendix A.
 
+   The key words "MUST" and "MAY" are described in BCP 14.
+
 Author's Address
 
    A. Author
