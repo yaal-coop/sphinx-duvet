@@ -247,26 +247,6 @@ def table(
     return node
 
 
-_RULE_STATES = [
-    ("ok", "done"),
-    ("partial", "partly done or planned"),
-    ("missing", "missing"),
-    ("exception", "deliberate deviation"),
-    ("unannotated", "not annotated yet"),
-    ("outside", "out of scope"),
-]
-
-
-def state_legend() -> nodes.paragraph:
-    """Return a line that explains the highlight colors of the requirements."""
-    node = paragraph(nodes.Text("Requirements: "), classes=["duvet-legend"])
-    for index, (state, text) in enumerate(_RULE_STATES):
-        if index:
-            node += nodes.Text(" · ")
-        node += nodes.inline(text=text, classes=["duvet-rule", f"duvet-rule-{state}"])
-    return node
-
-
 class FallbackLinks(SphinxPostTransform):
     """Remove a fallback link, such as the link to the RFC, when a text link next to it leads somewhere.
 

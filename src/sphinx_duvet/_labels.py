@@ -145,10 +145,30 @@ class Labels:
             )
         return node
 
+    def highlight_legend(self) -> nodes.paragraph:
+        """Return a line that explains the highlight colors of the requirements in a text.
+
+        It shows the labels as the legend of the reports does, each one on its color.
+        """
+        node = nodes.paragraph(classes=["duvet-legend"])
+        node += nodes.Text("Requirements: ")
+        for index, value in enumerate(_HIGHLIGHTS):
+            if index:
+                node += nodes.Text(" · ")
+            sample = nodes.inline(
+                classes=["duvet-rule", f"duvet-rule-{value.name.lower()}"]
+            )
+            label = self.state(value)
+            sample += label
+            if not any(char.isalpha() for char in label.astext()):
+                sample += nodes.Text(f" {DESCRIPTIONS[value]}")
+            node += sample
+        return node
+
     def legend(self, tests: bool = True) -> nodes.paragraph:
         """Return a line that explains the labels.
 
-        A description is left out when the label already says the same.
+        The description of a label shows on hover, and after the label when it is a symbol.
         Without tests, the state of a test that is not expected is left out.
         """
         node = nodes.paragraph(classes=["duvet-legend"])
@@ -158,10 +178,21 @@ class Labels:
                 node += nodes.Text(" · ")
             label = self.state(value)
             node += label
-            if label.astext() != DESCRIPTIONS[value]:
+            if not any(char.isalpha() for char in label.astext()):
                 node += nodes.Text(f" {DESCRIPTIONS[value]}")
         return node
 
+
+# The states that a text highlights, in the order of its legend.
+_HIGHLIGHTS = (
+    State.OK,
+    State.PARTIAL,
+    State.TODO,
+    State.MISSING,
+    State.EXCEPTION,
+    State.UNANNOTATED,
+    State.OUTSIDE,
+)
 
 # The order of the states in a summary, from done to out of scope.
 _SUMMARY = (

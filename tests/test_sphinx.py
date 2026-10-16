@@ -18,7 +18,9 @@ from sphinx_duvet._autoreport import _page_name
 from sphinx_duvet._domain import REPORT
 from sphinx_duvet._domain import TEXT
 from sphinx_duvet._domain import RuleLocation
+from sphinx_duvet._labels import Labels
 from sphinx_duvet._labels import duvet_label
+from sphinx_duvet._labels import label_sources
 from sphinx_duvet.report import Cite
 
 PROJECT = Path(__file__).parent / "projects" / "basic"
@@ -608,7 +610,7 @@ def test_label_descriptions(app: SphinxTestApp) -> None:
     freshenv=True,
 )
 def test_text_labels(app: SphinxTestApp) -> None:
-    """With the text preset, the legend leaves out the descriptions that repeat a label."""
+    """With the text preset, the legend shows the labels, and their descriptions on hover."""
     app.build()
     [table] = tables(app, "report")
     assert rows(table)[0][2:] == ["n/a", "n/a", "impl. done client.py 2 test missing"]
@@ -616,9 +618,9 @@ def test_text_labels(app: SphinxTestApp) -> None:
     legend = next(
         p for p in doctree.findall(nodes.paragraph) if "duvet-legend" in p["classes"]
     )
-    assert legend.astext().startswith(
-        "done · missing · not annotated not annotated yet · todo planned"
-    )
+    assert legend.astext().startswith("done · missing · not annotated · todo · partial")
+    explanations = [node["explanation"] for node in legend.findall(duvet_label)]
+    assert "not annotated yet" in explanations
 
 
 @pytest.mark.sphinx(
@@ -870,7 +872,9 @@ def test_spec_text(app: SphinxTestApp) -> None:
     )
     assert nested.parent["ids"] == ["section-2"]
     legend = next(doctree.findall(nodes.paragraph))
-    assert legend.astext().startswith("Requirements: done · partly done or planned")
+    assert legend.astext().startswith(
+        "Requirements: ✔ done · ½ partly done · … planned"
+    )
     header = next(doctree.findall(nodes.table))
     assert "duvet-front-matter" in header["classes"]
     assert "Request for Comments: 9999" in header.astext()
@@ -1310,6 +1314,19 @@ def test_note_for_some_targets(
     _, text, flask, django, client = row.children
     assert "Django checks the expiry." in django.astext()
     assert "Django checks the expiry." not in text.astext() + flask.astext()
+
+
+def test_highlight_legend_with_text_labels() -> None:
+    """With text labels, the legend of a text shows the labels, and the descriptions on hover."""
+    sources, _ = label_sources("text")
+    labels = Labels(sources, lambda markup: [nodes.Text(markup)])
+    legend = labels.highlight_legend()
+    assert legend.astext() == (
+        "Requirements: done · partial · todo · missing · exception"
+        " · not annotated · out of scope"
+    )
+    explanations = [node["explanation"] for node in legend.findall(duvet_label)]
+    assert "partly done" in explanations
 
 
 def test_menu_title() -> None:

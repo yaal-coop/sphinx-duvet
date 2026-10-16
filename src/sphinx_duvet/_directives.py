@@ -68,6 +68,12 @@ class _DuvetDirective(SphinxDirective):
         "show": _show,
     }
 
+    def parse_label(self, markup: str, messages: list[nodes.Node]) -> list[nodes.Node]:
+        """Parse the inline markup of a label, and keep its error messages."""
+        children, problems = self.state.inline_text(markup, self.lineno)
+        messages.extend(problems)
+        return list(children)
+
     def view(self) -> View:
         """Read the options of the directive."""
         return View.parse(
@@ -254,12 +260,6 @@ class DuvetReport(_DuvetDirective):
         )
         return anchor
 
-    def parse_label(self, markup: str, messages: list[nodes.Node]) -> list[nodes.Node]:
-        """Parse the inline markup of a label, and keep its error messages."""
-        children, problems = self.state.inline_text(markup, self.lineno)
-        messages.extend(problems)
-        return list(children)
-
     def row(
         self,
         project: Project,
@@ -311,7 +311,7 @@ class DuvetReport(_DuvetDirective):
     def shared_comments(
         self, requirement: Requirement, prefix: bool
     ) -> list[nodes.Node]:
-        """Return the notes of a requirement, and the reason why it is out of scope.
+        """Return the notes about every target, and the reason why the requirement is out of scope.
 
         Below the text, the reason starts with "Out of scope:". In the column of the state,
         the state already says it.
@@ -564,7 +564,16 @@ class DuvetSpec(_DuvetDirective):
         self.note_references()
         self.anchored = set()
         self.requirements = spec.requirements
-        result: list[nodes.Node] = [render.state_legend(), *self.front_matter()]
+        messages: list[nodes.Node] = []
+        labels = Labels(
+            label_sources(self.config.duvet_labels)[0],
+            lambda markup: self.parse_label(markup, messages),
+        )
+        result: list[nodes.Node] = [
+            labels.highlight_legend(),
+            *messages,
+            *self.front_matter(),
+        ]
         parents: list[nodes.Element] = []
         for text in self.texts:
             section = self.section(text)
