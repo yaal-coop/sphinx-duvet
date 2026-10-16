@@ -246,6 +246,19 @@ def test_page_break_with_another_header() -> None:
     assert pieces == ["A paragraph does not end", "here."]
 
 
+def test_term_with_a_colon() -> None:
+    """A term that ends with a colon is a definition when prose follows it, not a list."""
+    [definitions] = parse(
+        "   Error name:\n      The name requested.\n\n"
+        "   Change controller:\n      For Standards Track RFCs, state IETF.\n"
+    )
+    assert isinstance(definitions, DefinitionList)
+    terms = [item.term.lines[0].text.strip() for item in definitions.items]
+    assert terms == ["Error name:", "Change controller:"]
+    [figure] = parse('   Example:\n      {"a": 1}\n')
+    assert isinstance(figure, Figure)
+
+
 def test_page_break_at_the_end() -> None:
     """A page break at the end of a section is not a paragraph of its own."""
     contents = (

@@ -29,6 +29,7 @@ _LIST_ITEM = re.compile(r"^(o|\*|-|\d+\.|[a-z]\.|\(\d+\)|\([a-z]\))\s+\S")
 _MARKER = re.compile(r"(?P<marker>[o*+-]|\d+\.|[a-z]\.|\(\d+\)|\([a-zA-Z]\)) +(?=\S)")
 _BULLETS = ("o", "*", "+", "-")
 _LABEL = re.compile(r"\[[^\]\s]+\]( +)(?=\S)")
+_REFERENCE = re.compile(r"\[[^\]\s]+\]")
 _KEY_WORD = re.compile(r"\b(MUST|SHALL|SHOULD|MAY|REQUIRED|RECOMMENDED|OPTIONAL)\b")
 _TERM_GAP = re.compile(r"\S( {2,})(?=\S)")
 _CAPTION = re.compile(r"(Figure|Table) \d+: \S")
@@ -599,7 +600,16 @@ def _head(block: Block, prose: bool, after: bool) -> _Head | None:
     if body_indent <= first.indent:
         return None
     term_end = first.indent + gap.start(1) if gap else len(first.text.rstrip())
-    if not _is_term(first.text[first.indent : term_end], label=gap is not None):
+    term_text = first.text[first.indent : term_end]
+    # A term that ends with a colon has prose below it, not a list or code.
+    label = gap is not None or bool(
+        rest
+        and term_text.endswith(":")
+        and not _LIST_ITEM.match(rest[0].text.strip())
+        and not _looks_like_code(rest[0].text.strip())
+    )
+    # A long reference label stands on a line of its own, above its text.
+    if not _REFERENCE.fullmatch(term_text) and not _is_term(term_text, label=label):
         return None
     term = Block(PARAGRAPH, [_cut(first, first.indent, term_end)])
     lines = (

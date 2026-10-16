@@ -1009,6 +1009,7 @@ def test_spec_layout(app: SphinxTestApp) -> None:
         "Endpoint",
         "[RFC9998]",
         "[OTHER]",
+        "[I-D.ietf-example-long-reference-label]",
         "Unlabeled",
     ]
 

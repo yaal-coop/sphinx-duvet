@@ -142,11 +142,17 @@ Table of Contents
 
    [OTHER]    Author, B., "Other Document", 2026.
 
+   [I-D.ietf-example-long-reference-label]
+              Author, C., "Draft With a Long Label", Work in Progress,
+              2026.
+
    Unlabeled  A reference without a label.
 
 Appendix A.  Notes
 
    Some notes, after Appendix A.
+
+      Note: An aside is indented more than the text.
 
    The key words "MUST" and "MAY" are described in BCP 14.
 

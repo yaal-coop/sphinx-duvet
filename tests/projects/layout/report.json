@@ -2,9 +2,9 @@
   "version": "2.0",
   "sources": {
     "https://awslabs.github.io/duvet/v2/sources.json#inline": {
-      "src-4f459b4fbe4f7e74": {
+      "src-6178510732e0213a": {
         "file_name": "spec/rfc9997.txt",
-        "contents": "Internet Engineering Task Force (IETF)                         A. Author\nRequest for Comments: 9997                                   Example Org\nCategory: Standards Track                                   October 2026\nISSN: 2070-1721\n\n\n                          Updated Edition\n\n\n                       Example Layout Protocol\n                              for Tests\n\nAbstract\n\n   This document shows the layout of the text of an RFC.  Its text is\n   at http://www.rfc-editor.org/info/rfc9997.\n\nTable of Contents\n\n   1. Introduction ....................................................1\n      1.1. Terms ......................................................1\n   2. Lists and Tables ................................................2\n   3. Figures .........................................................3\n   4. References ......................................................4\n   Appendix A. Notes ..................................................5\n   Author's Address ...................................................5\n\n   This list MUST stay short.\n\n1.  Introduction\n\n   Clients use the server at https://example.com/ per Section 2 and\n   Section 9.  Section 4 of [RFC9998] and Section 1 of RFC 9999 are\n   other parts.  See [RFC9998], [RFC1234] and [OTHER] for more, but\n   not [NOWHERE].\n\n   Section 3 has figures.\n\n1.1.  Terms\n\n   Client\n      A program that sends requests.\n\n   Server  A program that answers requests.  The server MUST\n      answer as in Section 2.\n\n   Token  A secret value.\n\n   Endpoint\n\n      A path on the server.\n\n1.1.1.  Details\n\n   This section is too deep for the table of contents.\n\n   The client MUST retry.\n\n   The server MAY wait.  The client\n   MUST retry.\n\n2.  Lists and Tables\n\n   The client sends these parameters:\n\n   o  The client MUST send a token.\n\n   o  a name,\n\n      with a second paragraph.\n\n   The flow has these steps:\n\n   (A)  The client sends a request.\n\n   (B)  The server answers.\n\n   +-----------+-------------------+\n   | Name      | Use               |\n   +-----------+-------------------+\n   | token     | The server MUST   |\n   |           | check it.         |\n   |           |                   |\n   | name      |                   |\n   +-----------+-------------------+\n\n               Table 1: Parameters\n\n   +-------+-------+\n   | one   | two   |\n   +-------+-------+\n\n   Method Use\n   ------ -----------------------\n   GET    Reads a resource.\n\n   POST   Creates a resource.\n\n                 Table 2: Methods\n\n3.  Figures\n\n   A request:\n\n     GET /tokens HTTP/1.1\n     Host: server.example.com\n\n   A response:\n\n     {\n       \"token\": \"abc\"\n     }\n\n                 Figure 1: A token\n\n   An abbreviated response:\n\n     {\n       \"token\": \"abc\",\n       ...\n     }\n\n   A rule in a figure:\n\n     {\n       \"description\": \"The token MUST be secret.\"\n     }\n\n   A diagram:\n\n     +--------+       +--------+\n     | Client |------>| Server |\n     +--------+       +--------+\n\n4.  References\n\n   The references are:\n\n   [RFC9998]  Author, A., \"Example Other Protocol\", RFC 9998,\n              DOI 10.17487/RFC9998, October 2026,\n              <https://www.rfc-editor.org/info/rfc9998>.\n\n   [OTHER]    Author, B., \"Other Document\", 2026.\n\n   Unlabeled  A reference without a label.\n\nAppendix A.  Notes\n\n   Some notes, after Appendix A.\n\n   The key words \"MUST\" and \"MAY\" are described in BCP 14.\n\nAuthor's Address\n\n   A. Author\n   Example Org\n\n   Email: author@example.org\n   Email: author@yaal.coop\n"
+        "contents": "Internet Engineering Task Force (IETF)                         A. Author\nRequest for Comments: 9997                                   Example Org\nCategory: Standards Track                                   October 2026\nISSN: 2070-1721\n\n\n                          Updated Edition\n\n\n                       Example Layout Protocol\n                              for Tests\n\nAbstract\n\n   This document shows the layout of the text of an RFC.  Its text is\n   at http://www.rfc-editor.org/info/rfc9997.\n\nTable of Contents\n\n   1. Introduction ....................................................1\n      1.1. Terms ......................................................1\n   2. Lists and Tables ................................................2\n   3. Figures .........................................................3\n   4. References ......................................................4\n   Appendix A. Notes ..................................................5\n   Author's Address ...................................................5\n\n   This list MUST stay short.\n\n1.  Introduction\n\n   Clients use the server at https://example.com/ per Section 2 and\n   Section 9.  Section 4 of [RFC9998] and Section 1 of RFC 9999 are\n   other parts.  See [RFC9998], [RFC1234] and [OTHER] for more, but\n   not [NOWHERE].\n\n   Section 3 has figures.\n\n1.1.  Terms\n\n   Client\n      A program that sends requests.\n\n   Server  A program that answers requests.  The server MUST\n      answer as in Section 2.\n\n   Token  A secret value.\n\n   Endpoint\n\n      A path on the server.\n\n1.1.1.  Details\n\n   This section is too deep for the table of contents.\n\n   The client MUST retry.\n\n   The server MAY wait.  The client\n   MUST retry.\n\n2.  Lists and Tables\n\n   The client sends these parameters:\n\n   o  The client MUST send a token.\n\n   o  a name,\n\n      with a second paragraph.\n\n   The flow has these steps:\n\n   (A)  The client sends a request.\n\n   (B)  The server answers.\n\n   +-----------+-------------------+\n   | Name      | Use               |\n   +-----------+-------------------+\n   | token     | The server MUST   |\n   |           | check it.         |\n   |           |                   |\n   | name      |                   |\n   +-----------+-------------------+\n\n               Table 1: Parameters\n\n   +-------+-------+\n   | one   | two   |\n   +-------+-------+\n\n   Method Use\n   ------ -----------------------\n   GET    Reads a resource.\n\n   POST   Creates a resource.\n\n                 Table 2: Methods\n\n3.  Figures\n\n   A request:\n\n     GET /tokens HTTP/1.1\n     Host: server.example.com\n\n   A response:\n\n     {\n       \"token\": \"abc\"\n     }\n\n                 Figure 1: A token\n\n   An abbreviated response:\n\n     {\n       \"token\": \"abc\",\n       ...\n     }\n\n   A rule in a figure:\n\n     {\n       \"description\": \"The token MUST be secret.\"\n     }\n\n   A diagram:\n\n     +--------+       +--------+\n     | Client |------>| Server |\n     +--------+       +--------+\n\n4.  References\n\n   The references are:\n\n   [RFC9998]  Author, A., \"Example Other Protocol\", RFC 9998,\n              DOI 10.17487/RFC9998, October 2026,\n              <https://www.rfc-editor.org/info/rfc9998>.\n\n   [OTHER]    Author, B., \"Other Document\", 2026.\n\n   [I-D.ietf-example-long-reference-label]\n              Author, C., \"Draft With a Long Label\", Work in Progress,\n              2026.\n\n   Unlabeled  A reference without a label.\n\nAppendix A.  Notes\n\n   Some notes, after Appendix A.\n\n      Note: An aside is indented more than the text.\n\n   The key words \"MUST\" and \"MAY\" are described in BCP 14.\n\nAuthor's Address\n\n   A. Author\n   Example Org\n\n   Email: author@example.org\n   Email: author@yaal.coop\n"
       }
     },
     "https://awslabs.github.io/duvet/v2/sources.json#linked": {
@@ -30,115 +30,263 @@
   },
   "annotations": {
     "https://awslabs.github.io/duvet/v2/annotations.json#specification": {
-      "spc-06e7bc3213ceda41": {
+      "spc-3faf3d01f5e52201": {
         "source": {
-          "src": "src-4f459b4fbe4f7e74",
+          "src": "src-6178510732e0213a",
           "start": 0,
-          "end": 3459
+          "end": 3648
         },
         "format": "ietf"
       }
     },
     "https://awslabs.github.io/duvet/v2/annotations.json#section": {
-      "sec-083b30e97a553411": {
+      "sec-209fdaa1ab560b03": {
         "source": {
-          "src": "src-4f459b4fbe4f7e74",
-          "start": 3356,
-          "end": 3458
-        },
-        "short_name": "name-author-s-address",
-        "long_name": "Author's Address"
-      },
-      "sec-1f224c1fd9665be7": {
-        "source": {
-          "src": "src-4f459b4fbe4f7e74",
-          "start": 1332,
-          "end": 1546
-        },
-        "short_name": "section-1.1",
-        "long_name": "Terms"
-      },
-      "sec-2871d279fea7b16f": {
-        "source": {
-          "src": "src-4f459b4fbe4f7e74",
+          "src": "src-6178510732e0213a",
           "start": 496,
           "end": 1056
         },
         "short_name": "name-table-of-contents",
         "long_name": "Table of Contents"
       },
-      "sec-7e96a6775ad4a183": {
+      "sec-402271e90a1dc915": {
         "source": {
-          "src": "src-4f459b4fbe4f7e74",
-          "start": 2941,
-          "end": 3240
-        },
-        "short_name": "section-4",
-        "long_name": "References"
-      },
-      "sec-8abc9a563d6ed1f1": {
-        "source": {
-          "src": "src-4f459b4fbe4f7e74",
+          "src": "src-6178510732e0213a",
           "start": 369,
           "end": 494
         },
         "short_name": "name-abstract",
         "long_name": "Abstract"
       },
-      "sec-a8811c220d9c8541": {
+      "sec-556ae36fce19cc9d": {
         "source": {
-          "src": "src-4f459b4fbe4f7e74",
+          "src": "src-6178510732e0213a",
           "start": 1062,
           "end": 1324
         },
         "short_name": "section-1",
         "long_name": "Introduction"
       },
-      "sec-ada8bbf8c6c24e46": {
+      "sec-6c818f86af52bd30": {
         "source": {
-          "src": "src-4f459b4fbe4f7e74",
-          "start": 2485,
-          "end": 2935
+          "src": "src-6178510732e0213a",
+          "start": 3390,
+          "end": 3543
         },
-        "short_name": "section-3",
-        "long_name": "Figures"
+        "short_name": "appendix-A",
+        "long_name": "Notes"
       },
-      "sec-c8381cecac81d7aa": {
+      "sec-7b37e796dab6df80": {
         "source": {
-          "src": "src-4f459b4fbe4f7e74",
-          "start": 1704,
-          "end": 2479
+          "src": "src-6178510732e0213a",
+          "start": 2941,
+          "end": 3375
         },
-        "short_name": "section-2",
-        "long_name": "Lists and Tables"
+        "short_name": "section-4",
+        "long_name": "References"
       },
-      "sec-e89e4f4c7629b8ad": {
+      "sec-867502fcc034a3ed": {
         "source": {
-          "src": "src-4f459b4fbe4f7e74",
+          "src": "src-6178510732e0213a",
+          "start": 3545,
+          "end": 3647
+        },
+        "short_name": "name-author-s-address",
+        "long_name": "Author's Address"
+      },
+      "sec-88a03ac4cdf85ee9": {
+        "source": {
+          "src": "src-6178510732e0213a",
           "start": 1556,
           "end": 1698
         },
         "short_name": "section-1.1.1",
         "long_name": "Details"
       },
-      "sec-fb0ed5fe2ddf8a0a": {
+      "sec-a648ab16c74b033a": {
         "source": {
-          "src": "src-4f459b4fbe4f7e74",
-          "start": 3255,
-          "end": 3354
+          "src": "src-6178510732e0213a",
+          "start": 2485,
+          "end": 2935
         },
-        "short_name": "appendix-A",
-        "long_name": "Notes"
+        "short_name": "section-3",
+        "long_name": "Figures"
+      },
+      "sec-a7f769b3e19a0feb": {
+        "source": {
+          "src": "src-6178510732e0213a",
+          "start": 1332,
+          "end": 1546
+        },
+        "short_name": "section-1.1",
+        "long_name": "Terms"
+      },
+      "sec-c495cd262ef83306": {
+        "source": {
+          "src": "src-6178510732e0213a",
+          "start": 1704,
+          "end": 2479
+        },
+        "short_name": "section-2",
+        "long_name": "Lists and Tables"
       }
     },
     "https://awslabs.github.io/duvet/v2/annotations.json#requirement": {
-      "req-395167281164557d": {
+      "req-23117de269d17ef7": {
+        "source": {
+          "src": "lnk-8646b65cb5259dca",
+          "line": 15
+        },
+        "origin": {
+          "src": "src-6178510732e0213a",
+          "ranges": [
+            {
+              "start": 1030,
+              "end": 1056
+            }
+          ]
+        },
+        "level": "MUST"
+      },
+      "req-4e6b3d68636ab712": {
+        "source": {
+          "src": "lnk-a84ca2503dae42ca",
+          "line": 37
+        },
+        "origin": {
+          "src": "src-6178510732e0213a",
+          "ranges": [
+            {
+              "start": 2762,
+              "end": 2762
+            },
+            {
+              "start": 2771,
+              "end": 2813
+            },
+            {
+              "start": 2819,
+              "end": 2819
+            }
+          ]
+        },
+        "level": "MUST"
+      },
+      "req-7706e6d2fe39256e": {
+        "source": {
+          "src": "lnk-9e0d3884babc2ea4",
+          "line": 18
+        },
+        "origin": {
+          "src": "src-6178510732e0213a",
+          "ranges": [
+            {
+              "start": 1651,
+              "end": 1671
+            }
+          ]
+        },
+        "level": "MAY"
+      },
+      "req-9ca085df176d128d": {
+        "source": {
+          "src": "lnk-d768e5d3215dc531",
+          "line": 17
+        },
+        "origin": {
+          "src": "src-6178510732e0213a",
+          "ranges": [
+            {
+              "start": 1432,
+              "end": 1447
+            },
+            {
+              "start": 1454,
+              "end": 1477
+            }
+          ]
+        },
+        "level": "MUST"
+      },
+      "req-9df574c84664cc56": {
+        "source": {
+          "src": "lnk-9e0d3884babc2ea4",
+          "line": 12
+        },
+        "origin": {
+          "src": "src-6178510732e0213a",
+          "ranges": [
+            {
+              "start": 1624,
+              "end": 1646
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-4b6ef7b0f4e8e166": [
+            {
+              "start": 1624,
+              "end": 1646
+            }
+          ]
+        }
+      },
+      "req-9dff88c8466d42d7": {
+        "source": {
+          "src": "lnk-9e0d3884babc2ea4",
+          "line": 24
+        },
+        "origin": {
+          "src": "src-6178510732e0213a",
+          "ranges": [
+            {
+              "start": 1624,
+              "end": 1646
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-4b6ef7b0f4e8e166": [
+            {
+              "start": 1624,
+              "end": 1646
+            }
+          ]
+        }
+      },
+      "req-aa35ee4a15852d67": {
+        "source": {
+          "src": "lnk-b972f254a5789759",
+          "line": 42
+        },
+        "origin": {
+          "src": "src-6178510732e0213a",
+          "ranges": [
+            {
+              "start": 1764,
+              "end": 1796
+            }
+          ]
+        },
+        "level": "MUST",
+        "coverage": {
+          "cite-8a48e0744dcb6460": [
+            {
+              "start": 1767,
+              "end": 1796
+            }
+          ]
+        }
+      },
+      "req-c734cf4a0609c8d1": {
         "source": {
           "src": "lnk-b972f254a5789759",
           "line": 48
         },
         "origin": {
-          "src": "src-4f459b4fbe4f7e74",
+          "src": "src-6178510732e0213a",
           "ranges": [
             {
               "start": 1944,
@@ -163,164 +311,16 @@
           ]
         },
         "level": "MUST"
-      },
-      "req-7f0becbef0a39182": {
-        "source": {
-          "src": "lnk-9e0d3884babc2ea4",
-          "line": 12
-        },
-        "origin": {
-          "src": "src-4f459b4fbe4f7e74",
-          "ranges": [
-            {
-              "start": 1624,
-              "end": 1646
-            }
-          ]
-        },
-        "level": "MUST",
-        "coverage": {
-          "cite-33bd587a38bc5b2a": [
-            {
-              "start": 1624,
-              "end": 1646
-            }
-          ]
-        }
-      },
-      "req-7f15f8bef0abfa6b": {
-        "source": {
-          "src": "lnk-9e0d3884babc2ea4",
-          "line": 24
-        },
-        "origin": {
-          "src": "src-4f459b4fbe4f7e74",
-          "ranges": [
-            {
-              "start": 1624,
-              "end": 1646
-            }
-          ]
-        },
-        "level": "MUST",
-        "coverage": {
-          "cite-33bd587a38bc5b2a": [
-            {
-              "start": 1624,
-              "end": 1646
-            }
-          ]
-        }
-      },
-      "req-9902fb077efb7fd2": {
-        "source": {
-          "src": "lnk-9e0d3884babc2ea4",
-          "line": 18
-        },
-        "origin": {
-          "src": "src-4f459b4fbe4f7e74",
-          "ranges": [
-            {
-              "start": 1651,
-              "end": 1671
-            }
-          ]
-        },
-        "level": "MAY"
-      },
-      "req-aa96179ae1f63f79": {
-        "source": {
-          "src": "lnk-d768e5d3215dc531",
-          "line": 17
-        },
-        "origin": {
-          "src": "src-4f459b4fbe4f7e74",
-          "ranges": [
-            {
-              "start": 1432,
-              "end": 1447
-            },
-            {
-              "start": 1454,
-              "end": 1477
-            }
-          ]
-        },
-        "level": "MUST"
-      },
-      "req-d70a396aa073a0f3": {
-        "source": {
-          "src": "lnk-b972f254a5789759",
-          "line": 42
-        },
-        "origin": {
-          "src": "src-4f459b4fbe4f7e74",
-          "ranges": [
-            {
-              "start": 1764,
-              "end": 1796
-            }
-          ]
-        },
-        "level": "MUST",
-        "coverage": {
-          "cite-8bae19a219a7df94": [
-            {
-              "start": 1767,
-              "end": 1796
-            }
-          ]
-        }
-      },
-      "req-ee757398d3dc8e2b": {
-        "source": {
-          "src": "lnk-8646b65cb5259dca",
-          "line": 15
-        },
-        "origin": {
-          "src": "src-4f459b4fbe4f7e74",
-          "ranges": [
-            {
-              "start": 1030,
-              "end": 1056
-            }
-          ]
-        },
-        "level": "MUST"
-      },
-      "req-f203f646694c624e": {
-        "source": {
-          "src": "lnk-a84ca2503dae42ca",
-          "line": 37
-        },
-        "origin": {
-          "src": "src-4f459b4fbe4f7e74",
-          "ranges": [
-            {
-              "start": 2762,
-              "end": 2762
-            },
-            {
-              "start": 2771,
-              "end": 2813
-            },
-            {
-              "start": 2819,
-              "end": 2819
-            }
-          ]
-        },
-        "level": "MUST"
       }
     },
     "https://awslabs.github.io/duvet/v2/annotations.json#cite": {
-      "cite-33bd587a38bc5b2a": {
+      "cite-4b6ef7b0f4e8e166": {
         "source": {
           "src": "lnk-8da05963cabfe41a",
           "line": 7
         },
         "target": {
-          "src": "src-4f459b4fbe4f7e74",
+          "src": "src-6178510732e0213a",
           "ranges": [
             {
               "start": 1624,
@@ -331,13 +331,13 @@
         "type": "CITATION",
         "level": "AUTO"
       },
-      "cite-8bae19a219a7df94": {
+      "cite-8a48e0744dcb6460": {
         "source": {
           "src": "lnk-8da05963cabfe41a",
           "line": 1
         },
         "target": {
-          "src": "src-4f459b4fbe4f7e74",
+          "src": "src-6178510732e0213a",
           "ranges": [
             {
               "start": 1767,
