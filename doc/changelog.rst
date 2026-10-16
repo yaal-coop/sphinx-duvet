@@ -34,5 +34,6 @@ Added
 - ``group-by: all`` shows every target in one column.
 - ``duvet_autoreport`` writes a "Specifications" index of the texts, next to the "Compliance" index.
   The navigation shows short titles, such as "RFC 7643: Core Schema". ``duvet_short_titles`` sets others.
+- A report highlights the row of the requirement or section in the URL fragment.
 - The documentation explains how to install Duvet on Read the Docs and in the CI.
 - ``duvet_labels`` shows the states as symbols, as text, or with any inline markup such as icons.

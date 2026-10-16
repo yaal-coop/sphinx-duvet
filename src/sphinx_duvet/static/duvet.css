@@ -15,6 +15,7 @@ body[data-theme="light"] {
   --duvet-missing-bg: rgba(207, 34, 46, 0.14);
   --duvet-muted-bg: rgba(110, 119, 129, 0.14);
   --duvet-exception-bg: rgba(130, 80, 223, 0.14);
+  --duvet-target-bg: rgba(212, 167, 44, 0.24);
 }
 
 /* Furo in auto mode follows the system preference. */
@@ -32,6 +33,7 @@ body[data-theme="light"] {
     --duvet-missing-bg: rgba(248, 81, 73, 0.22);
     --duvet-muted-bg: rgba(139, 148, 158, 0.2);
     --duvet-exception-bg: rgba(188, 140, 255, 0.22);
+    --duvet-target-bg: rgba(210, 153, 34, 0.28);
   }
 }
 
@@ -50,6 +52,7 @@ body[data-theme="dark"] {
   --duvet-missing-bg: rgba(248, 81, 73, 0.22);
   --duvet-muted-bg: rgba(139, 148, 158, 0.2);
   --duvet-exception-bg: rgba(188, 140, 255, 0.22);
+  --duvet-target-bg: rgba(210, 153, 34, 0.28);
 }
 
 .duvet-status {
@@ -193,6 +196,11 @@ table.duvet-table.duvet-recap th:nth-child(n + 3) {
 /* A section of the specification, above its requirements. */
 table.duvet-table tr.duvet-section td {
   background: var(--duvet-section);
+}
+
+/* The requirement or section in the URL fragment stands out. */
+table.duvet-table tr:target > td {
+  background: var(--duvet-target-bg);
 }
 
 /* The title on the left, the link to the specification on the right. */
