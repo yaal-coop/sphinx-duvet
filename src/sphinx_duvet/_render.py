@@ -136,13 +136,6 @@ def paragraph(*children: nodes.Node, classes: Sequence[str] = ()) -> nodes.parag
     return node
 
 
-def link(text: str, uri: str | None) -> nodes.Node:
-    """Return a link, or plain text without an URI."""
-    if uri is None:
-        return nodes.Text(text)
-    return nodes.reference(text, text, refuri=uri)
-
-
 def bcp14_text(text: str) -> list[nodes.Node]:
     """Return the text of a requirement, with the BCP 14 key words marked.
 
@@ -273,6 +266,28 @@ def depart_optional_link_html(
 ) -> None:
     """Close the content of the link, as any inline text."""
     translator.depart_inline(node)
+
+
+class FallbackLinks(SphinxPostTransform):
+    """Remove a fallback link, such as the link to the RFC, when an optional link next to it leads somewhere.
+
+    Other formats than HTML keep the fallback, as they leave out the optional links.
+    """
+
+    default_priority = 19
+    formats = ("html",)
+
+    def run(self, **kwargs: object) -> None:
+        """Remove the fallbacks next to the optional links that are links."""
+        for content in self.document.findall(duvet_optional_link):
+            link = content.parent
+            if not isinstance(link, nodes.reference) or link.parent is None:
+                continue
+            for sibling in list(link.parent.children):
+                if isinstance(sibling, nodes.Element) and (
+                    "duvet-fallback" in sibling["classes"]
+                ):
+                    link.parent.remove(sibling)
 
 
 class OptionalLinks(SphinxPostTransform):

@@ -17,6 +17,7 @@ from ._labels import depart_label_html
 from ._labels import duvet_label
 from ._labels import visit_label_html
 from ._project import load_project
+from ._render import FallbackLinks
 from ._render import OptionalLinks
 from ._render import depart_optional_link_html
 from ._render import depart_permalink_html
@@ -67,6 +68,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
         texinfo=skip,
     )
     app.add_domain(DuvetDomain)
+    app.add_post_transform(FallbackLinks)
     app.add_post_transform(OptionalLinks)
     app.add_directive("duvet-report", DuvetReport)
     app.add_directive("duvet-recap", DuvetRecap)

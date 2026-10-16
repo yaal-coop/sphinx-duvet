@@ -140,8 +140,8 @@ Directives
    The path is the path of the specification in :file:`.duvet/config.toml`.
 
    The requirements are grouped by section, under a row with the title of the section.
-   Its links lead to the section in the text of the specification, if a page shows it
-   with :rst:dir:`duvet-spec`, and in the RFC. Each row shows the level of the requirement,
+   Its link leads to the section in the text of the specification, if a page shows it
+   with :rst:dir:`duvet-spec`, or else in the RFC. Each row shows the level of the requirement,
    its text, its notes and the reasons of its deviations.
    Each cell shows the implementation state and the test state.
    Below each state, a chip per file links to the annotations behind it, one link per line.

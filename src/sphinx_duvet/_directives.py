@@ -199,7 +199,10 @@ class DuvetReport(_DuvetDirective):
         )
         url = spec.section_url(section)
         if url is not None:
-            links += render.link("RFC ↗", url)
+            # The text of the specification in the documentation replaces it.
+            links += nodes.reference(
+                "RFC ↗", "RFC ↗", refuri=url, classes=["duvet-fallback"]
+            )
         return render.spanning_row(
             columns,
             heading,

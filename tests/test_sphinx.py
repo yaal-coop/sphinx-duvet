@@ -770,11 +770,6 @@ def test_without_permalinks(app: SphinxTestApp) -> None:
     assert "headerlink" not in html
 
 
-def test_link_without_uri() -> None:
-    """Without an address, a link is plain text, such as a cite without a repository link."""
-    assert isinstance(render.link("src/a.py:1", None), nodes.Text)
-
-
 def test_chips() -> None:
     """Cites of a file share a chip with a link per line. Long names are shortened."""
     blob = "https://example.org/blob/main"
@@ -895,11 +890,12 @@ def test_spec_targets(app: SphinxTestApp) -> None:
 
 @pytest.mark.sphinx("text", testroot="spec", confoverrides=CONF, freshenv=True)
 def test_spec_text_builder(app: SphinxTestApp) -> None:
-    """Out of HTML, requirements have no link to their report."""
+    """Out of HTML, requirements have no link to their report, and sections keep the RFC."""
     app.build()
     text = (Path(app.outdir) / "text.txt").read_text()
     assert "The client MUST send the token." in text
     assert "¶" not in text
+    assert "RFC ↗" in (Path(app.outdir) / "report.txt").read_text()
 
 
 @pytest.mark.sphinx("html", testroot="layout", confoverrides=LAYOUT_CONF, freshenv=True)
@@ -1092,10 +1088,8 @@ def test_report_links_to_text(app: SphinxTestApp) -> None:
         re.DOTALL,
     )
     assert section is not None
-    assert re.findall(r'href="([^"]+)"', section.group(1)) == [
-        "text.html#section-2",
-        "https://www.rfc-editor.org/rfc/rfc9999#section-2",
-    ]
+    # The text of the specification in the documentation replaces the RFC.
+    assert re.findall(r'href="([^"]+)"', section.group(1)) == ["text.html#section-2"]
     assert re.search(
         r'send the token\.<a [^>]*href="text\.html#duvet-text-rfc9999-2-1"[^>]*>'
         r'<span class="duvet-rule-link">§</span></a>',
