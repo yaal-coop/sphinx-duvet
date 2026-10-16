@@ -15,7 +15,7 @@ def add_report_sections(app: Sphinx, doctree: nodes.document) -> None:
     so Sphinx does not find them. They are nested by their numbers: 3.4.2 is below 3.4,
     or below 3 if the report has no row for 3.4.
     """
-    docname = app.env.current_document.docname
+    docname = app.env.docname
     toc = app.env.tocs[docname]
     for table in doctree.findall(nodes.table):
         sections = table.get(SECTIONS)

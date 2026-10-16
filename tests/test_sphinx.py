@@ -917,7 +917,13 @@ def test_spec_roles(app: SphinxTestApp) -> None:
     )
 
 
-@pytest.mark.sphinx("html", testroot="spec", confoverrides=CONF, freshenv=True)
+@pytest.mark.sphinx(
+    "html",
+    testroot="spec",
+    confoverrides=CONF,
+    freshenv=True,
+    srcdir="spec-without-report",
+)
 def test_spec_without_report(app: SphinxTestApp) -> None:
     """Without a report, requirements in the text are highlighted, but are not links."""
     (Path(app.srcdir) / "report.rst").write_text("Report\n======\n")
@@ -927,7 +933,9 @@ def test_spec_without_report(app: SphinxTestApp) -> None:
     assert "report.html#duvet-rfc9999" not in html
 
 
-@pytest.mark.sphinx("html", testroot="spec", confoverrides=CONF, freshenv=True)
+@pytest.mark.sphinx(
+    "html", testroot="spec", confoverrides=CONF, freshenv=True, srcdir="spec-targets"
+)
 def test_spec_targets(app: SphinxTestApp) -> None:
     """With targets, a requirement that applies to none of them is plain text, without a link."""
     (Path(app.srcdir) / "text.rst").write_text(
@@ -1114,6 +1122,7 @@ def test_spec_highlight_option(app: SphinxTestApp) -> None:
     testroot="layout",
     confoverrides={**LAYOUT_CONF, "duvet_spec_highlight": "nope"},
     freshenv=True,
+    srcdir="layout-highlight-config",
 )
 def test_spec_highlight_config(app: SphinxTestApp) -> None:
     """An unknown language in the configuration is reported, and figures are highlighted automatically."""
