@@ -176,11 +176,8 @@ class DuvetReport(_DuvetDirective):
             )
         widths = [3, 65] + [10] * len(columns)
         legend = labels.legend(project.config.tests)
-        return [
-            legend,
-            render.table(headers, rows, widths, classes=["duvet-report"]),
-            *messages,
-        ]
+        table = render.table(headers, rows, widths, classes=["duvet-report"])
+        return [legend, table, *messages]
 
     def section_row(self, spec: Specification, section: str, columns: int) -> nodes.row:
         """Return a row with the number and the title of a section, and links to it.
@@ -247,6 +244,9 @@ class DuvetReport(_DuvetDirective):
         A permalink after the level shows the identifier of the requirement.
         The text links to the requirement in the text of the specification,
         if a page shows it. The annotations of each column are chips below its states.
+        The comments that explain a state are in its column. With several columns,
+        the notes and the reason why the requirement is out of scope apply to all of them,
+        so they are below the text.
         """
         anchor = self.anchor(requirement)
         sentence = render.requirement_text(requirement.text)
@@ -254,35 +254,16 @@ class DuvetReport(_DuvetDirective):
         sentence.clear()
         sentence += render.text_link(words, "text", requirement.id)
         text: list[nodes.Node] = [sentence]
-        reasons = dict.fromkeys(c.reason for c in requirement.cites if c.reason)
-        text += [
-            render.paragraph(
-                nodes.Text(f"Deviation: {reason}"), classes=["duvet-reason"]
-            )
-            for reason in reasons
-        ]
-        for note in requirement.notes:
-            container = nodes.container(classes=["duvet-note"])
-            self.state.nested_parse(
-                StringList(note.body, source=str(note.source)),
-                self.content_offset,
-                container,
-            )
-            text.append(container)
-        if requirement.outside is not None:
-            text.append(
-                render.paragraph(
-                    nodes.Text(f"Out of scope: {requirement.outside}"),
-                    classes=["duvet-outside-reason"],
-                )
-            )
+        shared = self.shared_comments(requirement, len(columns) > 1)
+        if len(columns) > 1:
+            text += shared
+            shared = []
         permalink = anchor if self.config.html_permalinks else None
         level = render.level_cell(requirement.level, permalink, requirement.id)
         cells: list[nodes.Node | list[nodes.Node]] = [level, text]
         for (_, targets), status in zip(columns, statuses, strict=True):
-            cells.append(
-                self.status_cell(project, requirement, targets, status, labels)
-            )
+            cell = self.status_cell(project, requirement, targets, status, labels)
+            cells.append(cell + [node.deepcopy() for node in shared])
         node = render.row(cells, ids=[anchor])
         strength = render.level_strength(requirement.level)
         level_entry = cast(nodes.entry, node[0])
@@ -292,6 +273,33 @@ class DuvetReport(_DuvetDirective):
         ]
         return node
 
+    def shared_comments(
+        self, requirement: Requirement, prefix: bool
+    ) -> list[nodes.Node]:
+        """Return the notes of a requirement, and the reason why it is out of scope.
+
+        Below the text, the reason starts with "Out of scope:". In the column of the state,
+        the state already says it.
+        """
+        comments: list[nodes.Node] = []
+        for note in requirement.notes:
+            container = nodes.container(classes=["duvet-note"])
+            self.state.nested_parse(
+                StringList(note.body, source=str(note.source)),
+                self.content_offset,
+                container,
+            )
+            comments.append(container)
+        if requirement.outside is not None:
+            reason = requirement.outside
+            comments.append(
+                render.paragraph(
+                    nodes.Text(f"Out of scope: {reason}" if prefix else reason),
+                    classes=["duvet-outside-reason"],
+                )
+            )
+        return comments
+
     @staticmethod
     def status_cell(
         project: Project,
@@ -300,16 +308,26 @@ class DuvetReport(_DuvetDirective):
         status: Status,
         labels: Labels,
     ) -> list[nodes.Node]:
-        """Return the states of a column, each one followed by the annotations behind it."""
+        """Return the states of a column, each one followed by the annotations behind it.
+
+        The reasons of the deviations of the column follow its annotations.
+        """
         cell = labels.status_cell(status, project.config.tests)
         if status.implementation in SINGLE:
             return cell
         implementations, tests = project.evidence(requirement, targets)
+        reasons = [
+            render.paragraph(
+                nodes.Text(f"Deviation: {reason}"), classes=["duvet-reason"]
+            )
+            for reason in dict.fromkeys(c.reason for c in implementations if c.reason)
+        ]
         if not project.config.tests:
-            return [*cell, *render.chips(implementations, "CITATION")]
+            return [*cell, *render.chips(implementations, "CITATION"), *reasons]
         return [
             cell[0],
             *render.chips(implementations, "CITATION"),
+            *reasons,
             cell[1],
             *render.chips(tests, "TEST"),
         ]

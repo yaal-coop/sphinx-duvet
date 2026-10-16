@@ -139,7 +139,17 @@ def test_report_text(app: SphinxTestApp) -> None:
         "duvet-level-column-should",
         "duvet-level-column-may",
     } <= columns
-    assert "Deviation: Caching is up to the application." in doctree.astext()
+    # With several columns, a deviation is in the column of its target,
+    # and a note, which applies to every column, is below the text.
+    [table] = tables(app, "report")
+    [cache] = [row for row in rows(table) if row[1].startswith("The client MAY cache")]
+    assert cache[1] == "The client MAY cache the response."
+    assert cache[4] == (
+        "impl. ≠ exception rfc9999.md 3 Deviation: Caching is up to the application. test —"
+    )
+    [log] = [row for row in rows(table) if row[1].startswith("The server SHOULD log")]
+    assert "Logging uses the standard logging module." in log[1]
+    assert "Logging" not in log[2]
     [note] = [
         n for n in doctree.findall(nodes.container) if "duvet-note" in n["classes"]
     ]
@@ -1158,10 +1168,7 @@ def test_outside(app: SphinxTestApp) -> None:
     """Requirements out of scope show their reason, and unused entries are reported."""
     app.build()
     html = (Path(app.outdir) / "index.html").read_text()
-    assert (
-        '<p class="duvet-outside-reason">Out of scope: The terms are for the server.</p>'
-        in html
-    )
+    assert '<p class="duvet-outside-reason">The terms are for the server.</p>' in html
     assert 'class="duvet-status duvet-outside"' in html
     assert 'class="duvet-rule duvet-rule-outside"' in html
     assert any(

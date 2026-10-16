@@ -515,3 +515,9 @@ table.duvet-spec-table > caption {
   color: var(--duvet-muted);
   font-size: 0.9em;
 }
+
+/* The comments that explain a state are smaller in its narrow column. */
+table.duvet-report td:nth-child(n + 3) :is(.duvet-note, .duvet-reason, .duvet-outside-reason) {
+  margin-top: 0.4em;
+  font-size: 0.8em;
+}

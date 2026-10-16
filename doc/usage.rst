@@ -143,10 +143,13 @@ Directives
    If a page shows the text of the specification with :rst:dir:`duvet-spec`,
    the title and the text of each requirement link to it.
    Otherwise, a link leads to the section in the RFC. Each row shows the level of the requirement,
-   its text, its notes and the reasons of its deviations.
+   its text, and a cell per column.
    Each cell shows the implementation state and the test state.
    Below each state, a chip per file links to the annotations behind it, one link per line.
    Long file names are shortened, and shown in full on hover.
+   The reasons of the deviations follow their chips. The notes and the reason why
+   a requirement is out of scope are at the bottom of the cell. With several columns,
+   they apply to all of them, so they are below the text.
 
    The level of each requirement is a narrow column, written vertically:
    filled for MUST, outlined for SHOULD, plain for MAY. It is the permalink of the row.
