@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import stat
 import sys
 from pathlib import Path
@@ -301,6 +302,9 @@ def test_outside() -> None:
         for r in spec.requirements
     }
     assert states["rfc9997#1.1-1"] == State.OUTSIDE
+    terms = next(r for r in spec.requirements if r.id == "rfc9997#1.1-1")
+    reason = project.outside_reason(terms, project.targets[0])
+    assert reason == "The terms are for the server."
     assert states["rfc9997#1.1.1-1"] == State.OK
     assert states["rfc9997#2-2"] == State.OUTSIDE
     assert states["rfc9997#2-1"] == State.OK
@@ -319,6 +323,47 @@ def test_outside_with_cites() -> None:
     cited = next(r for r in spec.requirements if r.id == "rfc9997#1.1.1-1")
     assert cited.outside is None
     assert project.group(cited, project.targets).implementation == State.OK
+
+
+OUTSIDE_FOR_SOME = """
+[[outside]]
+target = "spec/rfc9999.txt#section-3"
+quote = "reject expired tokens,"
+reason = "Django checks the expiry."
+targets = "framework=django"
+
+[[outside]]
+target = "spec/rfc9999.txt#section-3"
+reason = "Clients do not handle keys."
+targets = ["role=client"]
+"""
+
+
+def test_outside_for_some_targets(basic_root: Path, tmp_path: Path) -> None:
+    """An entry with targets puts a requirement out of scope for those targets only."""
+    root = tmp_path / "basic"
+    shutil.copytree(basic_root, root)
+    with (root / ".duvet" / "targets.toml").open("a") as file:
+        file.write(OUTSIDE_FOR_SOME)
+    project = Project(root, read_report(root / "report.json"))
+    [flask, django, client] = project.targets
+
+    expired = requirement(project, "reject expired tokens,")
+    assert expired.outside is None
+    assert project.status(expired, django).implementation == State.OUTSIDE
+    assert project.status(expired, flask).implementation == State.OK
+    assert project.outside_reason(expired, django) == "Django checks the expiry."
+    assert project.outside_reason(expired, flask) is None
+    assert project.group(expired, [flask, django]).implementation == State.OK
+    assert project.group(expired, [django]).implementation == State.OUTSIDE
+
+    rotate = requirement(project, "Servers SHOULD rotate their keys.")
+    assert project.status(rotate, client).implementation == State.OUTSIDE
+    assert project.status(rotate, flask).implementation == State.UNANNOTATED
+
+    # A cite that covers the target keeps the requirement in scope.
+    empty = requirement(project, "The token MUST NOT be empty.")
+    assert project.status(empty, client).implementation == State.OK
 
 
 def test_citation_with_todo(project: Project) -> None:

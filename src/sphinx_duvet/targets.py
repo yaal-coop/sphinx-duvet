@@ -124,6 +124,8 @@ class Outside:
     target: str
     quote: str | None
     reason: str
+    targets: list[Selector] | None = field(default=None, hash=False)
+    """The targets out of scope. :data:`None` means every target."""
 
 
 @dataclass(frozen=True)
@@ -283,6 +285,7 @@ def _load_own(config: dict[str, Any]) -> TargetConfig:
                 _get(entry, "target", "outside"),
                 _optional(entry, "quote", "outside"),
                 _get(entry, "reason", "outside"),
+                _selectors(entry, "targets", "outside") if "targets" in entry else None,
             )
             for entry in config.get("outside", [])
         ],

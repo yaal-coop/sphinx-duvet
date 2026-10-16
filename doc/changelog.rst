@@ -36,6 +36,7 @@ Added
   ``duvet_figure_requirements`` and ``--figure-requirements`` keep them.
 - ``[[outside]]`` entries mark the requirements that another project implements.
   They show their reason, and are not counted.
+  An entry with ``targets`` puts the requirements out of scope for those targets only.
 - A requirement cited in full with a todo annotation is partly done.
 - ``group-by: all`` shows every target in one column.
 - ``duvet_autoreport`` writes a "Specifications" index of the texts, next to the "Compliance" index.

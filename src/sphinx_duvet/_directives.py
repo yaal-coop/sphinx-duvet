@@ -340,6 +340,15 @@ class DuvetReport(_DuvetDirective):
         The reasons of the deviations of the column follow its annotations.
         """
         cell = labels.status_cell(status, project.config.tests)
+        if status.implementation == State.OUTSIDE and requirement.outside is None:
+            # Out of scope for some targets only: the reason goes in their column.
+            reason = next(
+                filter(None, (project.outside_reason(requirement, t) for t in targets))
+            )
+            return [
+                *cell,
+                render.paragraph(nodes.Text(reason), classes=["duvet-outside-reason"]),
+            ]
         if status.implementation in SINGLE:
             return cell
         implementations, tests = project.evidence(requirement, targets)

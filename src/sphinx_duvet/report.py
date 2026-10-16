@@ -80,6 +80,8 @@ class Requirement:
     applies: list[Selector] | None = None
     outside: str | None = None
     """Why the requirement is out of the scope of the project, if it is."""
+    outside_targets: list[tuple[list[Selector], str]] = field(default_factory=list)
+    """Targets for which the requirement is out of scope, with the reason."""
     notes: list[Note] = field(default_factory=list)
     id: str = ""
     """A stable identifier, such as ``rfc7643#3.1-9``: the name of the specification,

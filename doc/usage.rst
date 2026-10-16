@@ -403,6 +403,16 @@ They are not counted, and are not gaps.
 A requirement that the project cites is in scope, even in a section out of scope.
 ``[[outside]]`` entries are not shared with the projects that include the project.
 
+An entry with ``targets`` puts the requirements out of scope for those targets only.
+The reason then shows in their column:
+
+.. code-block:: toml
+
+   [[outside]]
+   target = "spec/rfc9999.txt#section-4"
+   reason = "The application implements it."
+   targets = "role=client"
+
 A project can follow its implementation only, and its tests later:
 
 .. code-block:: toml

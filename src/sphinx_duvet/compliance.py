@@ -209,7 +209,9 @@ class Project:
             if not matches:
                 unused.append(entry)
             for requirement in matches:
-                if not requirement.cites:
+                if entry.targets is not None:
+                    requirement.outside_targets.append((entry.targets, entry.reason))
+                elif not requirement.cites:
                     requirement.outside = entry.reason
         return unused
 
@@ -261,6 +263,23 @@ class Project:
             or (t.checks is not None and any(matches_any(t.checks, d) for d in direct))
         ]
 
+    @staticmethod
+    def outside_reason(requirement: Requirement, target: Target) -> str | None:
+        """Return why a requirement is out of scope for a target, or :data:`None`.
+
+        An entry for some targets does not count if an annotation covers the target.
+        """
+        if requirement.outside is not None:
+            return requirement.outside
+        return next(
+            (
+                reason
+                for selectors, reason in requirement.outside_targets
+                if matches_any(selectors, target)
+            ),
+            None,
+        )
+
     def status(self, requirement: Requirement, target: Target) -> Status:
         """Return the implementation and test states of a requirement for a target.
 
@@ -272,14 +291,16 @@ class Project:
             return _NOT_APPLICABLE
         if requirement.outside is not None:
             return _OUTSIDE
-        if not requirement.cites:
-            return Status(State.UNANNOTATED, State.NOT_EXPECTED)
-
         cites = [
             c
             for c in requirement.cites
             if c.covers is None or matches_any(c.covers, target)
         ]
+        if not cites and self.outside_reason(requirement, target) is not None:
+            return _OUTSIDE
+        if not requirement.cites:
+            return Status(State.UNANNOTATED, State.NOT_EXPECTED)
+
         implementations = [c for c in cites if c.type in _IMPLEMENTATION_TYPES]
         todo = any(c.type == "TODO" for c in cites)
         if implementations and requirement.covered_by(implementations):
@@ -347,13 +368,14 @@ class Project:
         """Return the status of a requirement for several targets.
 
         The worst state of the targets wins.
-        A requirement out of scope for every target is out of scope.
+        The targets out of scope do not count, unless every target is out of scope.
         """
         statuses = [self.status(requirement, t) for t in targets]
         statuses = [s for s in statuses if s.implementation != State.NOT_APPLICABLE]
         if not statuses:
             return _NOT_APPLICABLE
-        if all(s.implementation == State.OUTSIDE for s in statuses):
+        statuses = [s for s in statuses if s.implementation != State.OUTSIDE]
+        if not statuses:
             return _OUTSIDE
         implementation = min(
             (s.implementation for s in statuses), key=_RANK.__getitem__
