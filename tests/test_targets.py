@@ -117,6 +117,22 @@ def test_covers(basic_root: Path) -> None:
     assert config.covers(".duvet/exceptions/rfc9999.md") is None
 
 
+def test_covers_in_duvet_folder() -> None:
+    """Only the default patterns in .duvet/ match the annotations in .duvet/."""
+    config = TargetConfig(
+        [CLIENT],
+        defaults=[
+            Default(".duvet/todo/client/**", [Selector.parse("role=client")]),
+            Default("**", [Selector.parse("role=server")]),
+        ],
+    )
+    assert config.covers(".duvet/todo/client/rfc9999.md") == [
+        Selector.parse("role=client")
+    ]
+    assert config.covers(".duvet/todo/rfc9999.md") is None
+    assert config.covers("src/server.py") == [Selector.parse("role=server")]
+
+
 def test_select(basic_root: Path) -> None:
     """Targets can be filtered with selectors."""
     config = load_targets(basic_root / ".duvet/targets.toml")

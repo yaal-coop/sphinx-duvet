@@ -388,6 +388,16 @@ and which annotations and requirements apply to them.
    target = "spec/rfc9999.txt#section-3"
    reason = "The HTTP server implements it."
 
+The annotations in :file:`.duvet/`, such as planned work and deviations, cover every target.
+To give them targets, put them in a folder and add a default pattern for it.
+Only patterns that start with ``.duvet/`` match them:
+
+.. code-block:: toml
+
+   [[default]]
+   pattern = ".duvet/todo/client/**"
+   covers = "role=client"
+
 Requirements out of scope show their reason, with the state "out of scope".
 They are not counted, and are not gaps.
 A requirement that the project cites is in scope, even in a section out of scope.

@@ -155,11 +155,13 @@ class TargetConfig:
         """Return the targets covered by the annotations of a file.
 
         :data:`None` means every target.
-        Annotations in :file:`.duvet/` cover every target.
+        Annotations in :file:`.duvet/` cover every target,
+        unless a default pattern in :file:`.duvet/` matches them.
         """
-        if path.startswith(".duvet/"):
-            return None
+        in_duvet = path.startswith(".duvet/")
         for default in self.defaults:
+            if in_duvet and not default.pattern.startswith(".duvet/"):
+                continue
             if _glob_match(path, default.pattern):
                 return default.covers
         return None
