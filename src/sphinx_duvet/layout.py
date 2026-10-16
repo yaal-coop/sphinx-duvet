@@ -32,7 +32,7 @@ _LABEL = re.compile(r"\[[^\]\s]+\]( +)(?=\S)")
 _KEY_WORD = re.compile(r"\b(MUST|SHALL|SHOULD|MAY|REQUIRED|RECOMMENDED|OPTIONAL)\b")
 _TERM_GAP = re.compile(r"\S( {2,})(?=\S)")
 _CAPTION = re.compile(r"(Figure|Table) \d+: \S")
-_GRID_BORDER = re.compile(r"\+(-+\+)+")
+_GRID_BORDER = re.compile(r"\+(-+\+)+|\+(=+\+)+")
 _DASH_RULE = re.compile(r"-{2,}( +-{2,})+")
 _TOC_NUMBER = re.compile(r"(?:Appendix +)?([0-9A-Z]+(?:\.\d+)*)\.? ")
 _LINK = re.compile(
@@ -159,7 +159,8 @@ def blocks(contents: bytes, start: int, end: int, title: bool = True) -> list[Bl
     lines = _lines(contents, start, end)[1 if title else 0 :]
     groups: list[list[Line]] = [[]]
     for line in _without_page_breaks(lines):
-        if line is None or not line.text.strip():
+        # The text of recent RFCs starts with a byte order mark.
+        if line is None or not line.text.strip("\ufeff \t\r"):
             groups.append([])
         else:
             groups[-1].append(line)
@@ -699,19 +700,18 @@ def _grid_table(block: Block) -> Table | None:
     contain a "|", are not supported: such a table stays a figure.
     """
     first = block.lines[0].text.rstrip()
-    if (
-        not _GRID_BORDER.fullmatch(first.strip())
-        or block.lines[-1].text.rstrip() != first
+    columns = [index for index, char in enumerate(first) if char == "+"]
+    if not _is_border(first, columns) or not _is_border(
+        block.lines[-1].text.rstrip(), columns
     ):
         return None
-    columns = [index for index, char in enumerate(first) if char == "+"]
     if len(columns) < 3:
         return None
     groups: list[list[Line]] = [[]]
     for line in block.lines[1:-1]:
         text = line.text.rstrip()
         bars = [index for index, char in enumerate(text) if char == "|"]
-        if text == first:
+        if _is_border(text, columns):
             groups.append([])
         elif len(text) == len(first) and bars == columns:
             groups[-1].append(line)
@@ -723,6 +723,15 @@ def _grid_table(block: Block) -> Table | None:
     rows = [row for group in cells[1 if header else 0 :] for row in _split_rows(group)]
     widths = [end - start - 1 for start, end in bounds]
     return Table(header, rows, widths)
+
+
+def _is_border(text: str, columns: list[int]) -> bool:
+    """Return True if a line is a border with a "+" at each column.
+
+    Borders are drawn with "-", or with "=" around the header in RFCXML v3 tables.
+    """
+    plus = [index for index, char in enumerate(text) if char == "+"]
+    return bool(_GRID_BORDER.fullmatch(text.strip())) and plus == columns
 
 
 def _cells(line: Line, bounds: list[tuple[int, int]]) -> list[Line]:

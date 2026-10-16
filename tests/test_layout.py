@@ -368,6 +368,31 @@ def test_page_break_after_a_figure() -> None:
     assert len(result) == 2
 
 
+def test_table_with_header_borders() -> None:
+    """Tables of recent RFCs draw the borders around the header with "="."""
+    [table] = parse(
+        "   +======+=========+\n"
+        "   | Name | Use     |\n"
+        "   +======+=========+\n"
+        "   | GET  | Reads.  |\n"
+        "   +------+---------+\n"
+        "   | PUT  | Writes. |\n"
+        "   +------+---------+\n"
+    )
+    assert isinstance(table, Table)
+    assert [cell.lines[0].text.strip() for cell in table.header[0]] == ["Name", "Use"]
+    assert [row[0].lines[0].text.strip() for row in table.rows] == ["GET", "PUT"]
+
+
+def test_byte_order_mark() -> None:
+    """The byte order mark at the start of recent RFCs is not a block."""
+    contents = "\ufeff\n\nInternet Engineering Task Force (IETF)\n".encode()
+    result = blocks(contents, 0, len(contents), title=False)
+    assert [block.lines[0].text for block in result] == [
+        "Internet Engineering Task Force (IETF)"
+    ]
+
+
 def test_page_break_in_a_table() -> None:
     """A page break in a table keeps it whole."""
     contents = (
