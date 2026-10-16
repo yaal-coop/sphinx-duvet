@@ -45,12 +45,14 @@ def generate_pages(app: Sphinx) -> None:
         label = _menu_title(spec.title, app.config.duvet_short_titles.get(spec.path))
         pages.append((label, name))
         content = _title(_compliance_title(spec.title))
-        if spec.url:
-            content += f"Specification: {spec.url}\n\n"
+        links = []
         if spec.format == "ietf":
-            content += (
-                f"Full text, with the requirements highlighted: :doc:`{name}-text`\n\n"
-            )
+            links.append(f":doc:`Read the specification <{name}-text>`")
+        if spec.url:
+            links.append(f"`{_url_label(spec.url)} ↗ <{spec.url}>`__")
+        if links:
+            content += ".. rst-class:: duvet-links\n\n" + " ".join(links) + "\n\n"
+        if spec.format == "ietf":
             text = _title(spec.title) + f".. duvet-spec:: {spec.path}\n"
             if "targets" in defaults:
                 text += f"   :targets: {defaults['targets']}\n"
@@ -71,6 +73,12 @@ def generate_pages(app: Sphinx) -> None:
     )
     specifications += _toctree(texts)
     _write_if_changed(folder / "specifications.rst", specifications)
+
+
+def _url_label(url: str) -> str:
+    """Return the host of an address, such as rfc-editor.org."""
+    host = url.split("://", 1)[-1].split("/", 1)[0]
+    return host.removeprefix("www.")
 
 
 def _toctree(pages: list[tuple[str, str]]) -> str:

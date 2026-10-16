@@ -87,6 +87,8 @@ Configuration
    If it is set, sphinx-duvet writes a page per specification, and two index pages:
    :file:`compliance/index` lists the compliance pages with the counts of every specification,
    and :file:`compliance/specifications` lists the texts of the IETF specifications.
+   A compliance page starts with two buttons: one to read the text of the specification
+   in the documentation, one to the specification on its site, such as rfc-editor.org.
    The navigation gives the specifications a short title, such as "RFC 7643: Core Schema":
    the part of the title after its last colon. :confval:`duvet_short_titles` sets others.
    For instance ``{"group-by": "role", "show": "missing"}``.
@@ -145,6 +147,11 @@ Directives
    Otherwise, a link leads to the section in the RFC. Each row shows the level of the requirement,
    its text, and a cell per column.
    Each cell shows the implementation state and the test state.
+   Above the table, a report with one column counts its requirements per state,
+   and the tested requirements. The counts explain the labels:
+   their description shows on hover, and next to the symbols.
+   A report with several columns has a legend: :rst:dir:`duvet-recap` counts them.
+   The sections of the report are in the table of contents of the page.
    Below each state, a chip per file links to the annotations behind it, one link per line.
    Long file names are shortened, and shown in full on hover.
    The reasons of the deviations follow their chips. The notes and the reason why

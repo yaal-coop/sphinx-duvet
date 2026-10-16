@@ -111,6 +111,40 @@ class Labels:
             _line(_caption("test "), self.state(status.test)),
         ]
 
+    def summary(
+        self, counts: dict[State, int], tested: tuple[int, int] | None
+    ) -> nodes.paragraph:
+        """Return the number of requirements in each state of a report, as chips.
+
+        It also explains the labels: their description shows on hover,
+        and in the chip when the label is a symbol. The tested requirements follow,
+        as tested/expected, if some tests are expected.
+        Spaces separate the chips in formats other than HTML.
+        """
+        node = nodes.paragraph(classes=["duvet-summary"])
+        for value in _SUMMARY:
+            if not counts.get(value):
+                continue
+            if node.children:
+                node += nodes.Text(" ")
+            chip = nodes.inline(classes=["duvet-summary-item"])
+            chip += nodes.inline(
+                text=str(counts[value]),
+                classes=["duvet-summary-count", _CLASSES[value]],
+            )
+            chip += nodes.Text(" ")
+            label = self.state(value)
+            chip += label
+            if not any(char.isalpha() for char in label.astext()):
+                chip += nodes.Text(f" {DESCRIPTIONS[value]}")
+            node += chip
+        if tested is not None and tested[1]:
+            node += nodes.Text(" ")
+            node += nodes.inline(
+                text=f"{tested[0]}/{tested[1]} tested", classes=["duvet-summary-item"]
+            )
+        return node
+
     def legend(self, tests: bool = True) -> nodes.paragraph:
         """Return a line that explains the labels.
 
@@ -127,6 +161,18 @@ class Labels:
             if label.astext() != DESCRIPTIONS[value]:
                 node += nodes.Text(f" {DESCRIPTIONS[value]}")
         return node
+
+
+# The order of the states in a summary, from done to out of scope.
+_SUMMARY = (
+    State.OK,
+    State.PARTIAL,
+    State.TODO,
+    State.MISSING,
+    State.UNANNOTATED,
+    State.EXCEPTION,
+    State.OUTSIDE,
+)
 
 
 def _line(*children: nodes.Node) -> nodes.paragraph:

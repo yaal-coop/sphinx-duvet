@@ -1,6 +1,7 @@
 """The duvet-report, duvet-recap and duvet-spec directives."""
 
 import re
+from collections import Counter
 from typing import ClassVar
 from typing import cast
 
@@ -41,6 +42,7 @@ from .report import section_number
 from .targets import ConfigError
 from .targets import Target
 from .views import SHOW
+from .views import Row
 from .views import View
 
 logger = logging.getLogger(__name__)
@@ -179,10 +181,30 @@ class DuvetReport(_DuvetDirective):
                 self.row(project, item.requirement, columns, item.statuses, labels)
             )
         widths = [3, 65] + [10] * len(columns)
-        legend = labels.legend(project.config.tests)
+        legend = (
+            self.summary(project, shown, labels)
+            if len(columns) == 1
+            else labels.legend(project.config.tests)
+        )
         table = render.table(headers, rows, widths, classes=["duvet-report"])
         table[SECTIONS] = sections
         return [legend, table, *messages]
+
+    @staticmethod
+    def summary(project: Project, shown: list[Row], labels: Labels) -> nodes.paragraph:
+        """Return the number of requirements in each state, for a report with one column.
+
+        With tests, the tested requirements follow.
+        """
+        counts = Counter(row.statuses[0].implementation for row in shown)
+        tested = None
+        if project.config.tests:
+            tests = [row.statuses[0].test for row in shown]
+            expected = [
+                t for t in tests if t not in (State.NOT_EXPECTED, State.NOT_APPLICABLE)
+            ]
+            tested = (sum(t == State.OK for t in expected), len(expected))
+        return labels.summary(dict(counts), tested)
 
     def section_row(self, spec: Specification, section: str, columns: int) -> nodes.row:
         """Return a row with the number and the title of a section, and links to it.

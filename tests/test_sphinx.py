@@ -161,6 +161,52 @@ def test_report_text(app: SphinxTestApp) -> None:
 
 
 @pytest.mark.sphinx("html", testroot="report", confoverrides=CONF, freshenv=True)
+def test_report_summary(app: SphinxTestApp) -> None:
+    """A report with one column counts its requirements per state. With several, it has a legend.
+
+    The counts explain the symbols. The tested requirements follow, if some are expected.
+    """
+    app.build()
+    summaries = [
+        p.astext()
+        for p in app.env.get_doctree("grouped").findall(nodes.paragraph)
+        if "duvet-summary" in p["classes"]
+    ]
+    assert summaries == [
+        "2 ½ partly done 1 … planned 1 ✘ missing 2/4 tested",
+        "3 ? not annotated yet",
+    ]
+    legend = next(
+        p
+        for p in app.env.get_doctree("report").findall(nodes.paragraph)
+        if "duvet-legend" in p["classes"]
+    )
+    assert legend.astext().startswith("✔ done · ✘ missing")
+    html = (Path(app.outdir) / "grouped.html").read_text()
+    assert (
+        '<span class="duvet-summary-count duvet-partial">2</span> '
+        '<abbr class="duvet-status duvet-partial" title="partly done">½</abbr>'
+    ) in html
+
+
+@pytest.mark.sphinx(
+    "html",
+    testroot="report",
+    confoverrides={**CONF, "duvet_labels": "text"},
+    freshenv=True,
+)
+def test_report_summary_text_labels(app: SphinxTestApp) -> None:
+    """With text labels, the descriptions only show on hover."""
+    app.build()
+    [first, _] = [
+        p.astext()
+        for p in app.env.get_doctree("grouped").findall(nodes.paragraph)
+        if "duvet-summary" in p["classes"]
+    ]
+    assert first == "2 partial 1 todo 1 missing 2/4 tested"
+
+
+@pytest.mark.sphinx("html", testroot="report", confoverrides=CONF, freshenv=True)
 def test_report_options(app: SphinxTestApp) -> None:
     """Targets, groups, sections, levels and states narrow the report.
 
@@ -368,15 +414,16 @@ def test_autoreport(app: SphinxTestApp) -> None:
     assert (folder / "rfc9999.rst").read_text() == (
         "RFC 9999 compliance\n"
         "===================\n\n"
-        "Specification: https://www.rfc-editor.org/rfc/rfc9999\n\n"
-        "Full text, with the requirements highlighted: :doc:`rfc9999-text`\n\n"
+        ".. rst-class:: duvet-links\n\n"
+        ":doc:`Read the specification <rfc9999-text>` "
+        "`rfc-editor.org ↗ <https://www.rfc-editor.org/rfc/rfc9999>`__\n\n"
         ".. duvet-recap:: spec/rfc9999.txt\n"
         "   :group-by: role\n\n"
         ".. duvet-report:: spec/rfc9999.txt\n"
         "   :group-by: role\n"
         "   :show: unannotated\n"
     )
-    assert "Specification:" not in (folder / "extension.rst").read_text()
+    assert "duvet-links" not in (folder / "extension.rst").read_text()
     assert (
         (folder / "extension.rst")
         .read_text()

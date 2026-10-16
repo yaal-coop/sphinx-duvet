@@ -9,6 +9,8 @@ Added
 - ``duvet-report`` shows the requirements of a specification,
   with the implementation and test state of each target.
   Below each state, chips link to the annotations behind it.
+  A report with one column counts its requirements per state.
+  The sections of a report are in the table of contents of its page.
 - ``duvet-recap`` counts the requirements per level and per target.
 - ``duvet_autoreport`` writes a page per specification.
 - Targets, and the targets of annotations and requirements, are set in :file:`.duvet/targets.toml`.
@@ -35,6 +37,7 @@ Added
 - A requirement cited in full with a todo annotation is partly done.
 - ``group-by: all`` shows every target in one column.
 - ``duvet_autoreport`` writes a "Specifications" index of the texts, next to the "Compliance" index.
+  A compliance page links to the text in the documentation and to the specification, as buttons.
   The navigation shows short titles, such as "RFC 7643: Core Schema". ``duvet_short_titles`` sets others.
 - A report highlights the row of the requirement or section in the URL fragment.
 - ``duvet-spec`` takes a ``targets`` option. ``duvet_autoreport`` sets it as for the reports.

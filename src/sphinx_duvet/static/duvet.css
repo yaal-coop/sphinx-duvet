@@ -521,3 +521,63 @@ table.duvet-report td:nth-child(n + 3) :is(.duvet-note, .duvet-reason, .duvet-ou
   margin-top: 0.4em;
   font-size: 0.8em;
 }
+
+/* The links to the specification, as buttons: the text in the documentation first. */
+p.duvet-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 0.5em 0 1em;
+}
+
+p.duvet-links a.reference {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3em 0.9em;
+  border: 1px solid var(--duvet-chip-border);
+  border-radius: 2em;
+  color: inherit;
+  font-size: 0.9em;
+  text-decoration: none;
+}
+
+p.duvet-links a.reference:first-child {
+  border-color: var(--duvet-strong);
+  background: var(--duvet-strong);
+  color: var(--duvet-on-strong);
+}
+
+p.duvet-links a.reference:hover,
+p.duvet-links a.reference:focus-visible {
+  border-color: currentColor;
+}
+
+p.duvet-links a.reference:first-child:hover,
+p.duvet-links a.reference:first-child:focus-visible {
+  opacity: 0.85;
+}
+
+/* The number of requirements in each state of a report, as chips. */
+p.duvet-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  margin: 0.5em 0 1em;
+  font-size: 0.85em;
+}
+
+.duvet-summary-item {
+  padding: 0.1em 0.55em;
+  border-radius: 0.35em;
+  background: var(--duvet-muted-bg);
+}
+
+.duvet-summary-count {
+  font-weight: 700;
+}
+
+/* The count has the color of the state, the label stays plain. */
+.duvet-summary-item abbr.duvet-status {
+  color: inherit;
+  font-weight: normal;
+}
