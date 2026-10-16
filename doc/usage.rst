@@ -536,6 +536,16 @@ Write them in reStructuredText files in :file:`.duvet/notes/`:
       Logging uses the standard *logging* module.
 
 The note is shown in the row of the requirement.
+A note about some targets only has a ``:targets:`` option, with :ref:`selectors`.
+It is shown in the column of those targets:
+
+.. code-block:: rst
+
+   .. duvet-note:: spec/rfc9999.txt#section-2
+      :quote: The client MUST send the token.
+      :targets: role=client
+
+      The token is sent in the Authorization header.
 
 .. _command-line:
 

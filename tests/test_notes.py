@@ -2,6 +2,7 @@ from pathlib import Path
 
 from sphinx_duvet.notes import load_notes
 from sphinx_duvet.notes import parse_notes
+from sphinx_duvet.targets import Selector
 
 
 def test_load_notes(basic_root: Path) -> None:
@@ -41,3 +42,14 @@ def test_note_body_indentation() -> None:
     text = ".. duvet-note:: spec.md#section\n\n\n  a\n    b\n\n  c\n  \nOther text.\n"
     [note] = parse_notes(text, Path("notes.rst"))
     assert note.body == ["a", "  b", "", "c"]
+
+
+def test_note_targets() -> None:
+    """A note can be about some targets only. Without the option, it is about every target."""
+    text = (
+        ".. duvet-note:: spec.md#section\n   :targets: role=client\n\n   Text.\n\n"
+        ".. duvet-note:: spec.md#section\n\n   Text.\n"
+    )
+    client, every = parse_notes(text, Path("notes.rst"))
+    assert client.targets == [Selector.parse("role=client")]
+    assert every.targets is None

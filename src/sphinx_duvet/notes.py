@@ -4,6 +4,9 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from .targets import Selector
+from .targets import parse_selectors
+
 _NOTE_PATTERN = re.compile(r"^\.\. duvet-note::\s+(\S+)\s*$")
 _OPTION_PATTERN = re.compile(r"^\s+:(\w+):\s*(.*)$")
 
@@ -17,13 +20,16 @@ class Note:
     body: list[str]
     source: Path
     line: int
+    targets: list[Selector] | None = None
+    """The targets the note is about. :data:`None` means every target."""
 
 
 def load_notes(folder: Path, prefix: str = "") -> list[Note]:
     """Read the duvet-note directives of the .rst files of a folder.
 
     Each note starts with ``.. duvet-note:: spec#section``, has a ``:quote:``
-    option, then an indented body. The prefix is added to the specification paths.
+    option, an optional ``:targets:`` option, then an indented body.
+    The prefix is added to the specification paths.
     """
     if not folder.is_dir():
         return []
@@ -63,6 +69,9 @@ def parse_notes(text: str, source: Path) -> list[Note]:
                 body=_dedent(body),
                 source=source,
                 line=start,
+                targets=parse_selectors(options["targets"])
+                if "targets" in options
+                else None,
             )
         )
     return notes

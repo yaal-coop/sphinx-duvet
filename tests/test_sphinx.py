@@ -1275,6 +1275,43 @@ def test_outside_for_some_targets(
     assert "Out of scope" not in row.astext()
 
 
+def test_note_for_some_targets(
+    make_app: Callable[..., SphinxTestApp], tmp_path: Path
+) -> None:
+    """A note about some targets is in the column of those targets, not below the text."""
+    root = tmp_path / "basic"
+    shutil.copytree(PROJECT, root)
+    (root / ".duvet" / "notes" / "targets.rst").write_text(
+        ".. duvet-note:: spec/rfc9999.txt#section-3\n"
+        "   :quote: reject expired tokens,\n"
+        "   :targets: framework=django\n\n"
+        "   Django checks the expiry.\n"
+    )
+    source = tmp_path / "doc"
+    source.mkdir()
+    (source / "conf.py").write_text('extensions = ["sphinx_duvet"]\n')
+    (source / "index.rst").write_text(
+        "Report\n======\n\n.. duvet-report:: spec/rfc9999.txt\n   :sections: 3\n"
+    )
+    app = make_app(
+        "html",
+        srcdir=source,
+        confoverrides={
+            "duvet_root": str(root),
+            "duvet_report_json": str(root / "report.json"),
+        },
+    )
+    app.build()
+    [row] = [
+        row
+        for row in app.env.get_doctree("index").findall(nodes.row)
+        if "reject expired tokens" in row.astext()
+    ]
+    _, text, flask, django, client = row.children
+    assert "Django checks the expiry." in django.astext()
+    assert "Django checks the expiry." not in text.astext() + flask.astext()
+
+
 def test_menu_title() -> None:
     """The navigation shows the part of the title after its last colon, or a given short title."""
     title = "RFC 7643: System for Cross-domain Identity Management: Core Schema"

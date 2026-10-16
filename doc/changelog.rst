@@ -16,6 +16,7 @@ Added
 - Targets, and the targets of annotations and requirements, are set in :file:`.duvet/targets.toml`.
   Default patterns that start with ``.duvet/`` give targets to the planned work and the deviations.
 - Notes in :file:`.duvet/notes/` add text to requirements.
+  A note about some targets shows in their column.
 - The ``sphinx-duvet`` command shows the reports in a terminal, and checks them in the CI.
 - Projects can include a shared project, for instance a git submodule,
   with its targets, applicability, requirements and notes.

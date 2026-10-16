@@ -36,11 +36,13 @@ from .compliance import Counts
 from .compliance import Project
 from .compliance import State
 from .compliance import Status
+from .notes import Note
 from .report import Requirement
 from .report import Specification
 from .report import section_number
 from .targets import ConfigError
 from .targets import Target
+from .targets import matches_any
 from .views import SHOW
 from .views import Row
 from .views import View
@@ -290,7 +292,13 @@ class DuvetReport(_DuvetDirective):
         cells: list[nodes.Node | list[nodes.Node]] = [level, text]
         for (_, targets), status in zip(columns, statuses, strict=True):
             cell = self.status_cell(project, requirement, targets, status, labels)
-            cells.append(cell + [node.deepcopy() for node in shared])
+            notes = [
+                self.note_node(note)
+                for note in requirement.notes
+                if note.targets is not None
+                and any(matches_any(note.targets, t) for t in targets)
+            ]
+            cells.append(cell + notes + [node.deepcopy() for node in shared])
         node = render.row(cells, ids=[anchor])
         strength = render.level_strength(requirement.level)
         level_entry = cast(nodes.entry, node[0])
@@ -308,15 +316,9 @@ class DuvetReport(_DuvetDirective):
         Below the text, the reason starts with "Out of scope:". In the column of the state,
         the state already says it.
         """
-        comments: list[nodes.Node] = []
-        for note in requirement.notes:
-            container = nodes.container(classes=["duvet-note"])
-            self.state.nested_parse(
-                StringList(note.body, source=str(note.source)),
-                self.content_offset,
-                container,
-            )
-            comments.append(container)
+        comments: list[nodes.Node] = [
+            self.note_node(note) for note in requirement.notes if note.targets is None
+        ]
         if requirement.outside is not None:
             reason = requirement.outside
             comments.append(
@@ -326,6 +328,16 @@ class DuvetReport(_DuvetDirective):
                 )
             )
         return comments
+
+    def note_node(self, note: Note) -> nodes.container:
+        """Return the body of a note, parsed as reStructuredText."""
+        container = nodes.container(classes=["duvet-note"])
+        self.state.nested_parse(
+            StringList(note.body, source=str(note.source)),
+            self.content_offset,
+            container,
+        )
+        return container
 
     @staticmethod
     def status_cell(
