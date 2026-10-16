@@ -30,6 +30,7 @@ from ._labels import Labels
 from ._labels import label_sources
 from ._project import LoadedProject
 from ._project import get_project
+from ._toc import SECTIONS
 from .compliance import Counts
 from .compliance import Project
 from .compliance import State
@@ -166,17 +167,21 @@ class DuvetReport(_DuvetDirective):
             ]
         headers = ["Level", "Requirement", *(label for label, _ in columns)]
         rows: list[nodes.row] = []
+        sections: list[tuple[str, str, str]] = []
         section = None
         for item in shown:
             if item.requirement.section != section:
                 section = item.requirement.section
-                rows.append(self.section_row(spec, section, len(headers)))
+                section_row = self.section_row(spec, section, len(headers))
+                sections.append(_toc_entry(section_row, section))
+                rows.append(section_row)
             rows.append(
                 self.row(project, item.requirement, columns, item.statuses, labels)
             )
         widths = [3, 65] + [10] * len(columns)
         legend = labels.legend(project.config.tests)
         table = render.table(headers, rows, widths, classes=["duvet-report"])
+        table[SECTIONS] = sections
         return [legend, table, *messages]
 
     def section_row(self, spec: Specification, section: str, columns: int) -> nodes.row:
@@ -408,6 +413,16 @@ class DuvetRecap(_DuvetDirective):
                 render.paragraph(nodes.Text(f"{count.tested}/{count.needs_test}"))
             )
         return cells
+
+
+def _toc_entry(row: nodes.row, section: str) -> tuple[str, str, str]:
+    """Return the anchor, the title and the number of a section row, for the table of contents."""
+    [title] = [
+        node
+        for node in row.findall(nodes.inline)
+        if "duvet-text-link" in node["classes"]
+    ]
+    return row["ids"][0], title.astext(), section_number(section)
 
 
 def _highlight(value: str) -> str:

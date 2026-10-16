@@ -22,6 +22,7 @@ from ._render import depart_permalink_html
 from ._render import duvet_permalink
 from ._render import skip_permalink
 from ._render import visit_permalink_html
+from ._toc import add_report_sections
 
 __version__ = metadata.version("sphinx-duvet")
 
@@ -65,6 +66,8 @@ def setup(app: Sphinx) -> dict[str, Any]:
     app.connect("config-inited", check_labels)
     app.connect("builder-inited", load_project)
     app.connect("builder-inited", generate_pages)
+    # After the collector of Sphinx, which builds the table of contents.
+    app.connect("doctree-read", add_report_sections, priority=600)
     return {
         "version": __version__,
         "parallel_read_safe": True,
