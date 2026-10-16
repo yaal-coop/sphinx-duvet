@@ -309,8 +309,76 @@ table.duvet-table tr:hover .duvet-rule-link {
   visibility: visible;
 }
 
-/* The level of a requirement and its permalink stay on one line. */
-.duvet-level-cell {
+/* The level of a requirement is a narrow column, written vertically.
+   The cell has the style of the badge: filled for MUST, outlined for SHOULD, plain for MAY.
+   Its content fills the cell but 1px at the top and the bottom,
+   so the cells of two rows with the same level stay apart.
+   The minimal height leaves room for SHOULD. */
+table.duvet-table td.duvet-level-column {
+  position: relative;
+  width: 2em;
+  min-width: 2em;
+  height: 4.6em;
+  padding: 0;
+}
+
+table.duvet-table td.duvet-level-column > p.duvet-level-cell {
+  position: absolute;
+  inset: 1px 0;
+  display: flex;
+  margin: 0;
+}
+
+.duvet-level-cell > *,
+.duvet-level-link {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+table.duvet-table a.duvet-level-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 0;
+}
+
+table.duvet-table a.duvet-level-link:focus-visible {
+  outline: 2px solid var(--duvet-warn);
+  outline-offset: -2px;
+}
+
+.duvet-level-word {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.72em;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.duvet-level-column-must > .duvet-level-cell {
+  background: var(--duvet-strong);
+  color: var(--duvet-on-strong);
+  font-weight: 700;
+}
+
+.duvet-level-column-should > .duvet-level-cell {
+  box-shadow: inset 0 0 0 2px var(--duvet-strong);
+  color: var(--duvet-strong);
+  font-weight: 600;
+}
+
+.duvet-level-column-may > .duvet-level-cell {
+  color: var(--duvet-muted);
+}
+
+/* The header of the level column is too wide for it: only screen readers read it. */
+table.duvet-report > thead th:first-child > p {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 

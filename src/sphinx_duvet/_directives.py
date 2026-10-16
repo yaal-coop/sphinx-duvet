@@ -174,9 +174,13 @@ class DuvetReport(_DuvetDirective):
             rows.append(
                 self.row(project, item.requirement, columns, item.statuses, labels)
             )
-        widths = [8, 60] + [10] * len(columns)
+        widths = [3, 65] + [10] * len(columns)
         legend = labels.legend(project.config.tests)
-        return [legend, render.table(headers, rows, widths), *messages]
+        return [
+            legend,
+            render.table(headers, rows, widths, classes=["duvet-report"]),
+            *messages,
+        ]
 
     def section_row(self, spec: Specification, section: str, columns: int) -> nodes.row:
         """Return a row with the number and the title of a section, and links to it.
@@ -269,16 +273,21 @@ class DuvetReport(_DuvetDirective):
                     classes=["duvet-outside-reason"],
                 )
             )
-        level = render.paragraph(
-            render.level_badge(requirement.level), classes=["duvet-level-cell"]
-        )
-        level.extend(self.permalink(anchor, requirement.id))
+        permalink = anchor if self.config.html_permalinks else None
+        level = render.level_cell(requirement.level, permalink, requirement.id)
         cells: list[nodes.Node | list[nodes.Node]] = [level, text]
         for (_, targets), status in zip(columns, statuses, strict=True):
             cells.append(
                 self.status_cell(project, requirement, targets, status, labels)
             )
-        return render.row(cells, ids=[anchor])
+        node = render.row(cells, ids=[anchor])
+        strength = render.level_strength(requirement.level)
+        level_entry = cast(nodes.entry, node[0])
+        level_entry["classes"] += [
+            "duvet-level-column",
+            f"duvet-level-column-{strength}",
+        ]
+        return node
 
     @staticmethod
     def status_cell(

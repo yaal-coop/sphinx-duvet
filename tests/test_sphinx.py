@@ -134,7 +134,13 @@ def test_report_text(app: SphinxTestApp) -> None:
     doctree = app.env.get_doctree("report")
     classes = {c for node in doctree.findall(nodes.inline) for c in node["classes"]}
     assert {"duvet-bcp14-must", "duvet-bcp14-should", "duvet-bcp14-may"} <= classes
-    assert {"duvet-level-must", "duvet-level-should", "duvet-level-may"} <= classes
+    assert {"duvet-level-word"} <= classes
+    columns = {c for node in doctree.findall(nodes.entry) for c in node["classes"]}
+    assert {
+        "duvet-level-column-must",
+        "duvet-level-column-should",
+        "duvet-level-column-may",
+    } <= columns
     assert "Deviation: Caching is up to the application." in doctree.astext()
     [note] = [
         n for n in doctree.findall(nodes.container) if "duvet-note" in n["classes"]
@@ -702,8 +708,8 @@ def test_rule_anchors(app: SphinxTestApp) -> None:
         "duvet-section-rfc9999-2.1~2",
     } <= set(ids)
     assert (
-        '<a class="headerlink reference internal" href="#duvet-rfc9999-2-1" '
-        'title="rfc9999#2-1">¶</a>'
+        '<a class="duvet-level-link reference internal" href="#duvet-rfc9999-2-1" '
+        'title="rfc9999#2-1">'
     ) in html
     assert (
         '<a class="headerlink reference internal" href="#duvet-section-rfc9999-2" '
@@ -1100,7 +1106,9 @@ def test_report_links_to_text(app: SphinxTestApp) -> None:
         for p in doctree.findall(nodes.paragraph)
         if "duvet-level-cell" in p["classes"]
     )
-    assert [child.tagname for child in level.children] == ["inline", "duvet_permalink"]
+    [link] = level.children
+    assert (link["refid"], link["reftitle"]) == ("duvet-rfc9999-2-1", "rfc9999#2-1")
+    assert link.astext() == "MUST"
     inventory = zlib.decompress(
         (Path(app.outdir) / "objects.inv").read_bytes().split(b"\n", 4)[4]
     )

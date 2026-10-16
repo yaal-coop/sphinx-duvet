@@ -168,10 +168,31 @@ def requirement_text(text: str) -> nodes.paragraph:
     return node
 
 
+def level_strength(level: str) -> str:
+    """Return the strength of a requirement level: must, should or may."""
+    return _BCP14.get(level, "may")
+
+
 def level_badge(level: str) -> nodes.inline:
     """Return a badge for a requirement level. The stronger the level, the heavier the badge."""
-    strength = _BCP14.get(level, "may")
+    strength = level_strength(level)
     return nodes.inline(text=level, classes=["duvet-level", f"duvet-level-{strength}"])
+
+
+def level_cell(level: str, anchor: str | None, title: str) -> nodes.paragraph:
+    """Return the level of a requirement, written vertically, as a link to its row.
+
+    Without an anchor, the level is not a link.
+    """
+    word = nodes.inline(text=level, classes=["duvet-level-word"])
+    cell = paragraph(classes=["duvet-level-cell"])
+    if anchor is None:
+        cell += word
+        return cell
+    cell += nodes.reference(
+        "", "", word, refid=anchor, reftitle=title, classes=["duvet-level-link"]
+    )
+    return cell
 
 
 Cells = Sequence[nodes.Node | list[nodes.Node]]
