@@ -279,6 +279,28 @@ def test_ietf_title_with_a_long_line() -> None:
     )
 
 
+def test_ietf_title_with_a_full_width_line() -> None:
+    """A title line that fills the whole width is part of the title."""
+    text = (
+        "The OAuth 2.0 Authorization Framework: JWT-Secured Authorization Request\n"
+        "                                 (JAR)\n\n"
+        "Abstract\n"
+    )
+    assert ietf_title(text) == (
+        "The OAuth 2.0 Authorization Framework: JWT-Secured Authorization Request (JAR)"
+    )
+
+
+def test_ietf_title_of_an_internet_draft() -> None:
+    """The name of an Internet-Draft below its title is left out."""
+    text = (
+        "               Identity Assertion JWT Authorization Grant\n"
+        "           draft-ietf-oauth-identity-assertion-authz-grant-04\n\n"
+        "Abstract\n"
+    )
+    assert ietf_title(text) == "Identity Assertion JWT Authorization Grant"
+
+
 def test_join_lines() -> None:
     """Lines are joined with spaces, except after a hyphen that ends a line."""
     assert join_lines(["in multi-", "domain  cases --", "for example"]) == (

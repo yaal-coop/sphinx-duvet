@@ -22,6 +22,7 @@ _SECTION = _V2 + "annotations.json#section"
 _REQUIREMENT = _V2 + "annotations.json#requirement"
 _CITE = _V2 + "annotations.json#cite"
 _COMPOUND_END = re.compile(r"(?<=\w-)\n\s*")
+_DRAFT_NAME = re.compile(r"draft-[a-z0-9-]+")
 _COMPOUND_SPACE = re.compile(r"(?<=\w-) (?=\w)")
 
 Report = dict[str, Any]
@@ -404,11 +405,13 @@ def ietf_title(text: str) -> str | None:
         return None
     block: list[str] = []
     for line in reversed(lines[:end]):
-        # A long title line is centered with a single space.
-        if line.strip() and line.startswith(" "):
+        if line.strip():
             block.insert(0, line.strip())
         elif block:
             break
+    # An Internet-Draft gives its name below its title.
+    if len(block) > 1 and _DRAFT_NAME.fullmatch(block[-1]):
+        block.pop()
     title = " ".join(block)
     number = re.search(r"Request for Comments:\s*(\d+)", text)
     if number and title:
