@@ -19,6 +19,7 @@ from sphinx_duvet._domain import REPORT
 from sphinx_duvet._domain import TEXT
 from sphinx_duvet._domain import RuleLocation
 from sphinx_duvet._labels import duvet_label
+from sphinx_duvet.report import Cite
 
 PROJECT = Path(__file__).parent / "projects" / "basic"
 CONF = {
@@ -107,11 +108,11 @@ def test_report(app: SphinxTestApp) -> None:
         "2.1. Parameters RFC ↗",
         "3. Security RFC ↗",
     ]
-    assert (
-        body[0][1] == "The client MUST send the token. src/client.py:2 (implementation)"
-    )
-    assert body[0][2:] == ["∅", "∅", "impl. ✔ test ✘"]
+    assert body[0][1] == "The client MUST send the token."
+    assert body[0][2:] == ["∅", "∅", "impl. ✔ client.py 2 test ✘"]
     assert body[5][2:] == ["?", "?", "?"]
+    [implication] = [row for row in body if row[1] == "The token MUST NOT be empty."]
+    assert implication[2] == "impl. ✔ implication common.py 4 test —"
 
 
 @pytest.mark.sphinx("html", testroot="report", confoverrides=CONF, freshenv=True)
@@ -134,7 +135,7 @@ def test_report_text(app: SphinxTestApp) -> None:
     classes = {c for node in doctree.findall(nodes.inline) for c in node["classes"]}
     assert {"duvet-bcp14-must", "duvet-bcp14-should", "duvet-bcp14-may"} <= classes
     assert {"duvet-level-must", "duvet-level-should", "duvet-level-may"} <= classes
-    assert "Caching is up to the application." in doctree.astext()
+    assert "Deviation: Caching is up to the application." in doctree.astext()
     [note] = [
         n for n in doctree.findall(nodes.container) if "duvet-note" in n["classes"]
     ]
@@ -159,7 +160,7 @@ def test_report_options(app: SphinxTestApp) -> None:
     )
     [table] = missing.findall(nodes.table)
     assert headers(table) == ["Level", "Requirement", "server"]
-    assert [re.split(" (?:src|\\.duvet)/", row[1])[0] for row in rows(table)] == [
+    assert [re.split(r"(?<=[.,]) ", row[1])[0] for row in rows(table)] == [
         "The server SHOULD log the request.",
         "The server MUST validate the café parameter and the response MUST be encoded as JSON.",
         "The server MUST reject replayed tokens and SHOULD alert the administrator.",
@@ -549,7 +550,7 @@ def test_text_labels(app: SphinxTestApp) -> None:
     """With the text preset, the legend leaves out the descriptions that repeat a label."""
     app.build()
     [table] = tables(app, "report")
-    assert rows(table)[0][2:] == ["n/a", "n/a", "impl. done test missing"]
+    assert rows(table)[0][2:] == ["n/a", "n/a", "impl. done client.py 2 test missing"]
     doctree = app.env.get_doctree("report")
     legend = next(
         p for p in doctree.findall(nodes.paragraph) if "duvet-legend" in p["classes"]
@@ -572,7 +573,7 @@ def test_markup_labels(app: SphinxTestApp) -> None:
     """Labels are inline markup, such as an icon role. Other states keep their symbol."""
     app.build()
     [table] = tables(app, "report")
-    assert rows(table)[0][2:] == ["∅", "∅", "impl. yes test no"]
+    assert rows(table)[0][2:] == ["∅", "∅", "impl. yes client.py 2 test no"]
     doctree = app.env.get_doctree("report")
     ok = next(n for n in doctree.findall(duvet_label) if n.astext() == "yes")
     assert isinstance(ok[0], nodes.emphasis)
@@ -610,7 +611,7 @@ def test_unknown_preset(app: SphinxTestApp) -> None:
         for m in warnings(app)
     )
     [table] = tables(app, "report")
-    assert rows(table)[0][2:] == ["∅", "∅", "impl. ✔ test ✘"]
+    assert rows(table)[0][2:] == ["∅", "∅", "impl. ✔ client.py 2 test ✘"]
 
 
 @pytest.mark.sphinx("text", testroot="report", confoverrides=CONF, freshenv=True)
@@ -636,7 +637,7 @@ def test_dependency_cites(
     app = make_app(*args, **kwargs)
     app.build()
     doctree = app.env.get_doctree("index")
-    assert "fakelib/__init__.py:2 (implementation, fakelib 1.2.3)" in doctree.astext()
+    assert "fakelib 1.2.3 __init__.py 2" in doctree.astext()
     uris = [
         ref["refuri"] for ref in doctree.findall(nodes.reference) if "refuri" in ref
     ]
@@ -751,6 +752,27 @@ def test_without_permalinks(app: SphinxTestApp) -> None:
 def test_link_without_uri() -> None:
     """Without an address, a link is plain text, such as a cite without a repository link."""
     assert isinstance(render.link("src/a.py:1", None), nodes.Text)
+
+
+def test_chips() -> None:
+    """Cites of a file share a chip with a link per line. Long names are shortened."""
+    blob = "https://example.org/blob/main"
+    name = "tests/test_service_provider_configuration.py"
+    cites = [
+        Cite("TEST", name, 40, [], blob_link=blob),
+        Cite("TEST", name, 12, [], blob_link=blob),
+        Cite("TODO", ".duvet/todo/rfc9999.md", 3, []),
+    ]
+    [box] = render.chips(cites, "TEST")
+    todo, shared = box.children
+    assert shared.astext() == "test_servic…guration.py 12 · 40"
+    assert [ref["refuri"] for ref in shared.findall(nodes.reference)] == [
+        f"{blob}/{name}#L12",
+        f"{blob}/{name}#L40",
+    ]
+    assert todo.astext() == "todo rfc9999.md 3"
+    assert not list(todo.findall(nodes.reference))
+    assert render.chips([], "TEST") == []
 
 
 @pytest.mark.sphinx("html", testroot="spec", confoverrides=CONF, freshenv=True)

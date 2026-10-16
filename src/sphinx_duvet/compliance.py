@@ -27,6 +27,7 @@ from .targets import matches_any
 
 _IMPLEMENTATION_TYPES = {"CITATION", "IMPLICATION", "EXCEPTION"}
 _TEST_TYPES = {"TEST", "IMPLICATION"}
+_TEST_ONLY_TYPES = {"TEST"}
 ALL = "all"
 """The group-by value that puts every target in one column."""
 LEVELS = ("MUST", "SHOULD", "MAY")
@@ -315,6 +316,32 @@ class Project:
             return Status(implementation, State.OK if tested else State.NOT_EXPECTED)
         tested = bool(tests) and requirement.covered_by(tests, within=local)
         return Status(implementation, State.OK if tested else State.MISSING)
+
+    def evidence(
+        self, requirement: Requirement, targets: list[Target]
+    ) -> tuple[list[Cite], list[Cite]]:
+        """Return the cites that count for the implementation and the tests of some targets.
+
+        They are matched as in :meth:`status`: tests at the granularity of the tests.
+        An implication, both implementation and test, is only an implementation here.
+        """
+        keys = self.config.test_granularity
+        implementations = [
+            c
+            for c in requirement.cites
+            if c.type not in _TEST_ONLY_TYPES
+            and (c.covers is None or any(matches_any(c.covers, t) for t in targets))
+        ]
+        tests = [
+            c
+            for c in requirement.cites
+            if c.type in _TEST_ONLY_TYPES
+            and (
+                c.covers is None
+                or any(matches_any(_project(c.covers, keys), t) for t in targets)
+            )
+        ]
+        return implementations, tests
 
     def group(self, requirement: Requirement, targets: list[Target]) -> Status:
         """Return the status of a requirement for several targets.

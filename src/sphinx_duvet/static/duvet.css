@@ -16,6 +16,7 @@ body[data-theme="light"] {
   --duvet-muted-bg: rgba(110, 119, 129, 0.14);
   --duvet-exception-bg: rgba(130, 80, 223, 0.14);
   --duvet-target-bg: rgba(212, 167, 44, 0.24);
+  --duvet-chip-border: rgba(110, 119, 129, 0.35);
 }
 
 /* Furo in auto mode follows the system preference. */
@@ -34,6 +35,7 @@ body[data-theme="light"] {
     --duvet-muted-bg: rgba(139, 148, 158, 0.2);
     --duvet-exception-bg: rgba(188, 140, 255, 0.22);
     --duvet-target-bg: rgba(210, 153, 34, 0.28);
+    --duvet-chip-border: rgba(139, 148, 158, 0.4);
   }
 }
 
@@ -53,6 +55,7 @@ body[data-theme="dark"] {
   --duvet-muted-bg: rgba(139, 148, 158, 0.2);
   --duvet-exception-bg: rgba(188, 140, 255, 0.22);
   --duvet-target-bg: rgba(210, 153, 34, 0.28);
+  --duvet-chip-border: rgba(139, 148, 158, 0.4);
 }
 
 .duvet-status {
@@ -93,13 +96,76 @@ abbr.duvet-status {
   font-weight: normal;
 }
 
-.duvet-cites {
-  font-size: 0.85em;
-  margin: 0.25em 0 0;
+/* The annotations behind a state, as chips below it: one chip per file.
+   The selector is specific enough to override the margins of cell paragraphs. */
+table.duvet-table td p.duvet-chips {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15em;
+  margin: 0.1em 0 0.35em 0.9em;
 }
 
-.duvet-cites p {
-  margin: 0;
+/* Two classes, so the border wins over the link styles of themes. */
+.duvet-chips .duvet-chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 0.45em;
+  border: 1px solid var(--duvet-chip-border);
+  border-radius: 1em;
+  font-size: 0.72em;
+  font-weight: normal;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+/* The chips keep the color of the text, whatever the links of the theme. */
+a.duvet-chip,
+.duvet-chip a {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.duvet-chip a {
+  border-bottom: 0;
+}
+
+.duvet-chips a.duvet-chip:hover,
+.duvet-chips a.duvet-chip:focus-visible {
+  border-color: currentColor;
+}
+
+/* Line numbers have some room around them, so they are easier to click. */
+a.duvet-chip-line {
+  padding: 0 0.2em;
+  border-radius: 0.3em;
+}
+
+a.duvet-chip-line:hover,
+a.duvet-chip-line:focus-visible {
+  background: var(--duvet-muted-bg);
+}
+
+.duvet-chip-name,
+.duvet-chip-line {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.duvet-chip-label {
+  color: var(--duvet-muted);
+  font-weight: 600;
+}
+
+/* Long names are shortened in the middle, and in full on hover. */
+abbr.duvet-chip-name {
+  text-decoration: none;
+  border-bottom: 0;
+}
+
+.duvet-reason {
+  color: var(--duvet-muted);
+  font-size: 0.9em;
 }
 
 .duvet-caption {

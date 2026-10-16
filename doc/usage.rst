@@ -142,8 +142,10 @@ Directives
    The requirements are grouped by section, under a row with the title of the section.
    Its links lead to the section in the text of the specification, if a page shows it
    with :rst:dir:`duvet-spec`, and in the RFC. Each row shows the level of the requirement,
-   its text, the annotations that cite it and its notes.
+   its text, its notes and the reasons of its deviations.
    Each cell shows the implementation state and the test state.
+   Below each state, a chip per file links to the annotations behind it, one link per line.
+   Long file names are shortened, and shown in full on hover.
 
    On hover, a permalink follows the level of each requirement and the title of each section,
    as for headings. ``html_permalinks`` and ``html_permalinks_icon`` apply.

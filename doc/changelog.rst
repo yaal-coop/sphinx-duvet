@@ -8,6 +8,7 @@ Added
 ^^^^^
 - ``duvet-report`` shows the requirements of a specification,
   with the implementation and test state of each target.
+  Below each state, chips link to the annotations behind it.
 - ``duvet-recap`` counts the requirements per level and per target.
 - ``duvet_autoreport`` writes a page per specification.
 - Targets, and the targets of annotations and requirements, are set in :file:`.duvet/targets.toml`.

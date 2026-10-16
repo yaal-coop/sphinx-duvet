@@ -8,6 +8,7 @@ from sphinx import addnodes
 from sphinx.transforms.post_transforms import SphinxPostTransform
 from sphinx.writers.html5 import HTML5Translator
 
+from ._labels import duvet_label
 from .report import Cite
 
 # Key words of RFC 2119 and RFC 8174, the longest first, with their strength.
@@ -57,12 +58,75 @@ def skip_permalink(translator: nodes.NodeVisitor, node: duvet_permalink) -> None
     raise nodes.SkipNode
 
 
-def cite_kind(cite: Cite) -> str:
-    """Return the kind of a cite, and the dependency it comes from."""
-    kind = CITE_TYPES.get(cite.type, cite.type.lower())
-    if cite.dependency is None:
-        return kind
-    return f"{kind}, {cite.dependency} {cite.version}".rstrip()
+def chips(cites: Sequence[Cite], plain: str) -> list[nodes.Node]:
+    """Return the cites as chips, one per file and kind, with a link per line.
+
+    Cites of the plain type have no label: their place in the cell says their kind.
+    A chip with one line is a link as a whole.
+    """
+    groups: dict[tuple[str, str], list[Cite]] = {}
+    for cite in sorted(cites, key=lambda c: (c.path, c.line)):
+        label = (
+            "" if cite.type == plain else CITE_TYPES.get(cite.type, cite.type.lower())
+        )
+        if cite.dependency is not None:
+            label = f"{label} {cite.dependency} {cite.version}".strip()
+        groups.setdefault((label, cite.path), []).append(cite)
+    if not groups:
+        return []
+    box = nodes.paragraph(classes=["duvet-chips"])
+    for (label, path), group in groups.items():
+        box += _chip(label, path, group)
+    return [box]
+
+
+def _chip(label: str, path: str, cites: list[Cite]) -> nodes.Element:
+    """Return the chip of the cites of a file."""
+    name = _short_name(path)
+    head: list[nodes.Node] = []
+    if label:
+        head += [
+            nodes.inline(text=label, classes=["duvet-chip-label"]),
+            nodes.Text(" "),
+        ]
+    first = cites[0]
+    if len(cites) == 1 and first.url is not None:
+        head += [nodes.inline(text=name, classes=["duvet-chip-name"]), nodes.Text(" ")]
+        return nodes.reference(
+            "",
+            "",
+            *head,
+            nodes.inline(text=str(first.line), classes=["duvet-chip-line"]),
+            refuri=first.url,
+            reftitle=f"{path}:{first.line}",
+            classes=["duvet-chip"],
+        )
+    chip = nodes.inline(classes=["duvet-chip"])
+    chip.extend(head)
+    chip += duvet_label(name, name, explanation=path, classes=["duvet-chip-name"])
+    for index, cite in enumerate(cites):
+        chip += nodes.Text(" · " if index else " ")
+        number = str(cite.line)
+        if cite.url is None:
+            chip += nodes.inline(text=number, classes=["duvet-chip-line"])
+            continue
+        chip += nodes.reference(
+            number,
+            number,
+            refuri=cite.url,
+            reftitle=f"{path}:{cite.line}",
+            classes=["duvet-chip-line"],
+        )
+    return chip
+
+
+def _short_name(path: str, width: int = 24) -> str:
+    """Return the name of a file, shortened in the middle if it is long."""
+    name = path.rsplit("/", 1)[-1]
+    if len(name) <= width:
+        return name
+    half = (width - 1) // 2
+    return name[:half] + "…" + name[-half:]
 
 
 def paragraph(*children: nodes.Node, classes: Sequence[str] = ()) -> nodes.paragraph:

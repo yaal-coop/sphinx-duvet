@@ -30,12 +30,14 @@ from ._labels import label_sources
 from ._project import LoadedProject
 from ._project import get_project
 from .compliance import Counts
+from .compliance import Project
 from .compliance import State
 from .compliance import Status
 from .report import Requirement
 from .report import Specification
 from .report import section_number
 from .targets import ConfigError
+from .targets import Target
 from .views import SHOW
 from .views import View
 
@@ -168,7 +170,9 @@ class DuvetReport(_DuvetDirective):
             if item.requirement.section != section:
                 section = item.requirement.section
                 rows.append(self.section_row(spec, section, len(headers)))
-            rows.append(self.row(item.requirement, item.statuses, labels))
+            rows.append(
+                self.row(project, item.requirement, columns, item.statuses, labels)
+            )
         widths = [8, 60] + [10] * len(columns)
         return [labels.legend(), render.table(headers, rows, widths), *messages]
 
@@ -219,13 +223,18 @@ class DuvetReport(_DuvetDirective):
         return list(children)
 
     def row(
-        self, requirement: Requirement, statuses: list[Status], labels: Labels
+        self,
+        project: Project,
+        requirement: Requirement,
+        columns: list[tuple[str, list[Target]]],
+        statuses: list[Status],
+        labels: Labels,
     ) -> nodes.row:
         """Return the row of a requirement: level, text, statuses.
 
         A permalink after the level shows the identifier of the requirement.
         A link after the text leads to the requirement in the text of the specification,
-        if a page shows it.
+        if a page shows it. The annotations of each column are chips below its states.
         """
         anchor = self.anchor(requirement)
         sentence = render.requirement_text(requirement.text)
@@ -233,17 +242,13 @@ class DuvetReport(_DuvetDirective):
             "§", "text", requirement.id, classes=["duvet-rule-link"]
         )
         text: list[nodes.Node] = [sentence]
-        if requirement.cites:
-            items = nodes.bullet_list(classes=["duvet-cites"])
-            for cite in sorted(requirement.cites, key=lambda c: (c.path, c.line)):
-                item = render.paragraph(
-                    render.link(f"{cite.path}:{cite.line}", cite.url)
-                )
-                item += nodes.Text(f" ({render.cite_kind(cite)})")
-                if cite.reason:
-                    item += nodes.Text(f": {cite.reason}")
-                items += nodes.list_item("", item)
-            text.append(items)
+        reasons = dict.fromkeys(c.reason for c in requirement.cites if c.reason)
+        text += [
+            render.paragraph(
+                nodes.Text(f"Deviation: {reason}"), classes=["duvet-reason"]
+            )
+            for reason in reasons
+        ]
         for note in requirement.notes:
             container = nodes.container(classes=["duvet-note"])
             self.state.nested_parse(
@@ -264,8 +269,31 @@ class DuvetReport(_DuvetDirective):
         )
         level.extend(self.permalink(anchor, requirement.id))
         cells: list[nodes.Node | list[nodes.Node]] = [level, text]
-        cells += [labels.status_cell(status) for status in statuses]
+        for (_, targets), status in zip(columns, statuses, strict=True):
+            cells.append(
+                self.status_cell(project, requirement, targets, status, labels)
+            )
         return render.row(cells, ids=[anchor])
+
+    @staticmethod
+    def status_cell(
+        project: Project,
+        requirement: Requirement,
+        targets: list[Target],
+        status: Status,
+        labels: Labels,
+    ) -> list[nodes.Node]:
+        """Return the states of a column, each one followed by the annotations behind it."""
+        cell = labels.status_cell(status)
+        if len(cell) == 1:
+            return cell
+        implementations, tests = project.evidence(requirement, targets)
+        return [
+            cell[0],
+            *render.chips(implementations, "CITATION"),
+            cell[1],
+            *render.chips(tests, "TEST"),
+        ]
 
 
 class DuvetRecap(_DuvetDirective):
