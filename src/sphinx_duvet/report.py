@@ -99,6 +99,7 @@ class Requirement:
         # Workaround for Duvet: two adjacent quotes leave the blank between them
         # unquoted, so Duvet finds the requirement incomplete. Blanks are not checked.
         # Remove when Duvet joins adjacent quotes.
+        # See https://github.com/awslabs/duvet/issues/268.
         return all(
             self.contents[offset : offset + 1].isspace()
             or any(start <= offset < end for start, end in quoted)
@@ -168,6 +169,7 @@ def run_duvet(
         # written next to the configuration, but read from .duvet/requirements.
         # So the generated configuration goes in the .duvet folder.
         # Remove when Duvet reads the requirements from where it writes them.
+        # See https://github.com/awslabs/duvet/issues/194.
         with tempfile.NamedTemporaryFile(
             "w", suffix=".toml", prefix=".sphinx-duvet-", dir=root / ".duvet"
         ) as config_file:
@@ -190,6 +192,8 @@ def _run(command: list[str], root: Path, executable: str, path: Path) -> Report:
     except FileNotFoundError as exc:
         # Workaround for Duvet: it has no prebuilt binary, so it is installed with cargo.
         # Update the message when Duvet publishes binaries or Python wheels.
+        # See https://github.com/awslabs/duvet/issues/267
+        # and https://github.com/awslabs/duvet/pull/213.
         raise DuvetNotFound(
             f"Duvet is not installed: {executable!r} not found. "
             "Install it with: cargo install duvet --locked"
@@ -234,6 +238,7 @@ def parse_report(report: Report) -> dict[str, Specification]:
                 spec=inline[src]["file_name"],
                 # Workaround for Duvet: requirements do not refer to their section,
                 # so the section is found from the offsets. Remove when they do.
+                # See https://github.com/awslabs/duvet/issues/283.
                 section=_section_at(sections.get(src, []), ranges[0][0]),
                 level=item["level"],
                 text=text,
@@ -272,6 +277,7 @@ def parse_report(report: Report) -> dict[str, Specification]:
                 path=path,
                 # Workaround for Duvet: the report has no title for IETF specifications,
                 # so it is read from the text. Remove when Duvet fills the title.
+                # See https://github.com/awslabs/duvet/issues/282.
                 title=item.get("title") or ietf_title(contents[src].decode()) or path,
                 format=item.get("format", ""),
                 sections={short: long for _, _, short, long in sections.get(src, [])},
@@ -295,7 +301,8 @@ def _without_marker(
 ) -> list[tuple[int, int]]:
     """Return the ranges of a requirement without the marker of its list item, such as "o"."""
     # Workaround for Duvet: a requirement at the start of a list item starts
-    # with the marker of the item. Remove when Duvet leaves it out (draft ticket T18).
+    # with the marker of the item. Remove when Duvet leaves it out.
+    # See https://github.com/awslabs/duvet/issues/272.
     start, end = ranges[0]
     marker = _MARKER.match(contents, start, end)
     if marker is None:
@@ -312,7 +319,7 @@ def _separate_duplicates(
     """
     # Workaround for Duvet: requirements with the same text in a section get
     # the range of the first sentence. Remove when Duvet keeps the range of
-    # each one (draft ticket T16).
+    # each one. See https://github.com/awslabs/duvet/issues/161.
     same: dict[tuple[str, tuple[tuple[int, int], ...]], list[Requirement]] = {}
     for requirement in requirements:
         same.setdefault((requirement.section, tuple(requirement.ranges)), []).append(

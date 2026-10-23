@@ -191,7 +191,9 @@ def _without_page_breaks(lines: list[Line]) -> list[Line | None]:
     paragraph break, written as None.
     """
     # Workaround for Duvet: the v2 report does not give the content lines of the
-    # sections, without their page breaks. Remove when it does (draft ticket T7).
+    # sections, without their page breaks. Remove when it does.
+    # See https://github.com/awslabs/duvet/issues/278
+    # and https://github.com/awslabs/duvet/issues/265.
     result: list[Line | None] = []
     index = 0
     while index < len(lines):
@@ -969,7 +971,8 @@ def figure_requirements(spec: Specification) -> list[Requirement]:
     Figures are examples, such as JSON schemas, so these requirements are not normative.
     """
     # Workaround for Duvet: requirements are also extracted from figures.
-    # Remove when Duvet skips them (draft ticket T17).
+    # Remove when Duvet skips them.
+    # See https://github.com/awslabs/duvet/issues/273.
     if spec.format != "ietf":
         return []
     figures: list[tuple[int, int]] = []
@@ -1002,7 +1005,8 @@ def cell_ranges(spec: Specification) -> dict[str, list[tuple[int, int]]]:
     The requirement is the sentence of the cell that holds its key word.
     """
     # Workaround for Duvet: requirements in tables mix the text of the columns.
-    # Remove when Duvet reads tables cell by cell (draft ticket T19).
+    # Remove when Duvet reads tables cell by cell.
+    # See https://github.com/awslabs/duvet/issues/274.
     if spec.format != "ietf":
         return {}
     cells: list[Block] = []
