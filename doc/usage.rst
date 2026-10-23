@@ -102,7 +102,7 @@ Configuration
 .. confval:: duvet_autoreport_recap
 
    Whether the page of each specification starts with the counts of its requirements,
-   from :rst:dir:`duvet-recap`. The default is ``True``.
+   from :rst:dir:`duvet-recap`. The default is ``False``.
    The index page always shows the counts of every specification.
 
 .. confval:: duvet_figure_requirements

@@ -32,7 +32,7 @@ Added
   JSON and HTTP examples are highlighted, see ``duvet_spec_highlight``.
   Notes, such as "Note: ...", are admonitions.
   ``duvet_autoreport`` gives each specification a page with its text.
-- ``duvet_autoreport_recap`` removes the counts at the top of the generated pages.
+- ``duvet_autoreport_recap`` adds the counts at the top of the generated pages.
 - Requirements that Duvet finds in the figures of IETF specifications are left out.
   ``duvet_figure_requirements`` and ``--figure-requirements`` keep them.
 - ``[[outside]]`` entries mark the requirements that another project implements.

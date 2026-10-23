@@ -420,8 +420,6 @@ def test_autoreport(app: SphinxTestApp) -> None:
         ".. rst-class:: duvet-links\n\n"
         ":doc:`Read the specification <rfc9999-text>` "
         "`rfc-editor.org ↗ <https://www.rfc-editor.org/rfc/rfc9999>`__\n\n"
-        ".. duvet-recap:: spec/rfc9999.txt\n"
-        "   :group-by: role\n\n"
         ".. duvet-report:: spec/rfc9999.txt\n"
         "   :group-by: role\n"
         "   :show: unannotated\n"
@@ -457,8 +455,7 @@ def test_autoreport(app: SphinxTestApp) -> None:
     )
     app.build()
     assert warnings(app) == []
-    recap, report = tables(app, "compliance/extension")
-    assert rows(recap)[0][:3] == ["SHOULD", "server", "1"]
+    [report] = tables(app, "compliance/extension")
     assert rows(report)[0][0] == "SHOULD"
     assert sections(report) == ["Discovery"]
     assert rows(report)[0][1] == 'The server SHOULD publish its "metadata".'
@@ -1201,19 +1198,25 @@ def test_report_without_text(app: SphinxTestApp) -> None:
 @pytest.mark.sphinx(
     "html",
     testroot="autoreport",
-    srcdir="autoreport-without-recap",
+    srcdir="autoreport-with-recap",
     confoverrides={
         **CONF,
-        "duvet_autoreport": {},
-        "duvet_autoreport_recap": False,
+        "duvet_autoreport": {"group-by": "role", "show": "unannotated"},
+        "duvet_autoreport_recap": True,
         "suppress_warnings": ["duvet.unused"],
     },
 )
-def test_autoreport_without_recap(app: SphinxTestApp) -> None:
-    """The pages of the specifications can leave out their counts. The index keeps them."""
+def test_autoreport_with_recap(app: SphinxTestApp) -> None:
+    """The pages of the specifications can start with their counts."""
     folder = Path(app.srcdir) / "compliance"
-    assert "duvet-recap" not in (folder / "rfc9999.rst").read_text()
-    assert ".. duvet-recap::\n" in (folder / "index.rst").read_text()
+    assert (
+        ".. duvet-recap:: spec/rfc9999.txt\n"
+        "   :group-by: role\n\n"
+        ".. duvet-report:: spec/rfc9999.txt\n"
+    ) in (folder / "rfc9999.rst").read_text()
+    app.build()
+    recap, _ = tables(app, "compliance/extension")
+    assert rows(recap)[0][:3] == ["SHOULD", "server", "1"]
 
 
 OUTSIDE = Path(__file__).parent / "projects" / "outside"
