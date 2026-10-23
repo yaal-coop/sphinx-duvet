@@ -122,9 +122,8 @@ def _line_of(path: Path, text: str) -> int | None:
 
 def _location(path: Path, line: int | None) -> nodes.Element:
     """Return a node that points to a file, for the location of a warning."""
-    # Workaround for Sphinx: a string location is read as a document name, and gets
-    # a .rst suffix. A node with a source is shown as is. Remove when Sphinx accepts
-    # file paths as locations.
+    # Sphinx reads a string location as a document name.
+    # A node with a source can point to any file.
     node = nodes.Element()
     node.source = str(path)
     node.line = line
