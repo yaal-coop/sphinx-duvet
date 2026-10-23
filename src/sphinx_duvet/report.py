@@ -108,10 +108,6 @@ class Requirement:
             if scope is None or any(a <= offset < b for a, b in scope)
         )
 
-    def _overlaps(self, ranges: list[tuple[int, int]]) -> bool:
-        """Return True if one of the byte ranges overlaps the requirement."""
-        return any(a < d and c < b for a, b in self.ranges for c, d in ranges)
-
 
 @dataclass
 class Specification:
@@ -226,6 +222,18 @@ def parse_report(report: Report) -> dict[str, Specification]:
             )
         )
 
+    cites: dict[str, Cite] = {}
+    for key, item in annotations.get(_CITE, {}).items():
+        source = linked[item["source"]["src"]]
+        cites[key] = Cite(
+            type=item["type"],
+            path=source["file_name"],
+            line=item["source"].get("line") or 0,
+            ranges=[(r["start"], r["end"]) for r in item["target"]["ranges"]],
+            reason=item.get("comment") or "",
+            blob_link=blob_links.get(source.get("repository")),
+        )
+
     requirements: dict[str, list[Requirement]] = {}
     for item in annotations.get(_REQUIREMENT, {}).values():
         src = item["origin"]["src"]
@@ -244,25 +252,9 @@ def parse_report(report: Report) -> dict[str, Specification]:
                 text=text,
                 ranges=ranges,
                 contents=contents[src],
+                cites=[cites[key] for key in item.get("coverage", {})],
             )
         )
-
-    for item in annotations.get(_CITE, {}).values():
-        source = linked[item["source"]["src"]]
-        target = item["target"]
-        cite = Cite(
-            type=item["type"],
-            path=source["file_name"],
-            line=item["source"].get("line") or 0,
-            ranges=[(r["start"], r["end"]) for r in target["ranges"]],
-            reason=item.get("comment") or "",
-            blob_link=blob_links.get(source.get("repository")),
-        )
-        # Workaround for Duvet: cites do not refer to the requirements they quote,
-        # so they are matched by offsets. Remove when they do.
-        for requirement in requirements.get(target["src"], []):
-            if requirement._overlaps(cite.ranges):
-                requirement.cites.append(cite)
 
     for src, spec_requirements in requirements.items():
         ends = {short: end for _, end, short, _ in sections.get(src, [])}
